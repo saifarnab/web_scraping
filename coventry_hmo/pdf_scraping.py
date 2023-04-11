@@ -49,26 +49,12 @@ def pdf_scraping():
     # x = PdfReader('coventry_hmo/coventry_p4-5.pdf')
     # print(x.pages[0].Contents.stream)
 
-    import os
-    from io import StringIO
-    import re
-    from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
-    from pdfminer.converter import TextConverter
-    from pdfminer.layout import LAParams
-    from pdfminer.pdfpage import PDFPage
+    import pdfplumber
 
-    manager = PDFResourceManager()
-    retstr = StringIO()
-    layout = LAParams(all_texts=False, detect_vertical=True)
-    device = TextConverter(manager, retstr, laparams=layout)
-    interpreter = PDFPageInterpreter(manager, device)
-    with open("coventry_hmo/coventry_p4-5.pdf", 'rb') as filepath:
-        for page in PDFPage.get_pages(filepath, check_extractable=True):
-            interpreter.process_page(page)
-    text = retstr.getvalue()
-    print(text)
-    device.close()
-    retstr.close()
+    with pdfplumber.open("coventry_hmo/coventry_p4-5.pdf") as pdf:
+        first_page = pdf.pages[0]
+        text = first_page.extract_text().split('\n')
+        print(text)
 
 
 
