@@ -15,9 +15,6 @@ def config_driver(maximize_window: bool) -> webdriver.Chrome:
 
 
 def scanner():
-    wb = xlsxwriter.Workbook("data.xlsx")
-    sheet1 = wb.add_worksheet("results")
-
     website = 'http://vixcentral.com/historical?days=30'
 
     # define 'driver' variable
@@ -36,7 +33,8 @@ def scanner():
     time.sleep(2)
 
     data = []
-    for i in range(10000):
+    wrong = []
+    for i in range(5000):
         try:
             tspan = driver.find_elements(By.XPATH,
                                          "//*[local-name()='svg']//*[local-name()='tspan' and @class='highcharts-text-outline']")
@@ -63,18 +61,17 @@ def scanner():
             next_date = driver.find_element(By.XPATH, "//button[@id='bnext']")
             next_date.click()
             time.sleep(1)
-            print(f"Extracted date for the date of --> {date_val}  i value --> {i}--> length = {len(temp)}")
+            print(f"Extracted date for the date of --> {date_val}  i value --> {i} --> length = {len(temp)}")
             if len(temp) <= 9:
                 data.append(temp)
             else:
-                print(f"ERROR --> {date_val} --> length = {len(temp)}")
+                continue
         except Exception as e:
-            print("Exception ", e)
+            continue
     return data
 
 
 if __name__ == '__main__':
-
     data = scanner()
     columns = ['Date', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'Days to expiration']
     df = pd.DataFrame(data, columns=columns)
