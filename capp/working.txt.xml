@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="capp.xsl"?>
+<cell>
+    <processStep syskeyid="I33-01-0050-A">
+        <description>
+            -3348174  ENGINE AR-STANDARD TITAN-
+        </description>
+        <instructions>
+            <line>3348174  ENGINE AR-STANDARD TITAN</line>
+            <line></line>
+            <line>USE LIFTING DEVICE PED 83-581 TO LIFT ENGINE.</line>
+        </instructions>
+        <consumed>
+            <component>
+                <Trn></Trn>
+                <Line>1</Line>
+                <Item>000-0000</Item>
+                <Item_Name>REF line only</Item_Name>
+                <Qty>1</Qty>
+                <UM>PC</UM>
+                <SL_Ind>Z</SL_Ind>
+                <Inv_Ctl>C</Inv_Ctl>
+                <Time_Acquir>.0</Time_Acquir>
+                <Time_Offset></Time_Offset>
+                <Usg>REF</Usg>
+                <Ctr_Cde></Ctr_Cde>
+                <Location_Bldg></Location_Bldg>
+                <Location_Bin></Location_Bin>
+                <SA_Ind></SA_Ind>
+                <note>PVA 7730_I33-11-1000-A.PPT</note>
+            </component>
+            <component>
+                <Trn></Trn>
+                <Line>10</Line>
+                <Item>334-8174</Item>
+                <Item_Name>ENGINE AR-COMPL</Item_Name>
+                <Qty>1</Qty>
+                <UM>PC</UM>
+                <SL_Ind></SL_Ind>
+                <Inv_Ctl>C</Inv_Ctl>
+                <Time_Acquir>.0</Time_Acquir>
+                <Time_Offset></Time_Offset>
+                <Usg></Usg>
+                <Ctr_Cde>10</Ctr_Cde>
+                <Location_Bldg>B 45C</Location_Bldg>
+                <Location_Bin>FL45C</Location_Bin>
+                <SA_Ind></SA_Ind>
+            </component>
+        </consumed>
+        <used>
+            <component>
+                <Trn></Trn>
+                <Item>PED 83 581</Item>
+                <Item_Name>ENGINE LIFTING</Item_Name>
+                <Item_type>PART</Item_type>
+                <Qty_opt>1</Qty_opt>
+                <UM>PC</UM>
+                <Cnsm_Pct>0</Cnsm_Pct>
+                <Inv_Ctl>C</Inv_Ctl>
+                <Time_Acquir></Time_Acquir>
+                <Time_Offset></Time_Offset>
+            </component>
+        </used>
+        <visual>7730_I33-11-1000-A.PPT</visual>
+    </processStep>
+</cell>

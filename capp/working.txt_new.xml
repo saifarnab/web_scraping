@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="capp.xsl"?>
+<cell>
+    <processStep syskeyid="I33-01-0050-A">
+        <description>
+            3348174 ENGINE AR-STANDARD TITAN USE LIFTING DEVICE PED 83-581 TO LIFT ENGINE.
+        </description>
+        <instructions>
+            <line>3348174  ENGINE AR-STANDARD TITAN</line>
+            <line></line>
+            <line>USE LIFTING DEVICE PED 83-581 TO LIFT ENGINE.</line>
+        </instructions>
+    </processStep>
+</cell>
