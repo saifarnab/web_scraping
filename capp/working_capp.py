@@ -29,7 +29,7 @@ def main(input):
                     xmlfile.write(used_items(p, syskeyid))
                     xmlfile.write(visual(p, syskeyid))
                     xmlfile.write('\n' + '    </processStep>')
-                    break
+
             xmlfile.write('\n' + '</cell>')
             xmlfile.closed
 
