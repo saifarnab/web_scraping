@@ -54,7 +54,7 @@ import pdfplumber
 
 def pdf_scraping() -> list:
     data = []
-    with pdfplumber.open("coventry_hmo/conventry.pdf") as pdf:
+    with pdfplumber.open("conventry.pdf") as pdf:
         for i in range(len(pdf.pages)):
             page = pdf.pages[i]
             text = page.extract_text().split('\n')
@@ -218,4 +218,4 @@ if __name__ == '__main__':
                'Kitchens', 'Sinks']
     df = pd.DataFrame(data, columns=columns)
     sorted_df = df.sort_values(by=['Licensee Name', 'Licensee Address'], ascending=True)
-    sorted_df.to_excel(f"coventry_hmo/data.xlsx", index=False)
+    sorted_df.to_excel(f"coventry_hmo/data_re_gen.xlsx", index=False)
