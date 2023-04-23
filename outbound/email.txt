@@ -1,0 +1,62 @@
+# install dependencies
+    1. pip install pandas
+    2. pip install PyDrive
+    3. pip install closeio
+
+# add Google API credentials files renamed it as "client_secrets.json" and add "settings.yaml" within same directory
+
+# change these variables according to your Google Drive folders IDs
+    1. CLOSE_API_KEY = '<your close api secret key>'
+    2. INPUT_FOLDER_ID = '<input gdrive folder id, from where script read all the csv files>'
+    3. OUTPUT_FOLDER_ID = '<output gdrive folder id, from where script move all csv files after processing>'
+    4. DOWNLOAD_FOLDER_PATH = '<left as it is for current directory>'
+    5. SQLITE_DB_PATH = '<left empty for current directory>'
+
+# change required custom field id for close
+    1. COMPANY_DESCRIPTION_ID = ''
+    2. COMPANY_LINKEDIN_ID = ''
+    3. COMPANY_EMPLOYEE_COUNT_ID = ''
+    4. CONTACT_LINKEDIN_ID = ''
+    5. CONTACT_POSITION_ID = ''
+    6. INDUSTRY_ID = ''
+    7. SENIORITY_ID = ''
+    8. NUM_EMPLOYEES_ID = ''
+    9. PENDING_STATUS_ID = ''
+
+# for first run the script will open the browser and ask you to allow the app to access your google drive
+
+# after that it will save credentials in credentials.json file and use it on next runs (to refresh oAuth token)
+
+
+# expected output in the console
+09:19:33 INFO ----------------- START RUNNING --------------------
+09:19:34 INFO Downloading apollo-contacts-export.csv to local path <downloads/apollo-contacts-export.csv>...
+09:19:36 INFO data send to close api and save to db for <Mrunal Desai>
+09:19:36 INFO data send to close api and save to db for <Kush Gulati>
+09:19:37 INFO data send to close api and save to db for <James Wilsterman>
+09:19:37 INFO data send to close api and save to db for <Jaime-Alexis Fowler>
+09:19:38 INFO data send to close api and save to db for <Neil Sequeira>
+09:19:38 INFO data send to close api and save to db for <Jenn Coyle>
+09:19:39 INFO data send to close api and save to db for <Dan Nolan>
+09:19:39 INFO data send to close api and save to db for <Claudia Ross>
+09:19:40 INFO data send to close api and save to db for <Drew Titmarsh>
+09:19:40 INFO data send to close api and save to db for <Anurag Kanungo>
+09:19:41 INFO data send to close api and save to db for <Lynne Tingle>
+09:19:41 INFO data send to close api and save to db for <Jacqueline Cheong>
+09:19:42 INFO data send to close api and save to db for <Andrew Gree>
+09:19:42 INFO data send to close api and save to db for <Sargun Kaur>
+09:19:42 INFO data send to close api and save to db for <Sheng Ke>
+09:19:43 INFO data send to close api and save to db for <Sinclair Hwang>
+09:19:44 INFO data send to close api and save to db for <Alex Kotran>
+09:19:44 INFO data send to close api and save to db for <Ralph Rabbat>
+09:19:45 INFO data send to close api and save to db for <Mauricio Fortich>
+09:19:45 INFO data send to close api and save to db for <Ami Lebendiker>
+09:19:46 INFO data send to close api and save to db for <Gordon Goff>
+09:19:46 INFO data send to close api and save to db for <Richard Mrlik>
+09:20:42 INFO ----------------- EXECUTION DONE --------------------
+
+# process flow
+1. take csv files from gdrive
+2. push data to close api
+3. move pushed file to output folder of gdrive
+
