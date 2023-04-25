@@ -1,0 +1,5 @@
+1. keep [gp.py, gamedb.accdb] files in same directory
+2. OS must be windows 64bit
+3. ODBC drivers for (ms access 64bit must installed )
+4. finally run 'python gp.py'
+5. You can delete data from the gamedb.accdb by open it using ms access
