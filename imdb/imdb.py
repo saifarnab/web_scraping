@@ -50,16 +50,21 @@ def run():
                                class_='ipc-inline-list ipc-inline-list--show-dividers sc-afe43def-4 kdXikI baseAlt')
                 lis = ul.findAll('li', class_="ipc-inline-list__item")
                 if len(lis) == 4:
-                    data.append([title, lis[0].text, convert_runtime(lis[3].text), lis[1].text])
+                    data.append(
+                        [title.strip(), lis[0].text.strip(), convert_runtime(lis[3].text.strip()), lis[1].text.strip(),
+                         each_id])
+
                 elif len(lis) == 2:
-                    data.append([title, 'N/A', convert_runtime(lis[1].text), lis[0].text])
+                    data.append(
+                        [title.strip(), 'N/A', convert_runtime(lis[1].text.strip()), lis[0].text.strip(), each_id])
 
                 logging.info(f'--> data is extracted for id = {each_id}')
 
         except Exception as ex:
             logging.error(f'--> failed to extract data from id = {each_id}')
 
-    df = pd.DataFrame(data, columns=["Title", "MediaType", "RunTime", "Year"])
+    print(data)
+    df = pd.DataFrame(data, columns=["Title", "MediaType", "RunTime", "Year", "ImdbID"])
     df.to_csv(f"data-{random.randint(1, 9999)}.csv", index=False)
     logging.info('Script successfully completed!')
 
