@@ -8,6 +8,7 @@ from closeio_api import Client
 
 CLOSE_API_KEY = 'api_6UOHiS0CDzQtMWeUePrqfX.6dMY8E1N4Nzu3i3olfEDPE'  # your close api secret key
 USER_ID = 'user_l0UqCXVwEd82vSOui1HxhVAyTAf0hOa9BDxsXizfJhV'
+EMAIL_TEMPLATE_ID = 'tmpl_6i4qWyPodtm0pfpJPR19W58EL9LfzNSJfKaPsH98en2'
 SQLITE_DB_PATH = ''  # left empty for current directory
 MAX_LIMIT_PER_DAY = 30  # maximum amount of email a sender can sent per day
 WAITING_TIME = 3600  # wait time for next email sending in seconds
@@ -26,9 +27,16 @@ def create_tables(conn):
                                                 receiver text NOT NULL,
                                                 sending_date text NOT NULL
                                             ); """
+    _connected_accounts_table = """ CREATE TABLE IF NOT EXISTS connected_accounts (
+                                                    id integer PRIMARY KEY,
+                                                    account_id text UNIQUE NOT NULL,
+                                                    account_name text NOT NULL,
+                                                    account_email text NOT NULL
+                                                ); """
     try:
         c = conn.cursor()
         c.execute(_email_table)
+        c.execute(_connected_accounts_table)
     except sqliteError as ex:
         logging.error('error while creating table', ex)
 
@@ -50,6 +58,17 @@ def create_email_sent_confirmation(conn, sender, receiver, sending_date):
     conn.commit()
 
 
+def create_connected_accounts(conn, accounts):
+    for account in accounts:
+        try:
+            sql = f"""INSERT INTO connected_accounts (account_id, account_name, account_email) VALUES ('{account[0]}','{account[1]}','{account[2]}')"""
+            cur = conn.cursor()
+            cur.execute(sql)
+            conn.commit()
+        except Exception as ex:
+            pass
+
+
 def make_email_payload(contact_id, sender_name, sender_email, receiver_email, lead_id):
     return {
         "contact_id": contact_id,
@@ -57,14 +76,13 @@ def make_email_payload(contact_id, sender_name, sender_email, receiver_email, le
         "lead_id": lead_id,
         "direction": "outgoing",
         "created_by_name": sender_name,
-        "date_created": date.today().isoformat(),
         "sender": f"{sender_name} <{sender_email}>",
         "to": [receiver_email],
         "bcc": [],
         "cc": [],
         "status": "inbox",
         "attachments": [],
-        "template_id": 'tmpl_6i4qWyPodtm0pfpJPR19W58EL9LfzNSJfKaPsH98en2'
+        "template_id": EMAIL_TEMPLATE_ID,
     }
 
 
@@ -86,12 +104,22 @@ def get_sender_current_sent_email_count(conn, sender) -> int:
 
 
 def send_email(api, payload):
-    api.post('/activity/email/', payload)
+    r = api.post('/activity/email/', payload)
+    print(r)
 
 
 def get_contacts(api):
     res_data = api.get(f'/contact/')
     return res_data['data']
+
+
+def check_lead_exist(conn, lead_id) -> bool:
+    cur = conn.cursor()
+    cur.execute(f"SELECT COUNT(*) FROM leads WHERE lead_id='{lead_id}'")
+    count = cur.fetchall()
+    if count[0][0] > 0:
+        return True
+    return False
 
 
 def run():
@@ -101,19 +129,36 @@ def run():
 
     contacts = get_contacts(api)
     sc = get_sender_accounts(api)
+    create_connected_accounts(conn, sc)
 
-    for contact in contacts:
-        for each_sender_account in sc:
-            sender_name = each_sender_account[1]
-            sender_email = each_sender_account[2]
+    counter, success_counter = 0, 0
+    while True:
+        for ind, sender in enumerate(sc):
+            contact = contacts[counter]
+            sender_name = sender[1]
+            sender_email = sender[2]
             if MAX_LIMIT_PER_DAY - get_sender_current_sent_email_count(conn, sender_email) <= 0:
+                logging.info(f'<{sender_email}> this sender email has exceed the max limit to sent email per day')
                 continue
             receiver_email = contact['emails'][0]['email']
             contact_id = contact['id']
             lead_id = contact['lead_id']
+            if check_lead_exist(conn, lead_id) is False:
+                logging.info(f'<{lead_id}> this lead id is not available on DB')
+                counter += 1
+                continue
             payload = make_email_payload(contact_id, sender_name, sender_email, receiver_email, lead_id)
             send_email(api, payload)
             create_email_sent_confirmation(conn, sender_email, receiver_email, date.today().strftime("%m/%d/%Y"))
+            counter += 1
+            success_counter += 1
+            logging.info(f'--> email sent to <{receiver_email}> from <{sender_email}> & confirmation store in DB')
+            logging.info(f'--> total successful email sent count = {success_counter}')
+            break
+
+        if counter >= len(contacts):
+            exit()
+        logging.info(f'--> waiting for {WAITING_TIME}s for next email sent..')
         time.sleep(WAITING_TIME)
 
 
