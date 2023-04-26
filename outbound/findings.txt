@@ -1,0 +1,34 @@
+1. this is the request body for sending email
+{
+    "contact_id": "cont_8NNOJnVwmHQEYuVOgJ4B4zU7g9RUxYH4JnPjza5Vr6t",
+    "user_id": "user_scOgjLAQD6aBSJYBVhIeNr6FJDp8iDTug8Mv6VqYoFn",
+    "lead_id": "lead_KwD00BYbXCHiPWj68LxFkxaeWuULpZ7awzm6LqeFs0h",
+    "direction": "outgoing",
+    "created_by": null,
+    "created_by_name": "Bruce Wayne",
+    "date_created": "2013-02-01T00:54:51.274000+00:00",
+    "subject": "Welcome to Close!",
+    "sender": "karan@close.com",
+    "to": [
+        "phil+sample@close.com"
+    ],
+    "bcc": [],
+    "cc": [],
+    "status": "draft",
+    "body_text": "Hi! My name is Karan and I'm your Account Manager. I'm here to get your team set up and help with anything you may need as you evaluate our platform. Please don't hesitate to reach out to me with any questions!",
+    "body_html": "Hi! My name is Karan and I'm your Account Manager. I'm here to get your team set up and help with anything you may need as you evaluate our platform. Please don't hesitate to reach out to me with any questions!",
+    "attachments": [],
+    "template_id": null
+}
+here the contact_id, user_id, lead_id. these ids are sender ids or receiver ids?
+
+2.  from contact api where i fetch sender email, i got (id, user_id, organization_id)
+    what should i do? map --> (contact_id to id), (user_id to user_id), still i do not have any lead_id here
+
+    i can use the lead id of receiver which we saved on db.
+    in this case, contact_id and user_id will be the sender, lead_id will be from the receiver.
+
+
+
+
+

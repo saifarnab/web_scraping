@@ -18,12 +18,13 @@ subprocess.check_call(['pip', 'install', 'PyDrive'])
 subprocess.check_call(['pip', 'install', 'closeio'])
 
 # required keys & path
-CLOSE_API_KEY = 'api_6UOHiS0CDzQtMWeUePrqfX.6dMY8E1N4Nzu3i3olfEDPE'  # your close api secret key
+# your close api secret key
+CLOSE_API_KEY = 'api_6UOHiS0CDzQtMWeUePrqfX.6dMY8E1N4Nzu3i3olfEDPE'
 
-INPUT_FOLDER_ID = ''  # input folder id
-OUTPUT_FOLDER_ID = ''  # output folder id
+INPUT_FOLDER_ID = '1njV8kYm6ODHyEBK3q_Y3bea2sU14CGwV'  # input folder id
+OUTPUT_FOLDER_ID = '1_zC_gVWLlzktJe4KYqyLF13oQyr7Pefu'  # output folder id
 
-DOWNLOAD_FOLDER_PATH = 'downloads'  # left as it is for current directory
+DOWNLOAD_FOLDER_PATH = 'downloads-close'  # left as it is for current directory
 SQLITE_DB_PATH = ''  # left empty for current directory
 
 # required custom field id for close
@@ -42,6 +43,13 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s %(message)s',
     datefmt='%H:%M:%S',
     level=logging.INFO)
+
+
+def check_email_exists(conn, email):
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM contacts WHERE email=?", (email,))
+    rows = cur.fetchall()
+    return len(rows) > 0
 
 
 def create_sqlite_db(file):
@@ -75,6 +83,7 @@ def create_tables(conn):
                                                     title text,
                                                     seniority text,
                                                     num_employees text,
+                                                    first_email_send boolean,
                                                     date_time text NOT NULL
                                                 ); """
     try:
@@ -95,7 +104,7 @@ def create_lead(conn, value):
 
 def create_contact(conn, value):
     sql = ''' INSERT INTO contacts(lead_ref_id,first_name,last_name,company_name,url,individual_li_url,company_li_url,
-    email,phone,industry,title,seniority,num_employees,date_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) '''
+    email,phone,industry,title,seniority,num_employees,first_email_send,date_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, value)
     conn.commit()
@@ -119,7 +128,7 @@ def make_close_payload(first_name, last_name, company_name, url, individual_li_u
         "description": company_des.strip(),
         "contacts": [
             {
-                "name": first_name.strip() + last_name.strip(),
+                "name": f"{first_name.strip()} {last_name.strip()}",
                 "title": title.strip(),
                 "emails": [
                     {
@@ -149,7 +158,8 @@ def make_close_payload(first_name, last_name, company_name, url, individual_li_u
 
 def modified_df_columns(dataframe):
     if 'COMPANY_NAME_FOR_EMAILS' in dataframe.columns and 'COMPANY_NAME' not in dataframe.columns:
-        dataframe = dataframe.rename(columns={'COMPANY_NAME_FOR_EMAILS': 'COMPANY_NAME'})
+        dataframe = dataframe.rename(
+            columns={'COMPANY_NAME_FOR_EMAILS': 'COMPANY_NAME'})
     if 'FIRST_NAME' not in dataframe.columns:
         dataframe['FIRST_NAME'] = ' '
     if 'LAST_NAME' not in dataframe.columns:
@@ -183,7 +193,8 @@ def modified_df_columns(dataframe):
 # check input & output folder exists or not
 def check_gdrive_folder_id_exists(drive, folder_id):
     try:
-        drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
+        drive.ListFile(
+            {'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
     except Exception as ex:
         logging.error(f"folder id ({folder_id}) is not found")
         exit()
@@ -200,6 +211,11 @@ def move_gdrive_file(drive, file_id, folder_id):
     file['parents'] = [{"kind": "drive#parentReference", "id": folder_id}]
     file.Upload()
     logging.info('files move to output folder')
+
+
+def add_activity_note(client, lead_id: str, note: str = 'Added from Outbound API Automation'):
+    client.post('activity/note', data={"note": note, "lead_id": lead_id})
+    logging.info("note pushed to close")
 
 
 def run():
@@ -220,7 +236,8 @@ def run():
             csv_file_title = csv_file['title']
             csv_file_id = csv_file['id']
             local_path = os.path.join(DOWNLOAD_FOLDER_PATH, csv_file_title)
-            logging.info(f'Downloading {csv_file_title} to local path <{local_path}>...')
+            logging.info(
+                f'Downloading {csv_file_title} to local path <{local_path}>...')
             csv_file.GetContentFile(local_path)
 
             # Read file as panda dataframe
@@ -229,44 +246,51 @@ def run():
             # modify dataframe fields if required
             dataframe = modified_df_columns(dataframe)
             for first_name, last_name, company_name, url, individual_li_url, email, phone, company_des, \
-                    company_li_url, industry, \
-                    title, seniority, num_employees in zip(dataframe['FIRST_NAME'], dataframe['LAST_NAME'],
-                                                           dataframe['COMPANY_NAME'], dataframe['WEBSITE'],
-                                                           dataframe['INDIVIDUAL_LI_URL'], dataframe['EMAIL'],
-                                                           dataframe['PHONE'], dataframe['COMPANY_DESCRIPTION'],
-                                                           dataframe['COMPANY_LI_URL'], dataframe['INDUSTRY'],
-                                                           dataframe['TITLE'], dataframe['SENIORITY'],
-                                                           dataframe['NUM_EMPLOYEES']):
+                company_li_url, industry, \
+                title, seniority, num_employees in zip(dataframe['FIRST_NAME'], dataframe['LAST_NAME'],
+                                                       dataframe['COMPANY_NAME'], dataframe['WEBSITE'],
+                                                       dataframe['INDIVIDUAL_LI_URL'], dataframe['EMAIL'],
+                                                       dataframe['PHONE'], dataframe['COMPANY_DESCRIPTION'],
+                                                       dataframe['COMPANY_LI_URL'], dataframe['INDUSTRY'],
+                                                       dataframe['TITLE'], dataframe['SENIORITY'],
+                                                       dataframe['NUM_EMPLOYEES']):
 
-                # make close api payload
-                payload = make_close_payload(first_name, last_name, company_name, url, individual_li_url, email, phone,
-                                             industry, company_des, company_li_url, title, seniority, num_employees)
+                if not check_email_exists(conn, email):
+                    # make close api payload
+                    payload = make_close_payload(first_name, last_name, company_name, url, individual_li_url, email, phone,
+                                                 industry, company_des, company_li_url, title, seniority, num_employees)
 
-                # post a lead
-                res_data = api.post('lead', data=payload)
+                    # post a lead
+                    res_data = api.post('lead', data=payload)
 
-                if res_data.get('id') not in ['', None]:
+                    if res_data.get('id') not in ['', None]:
 
-                    # save to db
-                    create_contact(conn, (
-                        create_lead(conn, (res_data['id'], res_data['date_created'])), first_name, last_name,
-                        company_name, url, individual_li_url, company_li_url, email, phone, industry, title, seniority,
-                        num_employees, res_data['date_created']))
+                        # send activity note
+                        add_activity_note(api, res_data.get('id'))
 
-                    logging.info(
-                        f'data send to close api and save to db for <{first_name.strip() + " " + last_name.strip()}>')
+                        # save to db
+                        create_contact(conn, (
+                            create_lead(
+                                conn, (res_data['id'], res_data['date_created'])), first_name, last_name,
+                            company_name, url, individual_li_url, company_li_url, email, phone, industry, title, seniority,
+                            num_employees, False, res_data['date_created']))
 
-                # handle error with rate limit
-                elif res_data.get('error'):
-                    if res_data.get('error').get('rate_reset'):
-                        rate_reset = math.ceil(res_data.get('error').get('rate_reset')) + 1
-                        logging.error(f"{res_data.get('error').get('message')}, wait for {rate_reset}s")
-                        time.sleep(rate_reset)
-                else:
-                    logging.error('unknown error', res_data)
+                        logging.info(
+                            f'data send to close api and save to db for <{first_name.strip() + " " + last_name.strip()}>')
+
+                    # handle error with rate limit
+                    elif res_data.get('error'):
+                        if res_data.get('error').get('rate_reset'):
+                            rate_reset = math.ceil(res_data.get(
+                                'error').get('rate_reset')) + 1
+                            logging.error(
+                                f"{res_data.get('error').get('message')}, wait for {rate_reset}s")
+                            time.sleep(rate_reset)
+                    else:
+                        logging.error('unknown error', res_data)
+                        logging.info(f'Duplicate email found for {first_name.strip()} {last_name.strip()} with email {email.strip()}, skipping this lead')
 
             move_gdrive_file(drive, csv_file_id, OUTPUT_FOLDER_ID)
-
 
         except Exception as ex:
             logging.error(ex)
