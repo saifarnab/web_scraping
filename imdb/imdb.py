@@ -24,6 +24,8 @@ def get_request_headers() -> dict:
 
 
 def convert_runtime(time_str):
+    if len(time_str) == 2:
+        return f"{60}"
     if "h" not in time_str.lower():
         return time_str[: len(time_str) - 1]
     hours, minutes = time_str.split("h ")
