@@ -274,6 +274,8 @@ tags
 /banners
 /banner
 /ws
+/outbound/client_secrets.json
+/outbound/Credentials.json
 
 #**/migrations/**
 #!**/migrations

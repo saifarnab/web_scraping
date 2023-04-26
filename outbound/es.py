@@ -58,7 +58,7 @@ def make_email_payload(contact_id, sender_name, sender_email, receiver_email, le
         "direction": "outgoing",
         "created_by_name": sender_name,
         "date_created": date.today().isoformat(),
-        "sender": sender_email,
+        "sender": f"{sender_name} <{sender_email}>",
         "to": [receiver_email],
         "bcc": [],
         "cc": [],
