@@ -51,21 +51,24 @@ def run():
                 lis = ul.findAll('li', class_="ipc-inline-list__item")
                 if len(lis) == 4:
                     data.append(
-                        [title.strip(), lis[0].text.strip(), convert_runtime(lis[3].text.strip()), lis[1].text.strip(),
+                        [title.strip(), lis[0].text.strip(), convert_runtime(lis[3].text.strip()), lis[1].text.strip().replace('–', '-'),
                          each_id])
 
                 elif len(lis) == 2:
-                    data.append(
-                        [title.strip(), 'N/A', convert_runtime(lis[1].text.strip()), lis[0].text.strip(), each_id])
+                    if 'tv' in lis[0].text.strip().lower():
+                        data.append(
+                            [title.strip(), lis[0].text.strip(), convert_runtime(lis[1].text.strip()), 'N/A', each_id])
+                    else:
+                        data.append([title.strip(), 'N/A', convert_runtime(lis[1].text.strip()), lis[0].text.strip().replace('–', '-'), each_id])
 
                 logging.info(f'--> data is extracted for id = {each_id}')
 
         except Exception as ex:
             logging.error(f'--> failed to extract data from id = {each_id}')
+            continue
 
-    print(data)
     df = pd.DataFrame(data, columns=["Title", "MediaType", "RunTime", "Year", "ImdbID"])
-    df.to_csv(f"data-{random.randint(1, 9999)}.csv", index=False)
+    df.to_csv(f"data-{random.randint(1, 9999)}.csv", index=False, encoding='utf8')
     logging.info('Script successfully completed!')
 
 
