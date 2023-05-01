@@ -135,19 +135,27 @@ def run():
     while True:
         for ind, sender in enumerate(sc):
             contact = contacts[counter]
-            sender_name = sender[1]
-            sender_email = sender[2]
-            if MAX_LIMIT_PER_DAY - get_sender_current_sent_email_count(conn, sender_email) <= 0:
-                logging.info(f'<{sender_email}> this sender email has exceed the max limit to sent email per day')
-                continue
-            receiver_email = contact['emails'][0]['email']
-            contact_id = contact['id']
-            lead_id = contact['lead_id']
-            if check_lead_exist(conn, lead_id) is False:
-                logging.info(f'<{lead_id}> this lead id is not available on DB')
-                counter += 1
-                continue
+            # sender_name = sender[1]
+            # sender_email = sender[2]
+            sender_name = 'David Tran'
+            sender_email = 'david@xfusion.io'
+            # if MAX_LIMIT_PER_DAY - get_sender_current_sent_email_count(conn, sender_email) <= 0:
+            #     logging.info(f'<{sender_email}> this sender email has exceed the max limit to sent email per day')
+            #     continue
+            # receiver_email = contact['emails'][0]['email']
+            # contact_id = contact['id']
+            # lead_id = contact['lead_id']
+
+            receiver_email = 'martin.onami@xfusion.io'
+            contact_id = 'emailacct_ZFiotKd2E2n3178diEp7SRY4VMY4Ote5wEbHPIrF532'
+            lead_id = 'lead_n44QaRtZXI8fs7l7qhEHTNDxHhqwSxQNkvmh6VZyTmH'
+
+            # if check_lead_exist(conn, lead_id) is False:
+            #     logging.info(f'<{lead_id}> this lead id is not available on DB')
+            #     counter += 1
+            #     continue
             payload = make_email_payload(contact_id, sender_name, sender_email, receiver_email, lead_id)
+            print(payload)
             send_email(api, payload)
             create_email_sent_confirmation(conn, sender_email, receiver_email, date.today().strftime("%m/%d/%Y"))
             counter += 1

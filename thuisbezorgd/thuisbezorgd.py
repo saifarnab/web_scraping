@@ -265,26 +265,19 @@ def create_csv(name: str):
 
 if __name__ == '__main__':
 
-    file_path = sys.argv[1:]
+    ch_driver = config_driver()
+    post_codes = open('postcodes.txt', "r")
+    logging.info('Script start running ...')
+    file_name = f'data_{random.randint(1, 999999)}'
+    create_csv(file_name)
+    logging.info(f'<{file_name}> file is created to store data actively')
+    all_data = []
 
-    if len(file_path) != 1:
-        logging.error('invalid file path args')
-        exit()
+    for code in post_codes:
+        code = code.strip()
+        if code != "":
+            data = scanner(ch_driver, code, all_data, file_name)
+            all_data = data
 
-    else:
-        ch_driver = config_driver()
-        post_codes = open(file_path[0], "r")
-        logging.info('Script start running ...')
-        file_name = f'data_{random.randint(1, 999999)}'
-        create_csv(file_name)
-        logging.info(f'<{file_name}> file is created to store data actively')
-        all_data = []
-
-        for code in post_codes:
-            code = code.strip()
-            if code != "":
-                data = scanner(ch_driver, code, all_data, file_name)
-                all_data = data
-
-        ch_driver.close()
-        logging.info(f'Script executed successfully and data is saved to <{file_name}.csv>')
+    ch_driver.close()
+    logging.info(f'Script executed successfully and data is saved to <{file_name}.csv>')
