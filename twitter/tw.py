@@ -14,13 +14,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 # define variables
-TWITTER_USERNAME = 'Imty94074113'
-TWITTER_PASSWORD = 'W78$@gtr$hsdifsdfb'
-# KEYWORDS = ['McDonald’s', 'Burger King', 'Wendy’s', 'Sonic Drive-In Restaurants', 'Jack in the Box', 'Carl’s Jr',
-#             'Five Guys', 'Whataburger', 'Smashburger', 'Starbucks', "Dunkin' Donuts", 'McCafe', 'Caribou',
-#             'Maxwell House', "Seattle's Best", 'Folgers']
+TWITTER_USERNAME = ''
+TWITTER_PASSWORD = ''
+KEYWORDS = ['McDonald’s', 'Burger King', 'Wendy’s', 'Sonic Drive-In Restaurants', 'Jack in the Box', 'Carl’s Jr',
+            'Five Guys', 'Whataburger', 'Smashburger', 'Starbucks', "Dunkin' Donuts", 'McCafe', 'Caribou',
+            'Maxwell House', "Seattle's Best", 'Folgers']
 
-KEYWORDS = ['Burger King']
+# KEYWORDS = ['Burger King']
 
 # log format
 logging.basicConfig(
@@ -47,7 +47,7 @@ def wait_until_find_element(driver, selector, param):
             driver.find_element(selector, param)
             break
         except Exception as e:
-            if math.ceil(time.time() - start_time) > 5:
+            if math.ceil(time.time() - start_time) > 10:
                 break
             continue
 
@@ -227,7 +227,7 @@ def scanner(f_name, keywords):
     while True:
         if handle_login(driver) is True:
             break
-        logging.error('login falied, retrying...')
+        logging.error('login failed, retrying...')
     logging.info('logging success.')
     parent = driver.window_handles[0]
     driver.execute_script("window.open('');")
@@ -238,8 +238,8 @@ def scanner(f_name, keywords):
 
     counter = 0
     for keyword in keywords:
-        until_date = parser.parse('2022-12-31').date()
-        since_date = parser.parse('2022-01-01').date()
+        until_date = parser.parse('2022-01-02').date()
+        since_date = parser.parse('2021-01-01').date()
         while str(since_date) != '2023-01-01':
             added_rows = []
             search = f'https://twitter.com/search?q={keyword}%20until%3A{until_date}%20since%3A{since_date}&src=typed_query'
@@ -258,6 +258,7 @@ def scanner(f_name, keywords):
                             logging.info(f'--> {counter + 1}. new entry added for keyword={keyword}, date={since_date}')
                             counter += 1
                             added_rows.append(new_row)
+
                     except Exception as ex:
                         continue
 
