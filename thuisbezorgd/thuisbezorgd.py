@@ -265,6 +265,7 @@ def create_csv(name: str):
 
 if __name__ == '__main__':
 
+
     ch_driver = config_driver()
     post_codes = open('postcodes.txt', "r")
     logging.info('Script start running ...')
