@@ -10,12 +10,14 @@ def check_duplicate(rows: list, row: str) -> bool:
             return True
     return False
 
+def rename():
+    df['First Season'].loc[(df['First Season'] > 1990)] = 1
+
 
 def run():
     import pandas as pd
-    toclean = pd.read_csv('data_6074.csv')
-    deduped = toclean.drop_duplicates(['Author_Name', 'Tweet_Timestamp'])
-    deduped.to_csv('data_6075.csv')
+    df = pd.read_csv('data_6074.csv')
+    df['Tweet_Number_of_Looks'] = 'N/A'
 
 
 if __name__ == '__main__':

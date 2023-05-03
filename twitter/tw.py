@@ -140,7 +140,7 @@ def extract_data_from_current_tweet_card(driver, parent, child, card, search_key
 
     try:
         # driver.save_screenshot("image.png")
-        view_count = card.find_element(By.XPATH, '//div[4]/a/div/div[2]/span/span/span').text
+        view_count = card.find_element(By.XPATH, './/div[4]/a/div/div[2]/span/span/span').text
     except Exception as exx:
         view_count = ""
 
