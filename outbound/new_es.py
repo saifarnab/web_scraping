@@ -139,12 +139,14 @@ def assign_timestamp_with_limit(connected_accounts: list) -> dict:
     data = {}
     for connected_account in connected_accounts:
         data[connected_account[2]] = {'timestamp': time.time(), 'limit': 0}
-    print(data)
     return data
 
 
-def update_timestamp_with_limit(connected_accounts, sender_email):
-    connected_accounts
+def update_timestamp_with_limit(connected_accounts_time_limits, sender_email):
+    print(connected_accounts_time_limits[sender_email])
+    timestamp, limit = connected_accounts_time_limits[sender_email]['timestamp'], connected_accounts_time_limits[sender_email]['limit']
+    connected_accounts_time_limits[sender_email] = {'timestamp': time.time() + 960, 'limit': limit + 1}
+    print(connected_accounts_time_limits[sender_email])
 
 
 def check_connected_account_availability(data: dict, connect_account_email: str) -> bool:
@@ -183,7 +185,7 @@ def run():
     for connected_account in connected_accounts:
 
         # check whether the connected account is available to send email
-        if check_connected_account_availability(connected_accounts_time_limits, connected_account[3]) is False:
+        if check_connected_account_availability(connected_accounts_time_limits, connected_account[2]) is False:
             continue
 
         # take a single contact to sent email
@@ -212,9 +214,10 @@ def run():
             # send_email(api, payload)
 
             # create confirmation entry in email table
-            create_email_sent_confirmation(conn, sender_email, receiver_email, date.today().strftime("%m/%d/%Y"))
+            # create_email_sent_confirmation(conn, sender_email, receiver_email, date.today().strftime("%m/%d/%Y"))
 
             # update the timestamp & limit for the used connected account
+            update_timestamp_with_limit(connected_accounts_time_limits, sender_email)
         else:
             pass
 

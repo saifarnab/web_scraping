@@ -14,13 +14,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 # define variables
-TWITTER_USERNAME = ''
-TWITTER_PASSWORD = ''
-KEYWORDS = ['McDonald’s', 'Burger King', 'Wendy’s', 'Sonic Drive-In Restaurants', 'Jack in the Box', 'Carl’s Jr',
-            'Five Guys', 'Whataburger', 'Smashburger', 'Starbucks', "Dunkin' Donuts", 'McCafe', 'Caribou',
-            'Maxwell House', "Seattle's Best", 'Folgers']
+TWITTER_USERNAME = 'khaledibnmahbub@gmail.com'
+TWITTER_PASSWORD = 'Allahhelpme6832'
+# KEYWORDS = ['McDonald’s', 'Burger King', 'Wendy’s', 'Sonic Drive-In Restaurants', 'Jack in the Box', 'Carl’s Jr',
+#             'Five Guys', 'Whataburger', 'Smashburger', 'Starbucks', "Dunkin' Donuts", 'McCafe', 'Caribou',
+#             'Maxwell House', "Seattle's Best", 'Folgers']
 
-# KEYWORDS = ['Burger King']
+KEYWORDS = ['Burger King']
 
 # log format
 logging.basicConfig(
@@ -238,8 +238,8 @@ def scanner(f_name, keywords):
 
     counter = 0
     for keyword in keywords:
-        until_date = parser.parse('2022-01-02').date()
-        since_date = parser.parse('2021-01-01').date()
+        until_date = parser.parse('2022-01-24').date()
+        since_date = parser.parse('2022-01-23').date()
         while str(since_date) != '2023-01-01':
             added_rows = []
             search = f'https://twitter.com/search?q={keyword}%20until%3A{until_date}%20since%3A{since_date}&src=typed_query'
