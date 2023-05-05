@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "yahoo-finance-385808",
+  "private_key_id": "529b86bfb92d4615dfc43dabe57140a36a4ecd18",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDRvkqcPuZWmnI1\nJ9W62bF5+/aQvLsBIF8eIDXeoHsDW8eeVKtqRNrJ9VFPROMQFYKmcGBaYBIPXkB8\n751q/1B8rcGTYuK2xy0Buuk2lzwCzSqhqhvFCvJzQQQMZ9HTYDbjhAWQylOzb7p+\nnbP5SzgzuTkJcUIFC8WSOKSPTEaBbb+dlZDXHoLrfNPJEaSQkWAVyImKI4ewwfyO\nfPpcLu/Ikx2P+VRn2zTyaTJAzc6ku45Gv0K7lVLNbLEdkHHZSCV7Sj0pdmO+fF+b\nF/1G/ssNSysiREftjwM6+97RmozR1bqyuAto985NAku/oAZXr0z5UlM0pmV+AuU+\ny+O8TU5/AgMBAAECggEABWWzEc8dcWO88J/mBE5yrLWVlgqP65WAHRqRT2tIcN12\nMcgrjJy8+ss7uRMkggGrslfcLYyEqnSTHLIlzxe4nPIQJdE6uEnOe8tbvIeq3Th6\ny0Brz9mTJ5uoBzxcsa3H7ZX7dq6XEiM4VnTg4kkpA4Zj/ufDbEOYnikVpol18Mje\nfrnemn1L+4KXxay0SF0wwhP/JKuVvoZcmC14n0o6aAKxz1J0BaGSDx6KlQgpwL3q\nTxcrxMvlHxaHw9RGTN7wvlAXEqyU2fSVGxXe3TsDdA1UpSoeFbbAP/CJMOftjBDZ\n+iJCJzNc9h1vnEbxS5TLXl141MkWfKzc77RZbw7ucQKBgQDt2+09S38o9V83ex8i\nTulMP3z/8+NwJTfHcTZnHSHL3YKDpuWAhAUsISxd+WbG14PJaCYEsTX9otv3ojM7\na3kRlQQBnKot6qZ6tmRxf12Cag9QjdFmGmAqGQt09xRXOSU2DBG8DbkRnUypv4T9\n1jyIi2K8vRqPfXTM4vE4kDqXXQKBgQDhvWtWbPlqGST43G5IJBXPMz/76Htu1Fp5\nV4XN7WxY6QrcMX7+9ErMOrJ3x76mpebaRbK/v70ONh8EFBnt5c+1sf8di+fXmNrc\nRj53X3J+UFV8faFyS5402Vx9vVgPrnRMVf3wRxQkMOoHNZb3QYtZdGLf1LqqqE6R\nPUP6osqriwKBgQDeJq7Ptahg/7LbZYGxkFPyo8VCZG3CevA6tPEjoyDCf/L6tLDa\ns/MEwULnzhyAkB6EyGHhtgUAC9A322TQFVNw6WVhgAmtct/j8l+jZVpXiGkfSiUN\noIq6JsP9jRqRUE0ByonxwjtcSTalv7sdPK8ytEQWlOOuqnShO0AiHQqr/QKBgQDd\nsjS3ZUCyBU29JmccbGwK2M9O6+xFVUIhh2Y+bp0I2J400FtjsrG+zyq03jOL4MTO\nusKo9HqMeXSOgdtRO3B5hf0BnIQtxc2zpTz16YQ9L1I1eABVipQuXQYr6weQJwnK\nam2BS50pSeyc9fF0lSdwzA/KuVY2AiNfGmcnwDcArwKBgD4oBj0hK+gWZXPW5ajQ\nbVPMn1p/9urmnAYbcvNXr2e8H4GKHWdSJ9XDZfZgSDDxlUxeE4vz4V50xne+jDBH\nyxDtos8vfrRH19mSlsi0KoBAmlzL9EzqkQIRHv0zagP8IQnuEyD7WRgBG8il07k1\ntexRAjOQ9L6hF04P4DncUkn0\n-----END PRIVATE KEY-----\n",
+  "client_email": "test-689@yahoo-finance-385808.iam.gserviceaccount.com",
+  "client_id": "102737426074997486007",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test-689%40yahoo-finance-385808.iam.gserviceaccount.com"
+}
