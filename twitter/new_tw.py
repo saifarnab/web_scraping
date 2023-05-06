@@ -5,11 +5,9 @@ import math
 import random
 import subprocess
 import time
-import twAuto
 
+import twAuto
 from dateutil import parser
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
@@ -21,12 +19,14 @@ subprocess.check_call(['pip', 'install', 'selenium'])
 subprocess.check_call(['pip', 'install', 'twAuto'])
 
 # define twitter credentials
-TWITTER_EMAIL_OR_PHONE = 'khaledibnmahbub@gmail.com'
-TWITTER_USERNAME = 'Imty94074113'
+TWITTER_EMAIL = 'khaledibnmahbub@gmail.com'
+TWITTER_USERNAME = 'KhaledIbnMahbu1'
 TWITTER_PASSWORD = 'Allahhelpme6832'
 
 # define the keywords, for best result named it like as the company page name
 KEYWORDS = ['Burger King']
+START_DATE = '2022-01-01'  # format should be (YYYY-mm-dd)
+END_DATE = '2022-12-31'    # format should be (YYYY-mm-dd)
 
 # log format
 logging.basicConfig(
@@ -35,40 +35,10 @@ logging.basicConfig(
     level=logging.INFO)
 
 
-def config_driver() -> webdriver.Chrome:
-    options = Options()
-
-    # user_agent = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.2 (KHTML, like Gecko) Chrome/22.0.1216.0 Safari/537.2'
-    # options = webdriver.ChromeOptions()
-    # options.add_argument(f'user-agent={user_agent}')
-    # options.add_argument("window-size=1024,768")
-    # options.add_argument("--headless")
-    # driver = webdriver.Chrome(options=options)
-    # driver.maximize_window()
-
-    # options.add_argument("--headless")
-    options.add_argument(
-        'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-        'Chrome/96.0.4664.45 Safari/537.36')
-    options.add_argument("window-size=1024,768")
-    options.add_argument("lang=en-GB")
-    options.add_argument('--ignore-certificate-errors')
-    options.add_argument('--allow-running-insecure-content')
-    options.add_argument("--disable-extensions")
-    options.add_argument("--proxy-server='direct://'")
-    options.add_argument("--proxy-bypass-list=*")
-    # options.add_argument("--start-maximized")
-    options.add_argument('--disable-gpu')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--no-sandbox')
-    driver = webdriver.Chrome(options=options)
-    return driver
-
-
 def login_via_tw_auto():
     tw = twAuto.twAuto(
         username=TWITTER_USERNAME,
-        email=TWITTER_EMAIL_OR_PHONE,
+        email=TWITTER_EMAIL,
         password=TWITTER_PASSWORD,
         chromeDriverMode="auto",
         pathType="xPath",
@@ -93,15 +63,6 @@ def wait_until_find_element(driver, selector, param):
             continue
 
 
-def wait_until_find_element_login(driver, selector, param):
-    while True:
-        try:
-            driver.find_element(selector, param)
-            break
-        except Exception as e:
-            continue
-
-
 def scroll_down_page(driver, last_position, num_seconds_to_load=0.5, scroll_attempt=0, max_attempts=5):
     end_of_scroll_region = False
     html = driver.find_element(By.TAG_NAME, 'html')
@@ -117,27 +78,6 @@ def scroll_down_page(driver, last_position, num_seconds_to_load=0.5, scroll_atte
             scroll_down_page(last_position, curr_position, scroll_attempt + 1)
     last_position = curr_position
     return last_position, end_of_scroll_region
-
-
-def handle_login(driver):
-    try:
-        logging.info('Attempt to login...')
-        driver.get('https://twitter.com/i/flow/login')
-        wait_until_find_element(driver, By.XPATH, '//input[@autocomplete="username"]')
-        driver.find_element(By.XPATH, '//input[@autocomplete="username"]').send_keys(TWITTER_USERNAME)
-        driver.find_element(By.XPATH,
-                            '//*[@id="layers"]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[6]').click()
-        time.sleep(2)
-        wait_until_find_element(driver, By.XPATH, '//input[@autocomplete="current-password"]')
-        driver.find_element(By.XPATH, '//input[@autocomplete="current-password"]').send_keys(TWITTER_PASSWORD)
-        driver.find_element(By.XPATH,
-                            '//*[@id="layers"]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div[1]').click()
-        while 'home' not in driver.current_url:
-            continue
-        return True
-    except Exception as exx:
-        print(exx)
-        return False
 
 
 def collect_all_tweets_from_current_view(driver, lookback_limit=25):
@@ -274,12 +214,7 @@ def check_duplicate(rows: list, row: list) -> bool:
     return False
 
 
-def scanner(f_name, keywords):
-    # driver = config_driver()
-    # while True:
-    #     if handle_login(driver) is True:
-    #         break
-    #     logging.error('login failed, retrying...')
+def scrapper(f_name, keywords):
     driver = login_via_tw_auto()
     parent = driver.window_handles[0]
     driver.execute_script("window.open('');")
@@ -290,9 +225,9 @@ def scanner(f_name, keywords):
 
     counter = 0
     for keyword in keywords:
-        until_date = parser.parse('2022-01-02').date()
-        since_date = parser.parse('2022-01-01').date()
-        while str(since_date) != '2023-01-01':
+        since_date = parser.parse(START_DATE).date()
+        until_date = since_date + datetime.timedelta(days=1)
+        while str(since_date) != END_DATE:
             added_rows = []
             search = f'https://twitter.com/search?q={keyword}%20until%3A{until_date}%20since%3A{since_date}&src=typed_query'
             driver.get(search)
@@ -322,5 +257,5 @@ if __name__ == '__main__':
     logging.info('Script start running ...')
     file_name = f'data_{random.randint(1, 9999)}'
     create_csv(file_name)
-    scanner(file_name, KEYWORDS)
+    scrapper(file_name, KEYWORDS)
     logging.info(f'Script successfully executed & saved data at `{file_name}.csv`')

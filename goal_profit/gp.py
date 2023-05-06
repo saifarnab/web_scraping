@@ -1,6 +1,7 @@
+import csv
 import logging
-import subprocess
 import pathlib
+import subprocess
 import time
 from datetime import date
 
@@ -22,7 +23,8 @@ logging.basicConfig(
 
 def config_driver(maximize_window: bool) -> webdriver.Chrome:
     chrome_options = Options()
-    chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('--headless')
+    chrome_options.add_argument("--disable-javascript")
     driver = webdriver.Chrome(options=chrome_options)
     if maximize_window is True:
         driver.maximize_window()
@@ -54,7 +56,13 @@ def ms_access_insert(game_date, game, home, ht_home, ht_away, ht_draw, home_on, 
     conn.close()
 
 
-def scanner():
+def write_csv(row: list):
+    with open(f'data.csv', 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(row)
+
+
+def scrapper():
     # define 'driver' variable
     driver = config_driver(True)
     driver.get('https://live.goalprofits.com/')
@@ -77,6 +85,8 @@ def scanner():
             # get to the live game section
             driver.get('https://live.goalprofits.com/')
             live_games_button = driver.find_element(By.XPATH, '//a[@href="#live"]')
+            live_games_button.click()
+            time.sleep(1)
             live_games_button.click()
             time.sleep(1)
             live_games_button.click()
@@ -106,9 +116,9 @@ def scanner():
                         game_time = 'N/A'
 
                     # if game time is not HT then return
-                    if game_time != 'HT':
-                        tr_ind += 2
-                        continue
+                    # if game_time != 'HT':
+                    #     tr_ind += 2
+                    #     continue
 
                     # extract required data from 1st tr
 
@@ -123,7 +133,8 @@ def scanner():
                         ht_score = 'N/A'
 
                     try:
-                        ht_home = td_elements[21].text.replace('\n', '').split('%')[0].split(' ')[1].strip()
+                        ht_home = td_elements[21].text.replace('\n', '').split('%')[0].split(' ')[1].strip().replace(
+                            'X:', '')
                         logging.info(f'ht_home --> {ht_home}')
                     except Exception as exx:
                         ht_home = 'N/A'
@@ -133,12 +144,16 @@ def scanner():
                         logging.info(f'ht_away --> {ht_away}')
                     except Exception as exx:
                         ht_away = 'N/A'
+                        print(exx)
+                        exit()
 
                     try:
                         ht_draw = td_elements[21].text.replace('\n', '').split('%')[1].split(' ')[1].strip()
                         logging.info(f'ht_draw --> {ht_draw}')
                     except Exception as exx:
                         ht_draw = 'N/A'
+                        print(exx)
+                        exit()
 
                     try:
                         home_on = td_elements[4].text
@@ -191,9 +206,9 @@ def scanner():
                     logging.info(f'game --> {game}')
 
                     # return if data already avalaible in accdb
-                    if ms_access_exist(current_date, game) is True:
-                        logging.info('data already avalaible in accdb')
-                        continue
+                    # if ms_access_exist(current_date, game) is True:
+                    #     logging.info('data already avalaible in accdb')
+                    #     continue
 
                     # extract data from i button which will open a modal
                     td_elements[2].find_element(By.XPATH, './/a[2]').click()
@@ -219,21 +234,24 @@ def scanner():
                         except Exception as e:
                             continue
 
-                    time.sleep(1)
+                    print(game)
+                    write_csv([current_date, game, home, ht_home, ht_away, ht_draw, home_on,
+                                     home_off, home_da, away_on, away_off, away_da, ht_score])
+                    time.sleep(10000)
 
                     # insert data to accdb
-                    ms_access_insert(current_date, game, home, ht_home, ht_away, ht_draw, home_on,
-                                     home_off, home_da, away_on, away_off, away_da, ht_score)
-                    logging.info('stored in access db')
+                    # ms_access_insert(current_date, game, home, ht_home, ht_away, ht_draw, home_on,
+                    #                  home_off, home_da, away_on, away_off, away_da, ht_score)
+                    # logging.info('stored in access db')
 
                     tr_ind += 2
                     logging.info(f'--> <{game}> data is fetched and stored to accdb!')
 
         except Exception as ex:
+            print(ex)
             continue
 
 
 if __name__ == '__main__':
     logging.info('Script start running ...')
-    data = scanner()
-
+    scrapper()

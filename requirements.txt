@@ -53,3 +53,7 @@ uritemplate~=4.1.1
 wsproto~=1.2.0
 pysat~=3.0.6
 pyodbc~=4.0.39
+chardet~=3.0.4
+twAuto~=0.3.4
+googletrans~=3.0.0
+gspread~=5.8.0

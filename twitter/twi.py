@@ -66,6 +66,15 @@ def wait_until_find_element(driver, selector, param):
             continue
 
 
+def wait_until_find_element_login(driver, selector, param):
+    while True:
+        try:
+            driver.find_element(selector, param)
+            break
+        except Exception as e:
+            continue
+
+
 def handle_login():
     driver.get('https://twitter.com/i/flow/login')
     wait_until_find_element(driver, By.XPATH, '//input[@autocomplete="username"]')
@@ -78,8 +87,8 @@ def handle_login():
     log_in = driver.find_elements(By.XPATH,
                                   '//div[@class="css-901oao r-1awozwy r-6koalj r-18u37iz r-16y2uox r-37j5jr r-a023e6 r-b88u0q r-1777fci r-rjixqe r-bcqeeo r-q4m81j r-qvutc0"]')
     log_in[-1].click()
-    # wait_until_find_element(driver, By.XPATH, '//input[@aria-activedescendant="typeaheadFocus-0.6761253994815084"]')
-    time.sleep(3)
+    wait_until_find_element_login(driver, By.XPATH, '//input[@aria-activedescendant="typeaheadFocus-0.6761253994815084"]')
+    # time.sleep(3)
     return True
 
 

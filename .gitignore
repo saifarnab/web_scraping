@@ -276,6 +276,7 @@ tags
 /ws
 /outbound/client_secrets.json
 /outbound/Credentials.json
+/yahoo_stock/yahoo-key.json
 
 #**/migrations/**
 #!**/migrations

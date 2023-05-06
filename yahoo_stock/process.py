@@ -74,7 +74,7 @@ def processor(idx):
     for key, value in df.iterrows():
         temp = [value['Date'], value['Symbol'], value['CompanyName'], value['ClosingPrice'], value['FiftyDayAverage'],
                 value['TwentyDayAverage'], value['FiftyDayAverageLast'], value['TwentyDayAverageLast'],
-                # value['TwoHundredDayAverage'], value['TwoHundredTotalLastAverage'],
+                value['TwoHundredDayAverage'], value['TwoHundredTotalLastAverage'],
                 f'=IF(AND((E{idx}-F{idx})>0,(E{idx}-F{idx})<(G{idx}-H{idx})),TRUE,FALSE)']
 
         market_data.insert_row(temp, idx, value_input_option='USER_ENTERED')
