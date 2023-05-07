@@ -23,6 +23,29 @@ logging.basicConfig(
 
 
 def create_tables(conn):
+    _leads_table = """ CREATE TABLE IF NOT EXISTS leads (
+                                                    id integer PRIMARY KEY,
+                                                    lead_id text NOT NULL,
+                                                    date_time text NOT NULL
+                                                ); """
+    _contacts_table = """ CREATE TABLE IF NOT EXISTS contacts (
+                                                        id integer PRIMARY KEY,
+                                                        lead_ref_id text NOT NULL,
+                                                        first_name text,
+                                                        last_name text,
+                                                        company_name text,
+                                                        url text,
+                                                        individual_li_url text,
+                                                        company_li_url text,
+                                                        email text,
+                                                        phone text,
+                                                        industry text,
+                                                        title text,
+                                                        seniority text,
+                                                        num_employees text,
+                                                        first_email_send boolean,
+                                                        date_time text NOT NULL
+                                                    ); """
     _email_table = """ CREATE TABLE IF NOT EXISTS emails (
                                                 id integer PRIMARY KEY,
                                                 sender_email text NOT NULL,
@@ -40,6 +63,8 @@ def create_tables(conn):
                                                 ); """
     try:
         c = conn.cursor()
+        c.execute(_contacts_table)
+        c.execute(_leads_table)
         c.execute(_email_table)
         c.execute(_connected_accounts_table)
     except sqliteError as ex:
@@ -155,9 +180,20 @@ def send_email_via_google(sender_email, sender_pass, receiver_email, receiver_na
         return False
 
 
-def get_contacts(api):
-    res_data = api.get(f'/contact/')
-    return res_data['data']
+def get_contacts(conn):
+    contacts = []
+
+    lead_cursor = conn.execute("SELECT * FROM leads")
+    leads = lead_cursor.fetchall()
+
+    for lead in leads:
+        contact_cursor = conn.execute("SELECT * FROM contacts WHERE lead_ref_id=?", (lead[0],))
+        contact = contact_cursor.fetchone()
+        contact_first_name = contact[2]
+        contact_email = contact[8]
+        contacts.append([lead[1], contact_first_name, contact_email])
+
+    return contacts
 
 
 def get_connected_accounts(conn):
@@ -209,6 +245,14 @@ def check_connected_account_availability(data: dict, connect_account_email: str)
         return False
 
 
+def get_contact_id_from_lead_api(api, lead_id) -> str:
+    try:
+        res_data = api.get(f'/lead/{lead_id}')
+        return res_data['contacts'][0]['id']
+    except Exception as e:
+        return ''
+
+
 def run():
     logging.info('Script starts running ...')
 
@@ -222,7 +266,7 @@ def run():
     api = Client(CLOSE_API_KEY)
 
     # fetch all the available contacts from close
-    contacts = get_contacts(api)
+    contacts = get_contacts(conn)
 
     # fetch all the available connected accounts from db
     connected_accounts = get_connected_accounts(conn)
@@ -243,14 +287,14 @@ def run():
     while contacts_pointer < total_contacts:
 
         # take a single contact to sent email
-        while check_email_already_send(conn, contacts[contacts_pointer]['emails'][0]['email']) is True:
+        while check_email_already_send(conn, contacts[contacts_pointer][2]) is True:
             contacts_pointer += 1
             logging.info(
-                f"{contacts[contacts_pointer]['emails'][0]['email']} already receive an email, ignoring...")
+                f"{contacts[contacts_pointer][2]} already receive an email, ignoring...")
 
         # check contact is available in DB
-        while check_lead_availability(conn, contacts[contacts_pointer]['lead_id']) is False:
-            logging.info(f"`{contacts[contacts_pointer]['lead_id']}` this lead id is not available in DB, ignoring...")
+        while check_lead_availability(conn, contacts[contacts_pointer][0]) is False:
+            logging.info(f"`{contacts[contacts_pointer][0]}` this lead id is not available in DB, ignoring...")
             time.sleep(2)
             contacts_pointer += 1
 
@@ -275,10 +319,13 @@ def run():
                     continue
 
                 # extract required data
-                receiver_email = contact['emails'][0]['email']
-                receiver_name = contact['name']
-                contact_id = contact['id']
-                lead_id = contact['lead_id']
+                receiver_email = contact[2]
+                receiver_name = contact[1]
+                lead_id = contact[0]
+                contact_id = get_contact_id_from_lead_api(api, lead_id)
+                if contact_id == '':
+                    logging.info(f'Failed to get contact id for `{lead_id}` this lead id, ignoring...')
+                    continue
                 sender_name = connected_account[1]
                 sender_email = connected_account[2]
                 sender_pass = connected_account[3]  # required if email sent configured via Google
@@ -344,6 +391,3 @@ def run():
 
     logging.info(f'total {success_counter} email have sent via this script.')
     logging.info('Script executed successfully!')
-
-
-run()

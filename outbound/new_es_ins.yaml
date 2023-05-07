@@ -1,0 +1,16 @@
+# change this variables
+
+CLOSE_API_KEY = ''  # your close api secret key
+USER_ID = ''
+SQLITE_DB_PATH = ''  # left empty for current directory
+MAX_LIMIT_PER_DAY = 30  # maximum amount of email a sender can sent per day
+WAITING_TIME = 3600  # wait time for next email sending in seconds
+
+# process flow 
+
+1. system will fetch all the contacts
+2. then it will fetch all the available connected accounts
+3. send mail from each connected account 
+4. wait until `WAITING_TIME` seconds 
+5. if a sender already occupied `MAX_LIMIT_PER_DAY`, ignore that sender 
+3. will create a table in previous sqlite.db named as emails
