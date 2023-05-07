@@ -80,7 +80,7 @@ def input_params():
 
 def csv_file_init(file_name: str):
     try:
-        with open(file_name, 'x') as output_file:
+        with open(file_name, 'x', newline='') as output_file:
             writer = csv.writer(output_file)
             writer.writerow(
                 ["Category", "Property Type", "Address", "Bedrooms", "Bathrooms", "Price", "Link", "Telephone",
