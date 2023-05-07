@@ -1,8 +1,10 @@
-import time
-
+import csv
+import requests
 from bs4 import BeautifulSoup
 from lxml import etree
-import requests
+
+# define api key for scrapper
+API_KEY = 'c333d3ec36f9c6e6d5c7969de4bb1695'
 
 HEADERS = ({'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
                           'Chrome/44.0.2403.157 Safari/537.36', 'Accept-Language': 'en-US, en;q=0.5'})
@@ -58,18 +60,64 @@ def input_params():
         print('invalid input for bathrooms. input must be integer & greater then or equal 0')
         exit()
 
-    return zip_code, bedrooms, bathrooms, min_price, max_price, category
+    try:
+        limit = int(input('How many property you want extract: '))
+        if limit < 1:
+            raise Exception
+    except Exception as e:
+        print('invalid input for limit. input must be integer & greater then or equal 0')
+        exit()
+
+    return zip_code, bedrooms, bathrooms, min_price, max_price, category, limit
+
+
+def csv_file_init():
+    try:
+        with open("data.csv", 'x') as output_file:
+            writer = csv.writer(output_file)
+            writer.writerow(
+                ["Category", "Property Type", "Address", "Bedrooms", "Bathrooms", "Price", "Link", "Telephone",
+                 "Managed", "Pool", "Furnished"])
+            print('File created successfully.')
+    except FileExistsError:
+        pass
+
+
+def write_csv(new_row: list) -> bool:
+    flag = True
+    with open("data.csv", "r") as f:
+        reader = csv.reader(f, delimiter=",")
+        for i, line in enumerate(reader):
+            if new_row[6].strip() == line[6].strip() and new_row[0].strip() == line[0].strip():
+                flag = False
+                break
+
+    if flag is False:
+        print('This property already available ignoring..')
+        return False
+
+    with open('data.csv', 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(new_row)
+
+    return True
+
+
+def close_program(msg: str):
+    print(msg)
+    print('Script successfully executed!')
+    exit()
 
 
 def scrapper():
     # take parameters as input
     # zip_code, bedrooms, bathrooms, min_price, max_price, category = input_params()
-    zip_code, bedrooms, bathrooms, min_price, max_price, category = 33312, 2, 2, 0, 150000, 1
+    zip_code, bedrooms, bathrooms, min_price, max_price, category, limit = 33312, 2, 2, 0, 150000, 1, 500
 
     # based on category decide which pages need to scrap
     if category == 1:  # Buy
         page = 1
-
+        property_counter = 0
         while True:
             # generate url
             url = f'https://www.realtor.com/realestateandhomes-search/{zip_code}/beds-{bedrooms}/baths-{bathrooms}/price-{min_price}-{max_price}/sby-6/pg-{page}'
@@ -80,7 +128,7 @@ def scrapper():
             # take all available cards
             property_cards = dom.xpath('//div[@data-testid="property-card"]')
             if len(property_cards) < 1:
-                break
+                close_program('All the available property have been extracted based on input params, exiting program..')
 
             # iterate each card to extract data
             for property_card in property_cards:
@@ -97,6 +145,15 @@ def scrapper():
                 details_soup = BeautifulSoup(details_page.content, "html.parser")
                 details_dom = etree.HTML(str(details_soup))
 
+                # property type
+                try:
+                    property_type = details_dom.xpath(
+                        '//div[@class="Text__StyledText-rui__sc-19ei9fn-0 eXfzyb TypeBody__StyledBody-rui__sc-163o7f1-0 gVxVge"]')[
+                        0].text
+                except Exception as e:
+                    property_type = ''
+
+                # pool & furnished feature
                 pool, furnished = 'N', 'N'
                 if 'Pool and Spa' in str(details_soup):
                     pool = 'Y'
@@ -122,6 +179,7 @@ def scrapper():
                 except Exception as e:
                     address = ''
 
+                # price, bed & bath
                 price = property_card.xpath('..//span[@data-label="pc-price"]')[0].text
                 if price is not None:
                     price = str(price).strip()
@@ -132,13 +190,118 @@ def scrapper():
                 if bed is not None:
                     bath = str(bath).strip()
 
-                print(page, details_url, address, price, bed, bath, pool, furnished, telephone)
+                # write to the csv if not exist
+                if write_csv(['Buy', property_type, address, bed, bath, price, details_url, telephone, '', pool, furnished]) is True:
+                    property_counter += 1
+                    print(f'--> {property_counter}. New Property added.')
+
+                # exit the program if limit reached
+                if property_counter > limit:
+                    close_program('Reached the property extraction limit, existing the program')
 
             page += 1
 
     else:  # Rent
-        pass
+        page = 1
+        property_counter = 0
+
+        # generate url
+        url = f'https://www.realtor.com/apartments/{zip_code}/beds-{bedrooms}/baths-{bathrooms}/price-{min_price}-{max_price}/sby-6/pg-{page}'
+        webpage = requests.get(url, headers=HEADERS)
+        soup = BeautifulSoup(webpage.content, "html.parser")
+        dom = etree.HTML(str(soup))
+
+        # take all available cards
+        property_cards = dom.xpath('//div[@data-testid="card-content"]')
+        if len(property_cards) < 1:
+            close_program('All the available property have been extracted based on input params, exiting program..')
+
+        # iterate each card to extract data
+        for property_card in property_cards:
+            details_url = property_card.xpath('..//a[@data-testid="card-link"]/@href')[0]
+            if details_url is not None:
+                details_url = str(details_url).strip()
+
+            # dig down property page
+            details_url = 'https://www.realtor.com' + details_url
+            details_page = requests.get(details_url, headers=HEADERS)
+            details_soup = BeautifulSoup(details_page.content, "html.parser")
+            details_dom = etree.HTML(str(details_soup))
+
+            # address
+            try:
+                address = details_dom.xpath('//div[@data-testid="locationInformationContainer"]//div//h1')[0].text
+            except Exception as e:
+                address = ''
+
+            # property type
+            try:
+                property_type = details_dom.xpath(
+                    '//div[@class="Text__StyledText-rui__sc-19ei9fn-0 wdTNy TypeBody__StyledBody-rui__sc-163o7f1-0 hHKKwr"]')[
+                    0].text
+            except Exception as e:
+                property_type = ''
+
+            # pool & furnished feature
+            pool, furnished = 'N', 'N'
+            if 'Pool' in str(details_soup) or 'Pool and Spa' in str(details_soup):
+                pool = 'Y'
+            if 'UnFurnished' in str(details_soup):
+                furnished = 'N'
+            elif 'Furnished' in str(details_soup):
+                furnished = 'Y'
+
+            telephone = ''
+            try:
+                if 'tel:' in str(details_soup):
+                    telephone = details_soup.find('a', href=lambda href: href and href.startswith('tel:')).text
+                else:
+                    for i in range(5):
+                        page_url = f'https://api.scraperapi.com/?api_key={API_KEY}&url={details_url}'
+                        response = requests.get(page_url)
+                        ds = BeautifulSoup(response.content, 'html.parser')
+                        if 'tel:' in str(ds):
+                            telephone = ds.find('a', href=lambda href: href and href.startswith('tel:')).text
+                            break
+            except Exception as e:
+                telephone = ''
+
+            # price, bed & bath
+            try:
+                price = property_card.xpath('..//div[@data-testid="card-price"]')[0].text
+                if price is not None:
+                    price = str(price).strip()
+            except Exception as e:
+                price = ''
+
+            try:
+                bed = property_card.xpath('..//li[@data-testid="property-meta-beds"]//span')[0].text
+                if bed is not None:
+                    bed = str(bed).strip()
+            except Exception as e:
+                bed = ''
+
+            try:
+                bath = property_card.xpath('..//li[@data-testid="property-meta-baths"]//span')[0].text
+                if bath is not None:
+                    bath = str(bath).strip()
+            except Exception as e:
+                bath = ''
+
+            # write to the csv if not exist
+            if write_csv(['Rent', property_type, address, bed, bath, price, details_url, telephone, '', pool,
+                          furnished]) is True:
+                property_counter += 1
+                print(f'--> {property_counter}. New Property added.')
+
+            # exit the program if limit reached
+            if property_counter > limit:
+                close_program('Reached the property extraction limit, existing the program')
+
+        page += 1
 
 
 if __name__ == "__main__":
+    print('Script starts ...')
+    csv_file_init()
     scrapper()

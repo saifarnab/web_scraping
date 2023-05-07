@@ -27,6 +27,7 @@ for cell in ws['C'][1:]:
 
 # Generate the API URL for scraping
 api_url = f'https://api.scraperapi.com/?api_key={api_key}&url={url}'
+page_url = f'https://api.scraperapi.com/?api_key=c333d3ec36f9c6e6d5c7969de4bb1695&url={url}'
 
 # Make a GET request to the API
 response = requests.get(api_url)
