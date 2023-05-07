@@ -95,7 +95,7 @@ def write_csv(file_name: str, new_row: list) -> bool:
     with open(file_name, "r") as f:
         reader = csv.reader(f, delimiter=",")
         for i, line in enumerate(reader):
-            if new_row[6].strip() == line[6].strip() and new_row[0].strip() == line[0].strip():
+            if line and new_row[6].strip() == line[6].strip() and new_row[0].strip() == line[0].strip():
                 flag = False
                 break
 
@@ -118,6 +118,7 @@ def close_program(msg: str):
 
 def scrapper():
     # take parameters as input
+    print('---------------------------******----------------------')
     zip_code, bedrooms, bathrooms, min_price, max_price, category, limit = input_params()
     # zip_code, bedrooms, bathrooms, min_price, max_price, category, limit = 33312, 2, 2, 0, 150000, 1, 5
     print('Script starts ...')
@@ -137,7 +138,7 @@ def scrapper():
             # take all available cards
             property_cards = dom.xpath('//div[@data-testid="property-card"]')
             if len(property_cards) < 1:
-                close_program('All the available property have been extracted based on input params, exiting program..')
+                close_program('No data avaialble, exiting program..')
 
             # iterate each card to extract data
             for property_card in property_cards:
@@ -189,15 +190,18 @@ def scrapper():
                     address = ''
 
                 # price, bed & bath
-                price = property_card.xpath('..//span[@data-label="pc-price"]')[0].text
-                if price is not None:
-                    price = str(price).strip()
-                bed = property_card.xpath('..//li[@data-label="pc-meta-beds"]//span[1]')[0].text
-                if bed is not None:
-                    bed = str(bed).strip()
-                bath = property_card.xpath('..//li[@data-label="pc-meta-baths"]//span[1]')[0].text
-                if bed is not None:
-                    bath = str(bath).strip()
+                try:
+                    price = property_card.xpath('..//span[@data-label="pc-price"]')[0].text.strip()
+                except Exception as e:
+                    price = ''
+                try:
+                    bed = property_card.xpath('..//li[@data-label="pc-meta-beds"]//span[1]')[0].text.strip()
+                except Exception as e:
+                    bed = ''
+                try:
+                    bath = property_card.xpath('..//li[@data-label="pc-meta-baths"]//span[1]')[0].text.strip()
+                except Exception as e:
+                    bath = ''
 
                 # write to the csv if not exist
                 if write_csv(file_name,
