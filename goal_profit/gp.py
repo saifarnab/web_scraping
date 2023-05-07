@@ -1,7 +1,7 @@
-import csv
 import logging
-import pathlib
+import random
 import subprocess
+import pathlib
 import time
 from datetime import date
 
@@ -9,6 +9,7 @@ import pyodbc
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+
 
 # install dependencies
 subprocess.check_call(['pip', 'install', 'selenium'])
@@ -23,8 +24,7 @@ logging.basicConfig(
 
 def config_driver(maximize_window: bool) -> webdriver.Chrome:
     chrome_options = Options()
-    # chrome_options.add_argument('--headless')
-    chrome_options.add_argument("--disable-javascript")
+    chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(options=chrome_options)
     if maximize_window is True:
         driver.maximize_window()
@@ -32,23 +32,20 @@ def config_driver(maximize_window: bool) -> webdriver.Chrome:
 
 
 def ms_access_exist(game_date, game) -> bool:
-    conn = pyodbc.connect(
-        r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=' + f'{pathlib.Path(__file__).parent.resolve()}\gamedb.accdb;')
+    conn = pyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=' + f'{pathlib.Path(__file__).parent.resolve()}\gamedb.accdb;')
     cursor = conn.cursor()
     cursor.execute('select * from data')
     for row in cursor.fetchall():
         if row[1] == game_date and row[2] == game:
             conn.close()
             return True
-
+    
     conn.close()
     return False
 
 
-def ms_access_insert(game_date, game, home, ht_home, ht_away, ht_draw, home_on, home_off, home_da, away_on, away_off,
-                     away_da, ht_score):
-    conn = pyodbc.connect(
-        r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:\Users\User\Documents\goal\gamedb.accdb;')
+def ms_access_insert(game_date, game, home, ht_home, ht_away, ht_draw, home_on, home_off, home_da, away_on, away_off, away_da, ht_score):
+    conn = pyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:\Users\User\Documents\goal\gamedb.accdb;')
     cursor = conn.cursor()
     cursor.execute(f"INSERT INTO data (GameDate, Game, Home, HTHome, HTAway, HTDraw, HomeOn, HomeOff, HomeDA, AwayOn, AwayOff, AwayDA, HTScore) \
                     VALUES ('{game_date}', '{game}', '{home}', '{ht_home}', '{ht_away}', '{ht_draw}', '{home_on}', '{home_off}', '{home_da}', '{away_on}', '{away_off}', '{away_da}', '{ht_score}')")
@@ -56,13 +53,7 @@ def ms_access_insert(game_date, game, home, ht_home, ht_away, ht_draw, home_on, 
     conn.close()
 
 
-def write_csv(row: list):
-    with open(f'data.csv', 'a', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(row)
-
-
-def scrapper():
+def scanner():
     # define 'driver' variable
     driver = config_driver(True)
     driver.get('https://live.goalprofits.com/')
@@ -77,7 +68,8 @@ def scrapper():
     driver.find_element(By.XPATH, '//input[@id="wlm_form_field_wp-submit"]').click()
     time.sleep(2)
 
-    # iterate to extract game data
+
+    # iterate to extract game data 
     while True:
 
         try:
@@ -92,15 +84,15 @@ def scrapper():
             live_games_button.click()
             time.sleep(1)
 
-            # find available live games
+            # find available live games 
             table_elements = driver.find_elements(By.XPATH, '//div[@id="html2"]//table')
-            # wait till 60s if no live games are available
+            # wait till 60s if no live games are available 
             if len(table_elements) == 0:
+                logging.info('--> no live games are playing, waiting 60s for next try.')                
                 time.sleep(60)
-                logging.info('--> no live games are playing, waiting 60s for next try.')
                 continue
 
-            # iterate each tr
+            # iterate each tr     
             for table_ind in range(len(table_elements)):
                 tr_elements = table_elements[table_ind].find_elements(By.XPATH, './/tbody//tr')
                 tr_ind = 0
@@ -115,17 +107,18 @@ def scrapper():
                     except Exception as exx:
                         game_time = 'N/A'
 
+
                     # if game time is not HT then return
-                    # if game_time != 'HT':
-                    #     tr_ind += 2
-                    #     continue
-
+                    if game_time != 'HT':
+                        tr_ind += 2
+                        continue
+                    
                     # extract required data from 1st tr
-
+                    
                     team1 = td_elements[1].text.index('(')
                     team1 = td_elements[1].text[:team1].strip()
                     logging.info(f'team1 --> {team1}')
-
+                    
                     try:
                         ht_score = td_elements[3].text.split('\n')[0]
                         logging.info(f'ht_score --> {ht_score}')
@@ -133,27 +126,24 @@ def scrapper():
                         ht_score = 'N/A'
 
                     try:
-                        ht_home = td_elements[21].text.replace('\n', '').split('%')[0].split(' ')[1].strip().replace(
-                            'X:', '')
+                        ht_home = td_elements[21].text.replace('\n', '').split('%')[0].split(' ')[1].strip().replace('X:', '')
                         logging.info(f'ht_home --> {ht_home}')
                     except Exception as exx:
                         ht_home = 'N/A'
+                        break
 
                     try:
                         ht_away = td_elements[21].text.replace('\n', '').split('%')[2].split(' ')[1].strip()
                         logging.info(f'ht_away --> {ht_away}')
                     except Exception as exx:
                         ht_away = 'N/A'
-                        print(exx)
-                        exit()
+                        
 
                     try:
                         ht_draw = td_elements[21].text.replace('\n', '').split('%')[1].split(' ')[1].strip()
                         logging.info(f'ht_draw --> {ht_draw}')
                     except Exception as exx:
                         ht_draw = 'N/A'
-                        print(exx)
-                        exit()
 
                     try:
                         home_on = td_elements[4].text
@@ -172,6 +162,7 @@ def scrapper():
                         logging.info(f'home_da --> {home_da}')
                     except Exception as exx:
                         home_da = 'N/A'
+                    
 
                     logging.info('extracted required data from 1st tr')
 
@@ -192,24 +183,25 @@ def scrapper():
                         away_off = td_elements2[2].text
                         logging.info(f'away_off --> {away_off}')
                     except Exception as exx:
-                        away_off = 'N/A'
+                        away_on = 'N/A'
+
 
                     try:
                         away_da = td_elements2[7].text
                         logging.info(f'away_da --> {away_da}')
                     except Exception as exx:
                         away_da = 'N/A'
-
+                    
                     logging.info('extracted required data from 2nd tr')
 
                     game = team1 + ' v ' + team2
                     logging.info(f'game --> {game}')
 
                     # return if data already avalaible in accdb
-                    # if ms_access_exist(current_date, game) is True:
-                    #     logging.info('data already avalaible in accdb')
-                    #     continue
-
+                    if ms_access_exist(current_date, game) is True:
+                        logging.info('data already avalaible in accdb')
+                        continue
+                    
                     # extract data from i button which will open a modal
                     td_elements[2].find_element(By.XPATH, './/a[2]').click()
                     logging.info(f'i button 1st click done')
@@ -219,13 +211,13 @@ def scrapper():
                     time.sleep(1)
                     try:
                         home = driver.find_elements(By.XPATH,
-                                                    '//table[@class="table borderless table-striped score-table"]//span[@class="d-block font13 text-nowrap"]')[
-                            0].text.split(':')[1].strip()
+                                                '//table[@class="table borderless table-striped score-table"]//span[@class="d-block font13 text-nowrap"]')[
+                        0].text.split(':')[1].strip()
                         logging.info(f'home --> {home}')
                     except Exception as exx:
-                        home = 'N/A'
+                        home = 'N/A'                    
 
-                        # close the modal opened by i button
+                    # close the modal opened by i button
                     close_buttons = driver.find_elements(By.XPATH, '//button[@class="close"]')
                     for close_button in close_buttons:
                         try:
@@ -234,24 +226,19 @@ def scrapper():
                         except Exception as e:
                             continue
 
-                    print(game)
-                    write_csv([current_date, game, home, ht_home, ht_away, ht_draw, home_on,
-                                     home_off, home_da, away_on, away_off, away_da, ht_score])
-                    time.sleep(10000)
+                    time.sleep(1)
 
                     # insert data to accdb
-                    # ms_access_insert(current_date, game, home, ht_home, ht_away, ht_draw, home_on,
-                    #                  home_off, home_da, away_on, away_off, away_da, ht_score)
-                    # logging.info('stored in access db')
+                    ms_access_insert(current_date, game, home, ht_home, ht_away, ht_draw, home_on,
+                                      home_off, home_da, away_on, away_off, away_da, ht_score)
+                    logging.info('storeed in access db')
 
                     tr_ind += 2
                     logging.info(f'--> <{game}> data is fetched and stored to accdb!')
 
         except Exception as ex:
-            print(ex)
-            continue
-
+           continue
 
 if __name__ == '__main__':
     logging.info('Script start running ...')
-    scrapper()
+    data = scanner()

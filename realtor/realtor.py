@@ -1,4 +1,6 @@
 import csv
+import subprocess
+
 import requests
 from bs4 import BeautifulSoup
 from lxml import etree
@@ -9,11 +11,16 @@ API_KEY = 'c333d3ec36f9c6e6d5c7969de4bb1695'
 HEADERS = ({'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
                           'Chrome/44.0.2403.157 Safari/537.36', 'Accept-Language': 'en-US, en;q=0.5'})
 
+# install dependencies
+subprocess.check_call(['pip', 'install', 'bs4'])
+subprocess.check_call(['pip', 'install', 'requests'])
+subprocess.check_call(['pip', 'install', 'lxml'])
+
 
 def input_params():
     try:
-        zip_code = int(input('Enter zip code: '))
-        if zip_code < 1:
+        zip_code = str(input('Enter zip code: '))
+        if zip_code == '':
             raise Exception
     except Exception as e:
         print('invalid input for zip code. input must be integer & greater then 0')
@@ -57,7 +64,7 @@ def input_params():
         if category not in [1, 2]:
             raise Exception
     except Exception as e:
-        print('invalid input for bathrooms. input must be integer & greater then or equal 0')
+        print('invalid input for bathrooms. input must be either 1 or 2')
         exit()
 
     try:
@@ -65,15 +72,15 @@ def input_params():
         if limit < 1:
             raise Exception
     except Exception as e:
-        print('invalid input for limit. input must be integer & greater then or equal 0')
+        print('invalid input for limit. input must be integer & greater then or equal 1')
         exit()
 
     return zip_code, bedrooms, bathrooms, min_price, max_price, category, limit
 
 
-def csv_file_init():
+def csv_file_init(file_name: str):
     try:
-        with open("data.csv", 'x') as output_file:
+        with open(file_name, 'x') as output_file:
             writer = csv.writer(output_file)
             writer.writerow(
                 ["Category", "Property Type", "Address", "Bedrooms", "Bathrooms", "Price", "Link", "Telephone",
@@ -83,9 +90,9 @@ def csv_file_init():
         pass
 
 
-def write_csv(new_row: list) -> bool:
+def write_csv(file_name: str, new_row: list) -> bool:
     flag = True
-    with open("data.csv", "r") as f:
+    with open(file_name, "r") as f:
         reader = csv.reader(f, delimiter=",")
         for i, line in enumerate(reader):
             if new_row[6].strip() == line[6].strip() and new_row[0].strip() == line[0].strip():
@@ -96,7 +103,7 @@ def write_csv(new_row: list) -> bool:
         print('This property already available ignoring..')
         return False
 
-    with open('data.csv', 'a', newline='') as file:
+    with open(file_name, 'a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(new_row)
 
@@ -111,11 +118,13 @@ def close_program(msg: str):
 
 def scrapper():
     # take parameters as input
-    # zip_code, bedrooms, bathrooms, min_price, max_price, category = input_params()
-    zip_code, bedrooms, bathrooms, min_price, max_price, category, limit = 33312, 2, 2, 0, 150000, 1, 500
-
+    zip_code, bedrooms, bathrooms, min_price, max_price, category, limit = input_params()
+    # zip_code, bedrooms, bathrooms, min_price, max_price, category, limit = 33312, 2, 2, 0, 150000, 1, 5
+    print('Script starts ...')
     # based on category decide which pages need to scrap
     if category == 1:  # Buy
+        file_name = 'buy_data.csv'
+        csv_file_init(file_name)
         page = 1
         property_counter = 0
         while True:
@@ -191,12 +200,14 @@ def scrapper():
                     bath = str(bath).strip()
 
                 # write to the csv if not exist
-                if write_csv(['Buy', property_type, address, bed, bath, price, details_url, telephone, '', pool, furnished]) is True:
+                if write_csv(file_name,
+                             ['Buy', property_type, address, bed, bath, price, details_url, telephone, '', pool,
+                              furnished]) is True:
                     property_counter += 1
                     print(f'--> {property_counter}. New Property added.')
 
                 # exit the program if limit reached
-                if property_counter > limit:
+                if property_counter >= limit:
                     close_program('Reached the property extraction limit, existing the program')
 
             page += 1
@@ -204,7 +215,8 @@ def scrapper():
     else:  # Rent
         page = 1
         property_counter = 0
-
+        file_name = 'rent_data.csv'
+        csv_file_init(file_name)
         # generate url
         url = f'https://www.realtor.com/apartments/{zip_code}/beds-{bedrooms}/baths-{bathrooms}/price-{min_price}-{max_price}/sby-6/pg-{page}'
         webpage = requests.get(url, headers=HEADERS)
@@ -230,7 +242,7 @@ def scrapper():
 
             # address
             try:
-                address = details_dom.xpath('//div[@data-testid="locationInformationContainer"]//div//h1')[0].text
+                address = " ".join(details_url.split('/')[-1].split('_')[:-1]).replace('-', " ").replace('_', ' ')
             except Exception as e:
                 address = ''
 
@@ -246,7 +258,7 @@ def scrapper():
             pool, furnished = 'N', 'N'
             if 'Pool' in str(details_soup) or 'Pool and Spa' in str(details_soup):
                 pool = 'Y'
-            if 'UnFurnished' in str(details_soup):
+            if 'Unfurnished' in str(details_soup):
                 furnished = 'N'
             elif 'Furnished' in str(details_soup):
                 furnished = 'Y'
@@ -256,6 +268,7 @@ def scrapper():
                 if 'tel:' in str(details_soup):
                     telephone = details_soup.find('a', href=lambda href: href and href.startswith('tel:')).text
                 else:
+                    print(f'Failed to get telephone, retrying...')
                     for i in range(5):
                         page_url = f'https://api.scraperapi.com/?api_key={API_KEY}&url={details_url}'
                         response = requests.get(page_url)
@@ -289,19 +302,17 @@ def scrapper():
                 bath = ''
 
             # write to the csv if not exist
-            if write_csv(['Rent', property_type, address, bed, bath, price, details_url, telephone, '', pool,
-                          furnished]) is True:
+            if write_csv(file_name, ['Rent', property_type, address, bed, bath, price, details_url, telephone, '', pool,
+                                     furnished]) is True:
                 property_counter += 1
                 print(f'--> {property_counter}. New Property added.')
 
             # exit the program if limit reached
-            if property_counter > limit:
+            if property_counter >= limit:
                 close_program('Reached the property extraction limit, existing the program')
 
         page += 1
 
 
 if __name__ == "__main__":
-    print('Script starts ...')
-    csv_file_init()
     scrapper()
