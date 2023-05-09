@@ -3,17 +3,30 @@ Instructions:
     1. create & activate virtual env
     2. Install the dependencies (requests, bs4, lxml)
     3. Add your scrapper Api key at <API_KEY>
-    4. Run -> python3 realtor.py
-        a. Enter your zip code (i.e: 33312)
-        b. Enter the number of bedrooms (input must be integer & greater then or equal 0)
-        c. Enter the number of bathrooms (input must be integer & greater then or equal 0)
-        d. Enter minimum price (input must be integer & greater then or equal 0)
-        e. Enter maximum price (input must be integer, greater then or equal minimum price)
-        f. Press 1 for `Buy`, Press 2 for `Rent` (input must be either 1 or 2)
-        g. How many property you want extract (input must be integer & greater then or equal 1)
+    4. define variables in the script
+        ZIP_CODE = '33312'
+        TYPE = 'single-family-home,condo'  # choices -> multi-family-home,mfd-mobile-home,farms-ranches,land,condo,townhome,single-family-home,apartments,any
+        BEDROOMS = '2'
+        BATHROOMS = '2'
+        MIN_PRICE = '0'
+        MAX_PRICE = '150000'
+        CATEGORY = 'buy'  # choices -> buy, rent
 
-    5. Program will create 'rent_data.csv' or 'buy_data.csv' based on the input params
+    5. Program will create 'rent_properties.csv' or 'buy_properties.csv' based on the input params
 
 
-Note: I still not able to figure out how to extract `managed` column data. Please give a property details link where i am able to find it.
+Feedback:
+1. Property type search option added
+2. Hyperlink enabled
+3. Script not serach on 'realtor.com' home page. Instead it generate search link based on the input params.
+    For 'buy' option it will like to search the properties from 'https://www.realtor.com/realestateandhomes-search/33312/beds-2/baths-2/type-single-family-home,condo/price-0-150000/sby-6/pg-1'
+    For 'rent' option it will like to search the properties from 'https://www.realtor.com/apartments/33312/beds-2/baths-2/type-single-family-home,condo/price-0-150000/sby-6/pg-1'
+    And it traverse every available pages and also in your terminal or console it will show in which link it currently scrapping. I extract 294 properties for the sample input params.
+    And also show when it ignore a property which is already availalbe on csv. You can forcefully close the program or keep it checking.
+4. I check the script with the provided sample input params, it only takes the search result.
+5. How could i generate zillow link for a property?
+
+
+
+
 

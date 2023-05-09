@@ -5,6 +5,15 @@ import requests
 from bs4 import BeautifulSoup
 from lxml import etree
 
+# define variables
+ZIP_CODE = '33312'
+TYPE = 'apartments,condo'  # choices -> multi-family-home,mfd-mobile-home,farms-ranches,land,condo,townhome,single-family-home,apartments,any
+BEDROOMS = '2'
+BATHROOMS = '2'
+MIN_PRICE = '500'
+MAX_PRICE = '150000'
+CATEGORY = 'rent'  # choices -> buy, rent
+
 # define api key for scrapper
 API_KEY = 'c333d3ec36f9c6e6d5c7969de4bb1695'
 
@@ -15,67 +24,6 @@ HEADERS = ({'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (K
 subprocess.check_call(['pip', 'install', 'bs4'])
 subprocess.check_call(['pip', 'install', 'requests'])
 subprocess.check_call(['pip', 'install', 'lxml'])
-
-
-def input_params():
-    try:
-        zip_code = str(input('Enter zip code: '))
-        if zip_code == '':
-            raise Exception
-    except Exception as e:
-        print('invalid input for zip code. input must be integer & greater then 0')
-        exit()
-
-    try:
-        bedrooms = int(input('Enter the number of bedrooms: '))
-        if bedrooms < 0:
-            raise Exception
-    except Exception as e:
-        print('invalid input for bedrooms. input must be integer & greater then or equal 0')
-        exit()
-
-    try:
-        bathrooms = int(input('Enter the number of bathrooms: '))
-        if bathrooms < 0:
-            raise Exception
-    except Exception as e:
-        print('invalid input for bathrooms. input must be integer & greater then 0')
-        exit()
-
-    min_price = 0
-    try:
-        min_price = int(input('Enter minimum price: '))
-        if min_price < 0:
-            raise Exception
-    except Exception as e:
-        print('invalid input for bathrooms. input must be integer & greater then or equal 0')
-        exit()
-
-    try:
-        max_price = int(input('Enter maximum price: '))
-        if max_price < min_price:
-            raise Exception
-    except Exception as e:
-        print('invalid input for bathrooms. input must be integer, greater then or equal min price')
-        exit()
-
-    try:
-        category = int(input('Press 1 for `Buy`, Press 2 for `Rent`: '))
-        if category not in [1, 2]:
-            raise Exception
-    except Exception as e:
-        print('invalid input for bathrooms. input must be either 1 or 2')
-        exit()
-
-    try:
-        limit = int(input('How many property you want extract: '))
-        if limit < 1:
-            raise Exception
-    except Exception as e:
-        print('invalid input for limit. input must be integer & greater then or equal 1')
-        exit()
-
-    return zip_code, bedrooms, bathrooms, min_price, max_price, category, limit
 
 
 def csv_file_init(file_name: str):
@@ -92,6 +40,8 @@ def csv_file_init(file_name: str):
 
 def write_csv(file_name: str, new_row: list) -> bool:
     flag = True
+    add_hyperlink = f'=HYPERLINK("{new_row[6]}","{new_row[6]}")'
+    new_row[6] = add_hyperlink
     with open(file_name, "r") as f:
         reader = csv.reader(f, delimiter=",")
         for i, line in enumerate(reader):
@@ -119,18 +69,21 @@ def close_program(msg: str):
 def scrapper():
     # take parameters as input
     print('---------------------------******----------------------')
-    zip_code, bedrooms, bathrooms, min_price, max_price, category, limit = input_params()
-    # zip_code, bedrooms, bathrooms, min_price, max_price, category, limit = 33312, 2, 2, 0, 150000, 1, 5
     print('Script starts ...')
+
     # based on category decide which pages need to scrap
-    if category == 1:  # Buy
-        file_name = 'buy_data.csv'
+    if CATEGORY == 'buy':
+        file_name = 'buy_properties.csv'
         csv_file_init(file_name)
         page = 1
         property_counter = 0
         while True:
             # generate url
-            url = f'https://www.realtor.com/realestateandhomes-search/{zip_code}/beds-{bedrooms}/baths-{bathrooms}/price-{min_price}-{max_price}/sby-6/pg-{page}'
+            if TYPE.lower() in ['', 'any']:
+                url = f'https://www.realtor.com/realestateandhomes-search/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/price-{MIN_PRICE}-{MAX_PRICE}/sby-6/pg-{page}'
+            else:
+                url = f'https://www.realtor.com/realestateandhomes-search/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/sby-6/pg-{page}'
+            print(f'scrapping from --> {url}')
             webpage = requests.get(url, headers=HEADERS)
             soup = BeautifulSoup(webpage.content, "html.parser")
             dom = etree.HTML(str(soup))
@@ -210,19 +163,19 @@ def scrapper():
                     property_counter += 1
                     print(f'--> {property_counter}. New Property added.')
 
-                # exit the program if limit reached
-                if property_counter >= limit:
-                    close_program('Reached the property extraction limit, existing the program')
-
             page += 1
 
     else:  # Rent
         page = 1
         property_counter = 0
-        file_name = 'rent_data.csv'
+        file_name = 'rent_properties.csv'
         csv_file_init(file_name)
         # generate url
-        url = f'https://www.realtor.com/apartments/{zip_code}/beds-{bedrooms}/baths-{bathrooms}/price-{min_price}-{max_price}/sby-6/pg-{page}'
+        if TYPE.lower() in ['', 'any']:
+            url = f'https://www.realtor.com/apartments/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/price-{MIN_PRICE}-{MAX_PRICE}/sby-6/pg-{page}'
+        else:
+            url = f'https://www.realtor.com/apartments/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/sby-6/pg-{page}'
+        print(f'scrapping from --> {url}')
         webpage = requests.get(url, headers=HEADERS)
         soup = BeautifulSoup(webpage.content, "html.parser")
         dom = etree.HTML(str(soup))
@@ -273,7 +226,7 @@ def scrapper():
                     telephone = details_soup.find('a', href=lambda href: href and href.startswith('tel:')).text
                 else:
                     print(f'Failed to get telephone, retrying...')
-                    for i in range(5):
+                    for i in range(4):
                         page_url = f'https://api.scraperapi.com/?api_key={API_KEY}&url={details_url}'
                         response = requests.get(page_url)
                         ds = BeautifulSoup(response.content, 'html.parser')
@@ -310,10 +263,6 @@ def scrapper():
                                      furnished]) is True:
                 property_counter += 1
                 print(f'--> {property_counter}. New Property added.')
-
-            # exit the program if limit reached
-            if property_counter >= limit:
-                close_program('Reached the property extraction limit, existing the program')
 
         page += 1
 
