@@ -12,7 +12,7 @@ BEDROOMS = '2'
 BATHROOMS = '2'
 MIN_PRICE = '500'
 MAX_PRICE = '150000'
-CATEGORY = 'rent'  # choices -> buy, rent
+CATEGORY = 'buy'  # choices -> buy, rent
 
 # define api key for scrapper
 API_KEY = 'c333d3ec36f9c6e6d5c7969de4bb1695'
@@ -72,7 +72,7 @@ def scrapper():
     print('Script starts ...')
 
     # based on category decide which pages need to scrap
-    if CATEGORY == 'buy':
+    if CATEGORY.lower() == 'buy':
         file_name = 'buy_properties.csv'
         csv_file_init(file_name)
         page = 1
@@ -107,6 +107,13 @@ def scrapper():
                 details_page = requests.get(details_url, headers=HEADERS)
                 details_soup = BeautifulSoup(details_page.content, "html.parser")
                 details_dom = etree.HTML(str(details_soup))
+
+                # managed
+                managed = ''
+                if 'Landlord' in str(details_soup):
+                    managed = 'Owner'
+                if 'Brokered by' in str(details_soup):
+                    managed = 'Property Manager'
 
                 # property type
                 try:
@@ -158,14 +165,14 @@ def scrapper():
 
                 # write to the csv if not exist
                 if write_csv(file_name,
-                             ['Buy', property_type, address, bed, bath, price, details_url, telephone, '', pool,
+                             ['Buy', property_type, address, bed, bath, price, details_url, telephone, managed, pool,
                               furnished]) is True:
                     property_counter += 1
                     print(f'--> {property_counter}. New Property added.')
 
             page += 1
 
-    else:  # Rent
+    elif CATEGORY.lower() == 'rent':  # Rent
         page = 1
         property_counter = 0
         file_name = 'rent_properties.csv'
@@ -196,6 +203,13 @@ def scrapper():
             details_page = requests.get(details_url, headers=HEADERS)
             details_soup = BeautifulSoup(details_page.content, "html.parser")
             details_dom = etree.HTML(str(details_soup))
+
+            # managed
+            managed = ''
+            if 'Landlord' in str(details_soup):
+                managed = 'Owner'
+            if 'Brokered by' in str(details_soup):
+                managed = 'Property Manager'
 
             # address
             try:
@@ -259,12 +273,16 @@ def scrapper():
                 bath = ''
 
             # write to the csv if not exist
-            if write_csv(file_name, ['Rent', property_type, address, bed, bath, price, details_url, telephone, '', pool,
-                                     furnished]) is True:
+            if write_csv(file_name,
+                         ['Rent', property_type, address, bed, bath, price, details_url, telephone, managed, pool,
+                          furnished]) is True:
                 property_counter += 1
                 print(f'--> {property_counter}. New Property added.')
 
         page += 1
+
+    else:
+        print('invalid category choices')
 
 
 if __name__ == "__main__":
