@@ -10,9 +10,10 @@ ZIP_CODE = '33312'
 TYPE = 'apartments,condo'  # choices -> multi-family-home,mfd-mobile-home,farms-ranches,land,condo,townhome,single-family-home,apartments,any
 BEDROOMS = '2'
 BATHROOMS = '2'
-MIN_PRICE = '500'
-MAX_PRICE = '150000'
-CATEGORY = 'buy'  # choices -> buy, rent
+MIN_PRICE = '5000'
+MAX_PRICE = '10000'
+CATEGORY = 'rent'  # choices -> buy, rent
+KEYWOARDS = 'Pool,Water-front'
 
 # define api key for scrapper
 API_KEY = 'c333d3ec36f9c6e6d5c7969de4bb1695'
@@ -80,16 +81,17 @@ def scrapper():
         while True:
             # generate url
             if TYPE.lower() in ['', 'any']:
-                url = f'https://www.realtor.com/realestateandhomes-search/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/price-{MIN_PRICE}-{MAX_PRICE}/sby-6/pg-{page}'
+                url = f'https://www.realtor.com/realestateandhomes-search/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWOARDS}/sby-6/pg-{page}'
             else:
-                url = f'https://www.realtor.com/realestateandhomes-search/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/sby-6/pg-{page}'
+                url = f'https://www.realtor.com/realestateandhomes-search/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWOARDS}/sby-6/pg-{page}'
             print(f'scrapping from --> {url}')
             webpage = requests.get(url, headers=HEADERS)
             soup = BeautifulSoup(webpage.content, "html.parser")
             dom = etree.HTML(str(soup))
 
             # take all available cards
-            property_cards = dom.xpath('//div[@data-testid="property-card"]')
+            property_cards = dom.xpath(
+                '//section[@class="PropertiesList_propertiesContainer__7NakV PropertiesList_listViewGrid__TYNow"]//div[@data-testid="card-content"]')
             if len(property_cards) < 1:
                 close_program('No data avaialble, exiting program..')
 
@@ -173,113 +175,115 @@ def scrapper():
             page += 1
 
     elif CATEGORY.lower() == 'rent':  # Rent
-        page = 1
-        property_counter = 0
         file_name = 'rent_properties.csv'
         csv_file_init(file_name)
-        # generate url
-        if TYPE.lower() in ['', 'any']:
-            url = f'https://www.realtor.com/apartments/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/price-{MIN_PRICE}-{MAX_PRICE}/sby-6/pg-{page}'
-        else:
-            url = f'https://www.realtor.com/apartments/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/sby-6/pg-{page}'
-        print(f'scrapping from --> {url}')
-        webpage = requests.get(url, headers=HEADERS)
-        soup = BeautifulSoup(webpage.content, "html.parser")
-        dom = etree.HTML(str(soup))
+        page = 1
+        property_counter = 0
+        while True:
+            # generate url
+            if TYPE.lower() in ['', 'any']:
+                url = f'https://www.realtor.com/apartments/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWOARDS}/sby-6/pg-{page}'
+            else:
+                url = f'https://www.realtor.com/apartments/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWOARDS}/sby-6/pg-{page}'
+            print(f'scrapping from --> {url}')
+            webpage = requests.get(url, headers=HEADERS)
+            soup = BeautifulSoup(webpage.content, "html.parser")
+            dom = etree.HTML(str(soup))
 
-        # take all available cards
-        property_cards = dom.xpath('//div[@data-testid="card-content"]')
-        if len(property_cards) < 1:
-            close_program('All the available property have been extracted based on input params, exiting program..')
+            # take all available cards
+            property_cards = dom.xpath(
+                '//section[@class="PropertiesList_propertiesContainer__7NakV PropertiesList_listViewGrid__TYNow"]//div[@data-testid="card-content"]')
+            if len(property_cards) < 1:
+                close_program('All the available property have been extracted based on input params, exiting program..')
 
-        # iterate each card to extract data
-        for property_card in property_cards:
-            details_url = property_card.xpath('..//a[@data-testid="card-link"]/@href')[0]
-            if details_url is not None:
-                details_url = str(details_url).strip()
+            # iterate each card to extract data
+            for property_card in property_cards:
+                details_url = property_card.xpath('..//a[@data-testid="card-link"]/@href')[0]
+                if details_url is not None:
+                    details_url = str(details_url).strip()
 
-            # dig down property page
-            details_url = 'https://www.realtor.com' + details_url
-            details_page = requests.get(details_url, headers=HEADERS)
-            details_soup = BeautifulSoup(details_page.content, "html.parser")
-            details_dom = etree.HTML(str(details_soup))
+                # dig down property page
+                details_url = 'https://www.realtor.com' + details_url
+                details_page = requests.get(details_url, headers=HEADERS)
+                details_soup = BeautifulSoup(details_page.content, "html.parser")
+                details_dom = etree.HTML(str(details_soup))
 
-            # managed
-            managed = ''
-            if 'Landlord' in str(details_soup):
-                managed = 'Owner'
-            if 'Brokered by' in str(details_soup):
-                managed = 'Property Manager'
+                # managed
+                managed = ''
+                if 'Landlord' in str(details_soup):
+                    managed = 'Owner'
+                if 'Brokered by' in str(details_soup):
+                    managed = 'Property Manager'
 
-            # address
-            try:
-                address = " ".join(details_url.split('/')[-1].split('_')[:-1]).replace('-', " ").replace('_', ' ')
-            except Exception as e:
-                address = ''
+                # address
+                try:
+                    address = " ".join(details_url.split('/')[-1].split('_')[:-1]).replace('-', " ").replace('_', ' ')
+                except Exception as e:
+                    address = ''
 
-            # property type
-            try:
-                property_type = details_dom.xpath(
-                    '//div[@class="Text__StyledText-rui__sc-19ei9fn-0 wdTNy TypeBody__StyledBody-rui__sc-163o7f1-0 hHKKwr"]')[
-                    0].text
-            except Exception as e:
-                property_type = ''
+                # property type
+                try:
+                    property_type = details_dom.xpath(
+                        '//div[@class="Text__StyledText-rui__sc-19ei9fn-0 wdTNy TypeBody__StyledBody-rui__sc-163o7f1-0 hHKKwr"]')[
+                        0].text
+                except Exception as e:
+                    property_type = ''
 
-            # pool & furnished feature
-            pool, furnished = 'N', 'N'
-            if 'Pool' in str(details_soup) or 'Pool and Spa' in str(details_soup):
-                pool = 'Y'
-            if 'Unfurnished' in str(details_soup):
-                furnished = 'N'
-            elif 'Furnished' in str(details_soup):
-                furnished = 'Y'
+                # pool & furnished feature
+                pool, furnished = 'N', 'N'
+                if 'Pool' in str(details_soup) or 'Pool and Spa' in str(details_soup):
+                    pool = 'Y'
+                if 'Unfurnished' in str(details_soup):
+                    furnished = 'N'
+                elif 'Furnished' in str(details_soup):
+                    furnished = 'Y'
 
-            telephone = ''
-            try:
-                if 'tel:' in str(details_soup):
-                    telephone = details_soup.find('a', href=lambda href: href and href.startswith('tel:')).text
-                else:
-                    print(f'Failed to get telephone, retrying...')
-                    for i in range(4):
-                        page_url = f'https://api.scraperapi.com/?api_key={API_KEY}&url={details_url}'
-                        response = requests.get(page_url)
-                        ds = BeautifulSoup(response.content, 'html.parser')
-                        if 'tel:' in str(ds):
-                            telephone = ds.find('a', href=lambda href: href and href.startswith('tel:')).text
-                            break
-            except Exception as e:
                 telephone = ''
+                try:
+                    if 'tel:' in str(details_soup):
+                        telephone = details_soup.find('a', href=lambda href: href and href.startswith('tel:')).text
+                    else:
+                        print(f'Failed to get telephone, retrying...')
+                        for i in range(4):
+                            page_url = f'https://api.scraperapi.com/?api_key={API_KEY}&url={details_url}'
+                            response = requests.get(page_url)
+                            ds = BeautifulSoup(response.content, 'html.parser')
+                            if 'tel:' in str(ds):
+                                telephone = ds.find('a', href=lambda href: href and href.startswith('tel:')).text
+                                break
+                except Exception as e:
+                    telephone = ''
 
-            # price, bed & bath
-            try:
-                price = property_card.xpath('..//div[@data-testid="card-price"]')[0].text
-                if price is not None:
-                    price = str(price).strip()
-            except Exception as e:
-                price = ''
+                # price, bed & bath
+                try:
+                    price = property_card.xpath('..//div[@data-testid="card-price"]')[0].text
+                    if price is not None:
+                        price = str(price).strip()
+                except Exception as e:
+                    price = ''
 
-            try:
-                bed = property_card.xpath('..//li[@data-testid="property-meta-beds"]//span')[0].text
-                if bed is not None:
-                    bed = str(bed).strip()
-            except Exception as e:
-                bed = ''
+                try:
+                    bed = property_card.xpath('..//li[@data-testid="property-meta-beds"]//span')[0].text
+                    if bed is not None:
+                        bed = str(bed).strip()
+                except Exception as e:
+                    bed = ''
 
-            try:
-                bath = property_card.xpath('..//li[@data-testid="property-meta-baths"]//span')[0].text
-                if bath is not None:
-                    bath = str(bath).strip()
-            except Exception as e:
-                bath = ''
+                try:
+                    bath = property_card.xpath('..//li[@data-testid="property-meta-baths"]//span')[0].text
+                    if bath is not None:
+                        bath = str(bath).strip()
+                except Exception as e:
+                    bath = ''
 
-            # write to the csv if not exist
-            if write_csv(file_name,
-                         ['Rent', property_type, address, bed, bath, price, details_url, telephone, managed, pool,
-                          furnished]) is True:
-                property_counter += 1
-                print(f'--> {property_counter}. New Property added.')
+                # write to the csv if not exist
+                if write_csv(file_name,
+                             ['Rent', property_type, address, bed, bath, price, details_url, telephone, managed, pool,
+                              furnished]) is True:
+                    property_counter += 1
+                    print(f'--> {property_counter}. New Property added.')
 
-        page += 1
+            page += 1
 
     else:
         print('invalid category choices')
