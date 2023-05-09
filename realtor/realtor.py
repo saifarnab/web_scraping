@@ -1,5 +1,6 @@
 import csv
 import subprocess
+import time
 
 import requests
 from bs4 import BeautifulSoup
@@ -12,8 +13,8 @@ BEDROOMS = '2'
 BATHROOMS = '2'
 MIN_PRICE = '5000'
 MAX_PRICE = '10000'
-CATEGORY = 'rent'  # choices -> buy, rent
-KEYWOARDS = 'Pool,Water-front'
+CATEGORY = 'buy'  # choices -> buy, rent
+KEYWORDS = ''
 
 # define api key for scrapper
 API_KEY = 'c333d3ec36f9c6e6d5c7969de4bb1695'
@@ -81,17 +82,16 @@ def scrapper():
         while True:
             # generate url
             if TYPE.lower() in ['', 'any']:
-                url = f'https://www.realtor.com/realestateandhomes-search/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWOARDS}/sby-6/pg-{page}'
+                url = f'https://www.realtor.com/realestateandhomes-search/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWORDS}/sby-6/pg-{page}'
             else:
-                url = f'https://www.realtor.com/realestateandhomes-search/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWOARDS}/sby-6/pg-{page}'
+                url = f'https://www.realtor.com/realestateandhomes-search/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWORDS}/sby-6/pg-{page}'
             print(f'scrapping from --> {url}')
             webpage = requests.get(url, headers=HEADERS)
             soup = BeautifulSoup(webpage.content, "html.parser")
             dom = etree.HTML(str(soup))
 
             # take all available cards
-            property_cards = dom.xpath(
-                '//section[@class="PropertiesList_propertiesContainer__7NakV PropertiesList_listViewGrid__TYNow"]//div[@data-testid="card-content"]')
+            property_cards = dom.xpath('//div[@data-testid="property-card"]')
             if len(property_cards) < 1:
                 close_program('No data avaialble, exiting program..')
 
@@ -112,10 +112,28 @@ def scrapper():
 
                 # managed
                 managed = ''
-                if 'Landlord' in str(details_soup):
-                    managed = 'Owner'
-                if 'Brokered by' in str(details_soup):
-                    managed = 'Property Manager'
+                try:
+                    providers = details_dom.xpath('//div[@class="provider-data"]//ul[@class="content"]')
+                    for provider in providers:
+                        items = provider.xpath('..//li')
+                        if 'Brokered by' in items[0].text:
+                            if items[1].text not in [None, '']:
+                                managed = items[1].text
+                            elif items[1].xpath('..//span'):
+                                managed = items[1].xpath('..//span')[0].text
+
+                            elif len(details_dom.xpath('//a[@data-testid="provider-link"]')) == 2:
+                                managed = details_dom.xpath('//a[@data-testid="provider-link"]')[1].text
+
+                            elif len(details_dom.xpath('//a[@data-testid="provider-link"]')) == 1:
+                                managed = details_dom.xpath('//a[@data-testid="provider-link"]')[0].text
+
+                    if managed is None:
+                        managed = ''
+
+                except Exception as e:
+                    print(f'Exception detected - {details_url}')
+                    managed = ''
 
                 # property type
                 try:
@@ -167,8 +185,9 @@ def scrapper():
 
                 # write to the csv if not exist
                 if write_csv(file_name,
-                             ['Buy', property_type, address, bed, bath, price, details_url, telephone, managed, pool,
-                              furnished]) is True:
+                             ['Buy', str(property_type), str(address), str(bed).replace('-', 'to'),
+                              str(bath).replace('-', 'to'), str(price), str(details_url),
+                              str(telephone), str(managed), str(pool), str(furnished)]) is True:
                     property_counter += 1
                     print(f'--> {property_counter}. New Property added.')
 
@@ -182,9 +201,9 @@ def scrapper():
         while True:
             # generate url
             if TYPE.lower() in ['', 'any']:
-                url = f'https://www.realtor.com/apartments/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWOARDS}/sby-6/pg-{page}'
+                url = f'https://www.realtor.com/apartments/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWORDS}/sby-6/pg-{page}'
             else:
-                url = f'https://www.realtor.com/apartments/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWOARDS}/sby-6/pg-{page}'
+                url = f'https://www.realtor.com/apartments/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWORDS}/sby-6/pg-{page}'
             print(f'scrapping from --> {url}')
             webpage = requests.get(url, headers=HEADERS)
             soup = BeautifulSoup(webpage.content, "html.parser")
@@ -210,10 +229,6 @@ def scrapper():
 
                 # managed
                 managed = ''
-                if 'Landlord' in str(details_soup):
-                    managed = 'Owner'
-                if 'Brokered by' in str(details_soup):
-                    managed = 'Property Manager'
 
                 # address
                 try:
@@ -248,6 +263,7 @@ def scrapper():
                             page_url = f'https://api.scraperapi.com/?api_key={API_KEY}&url={details_url}'
                             response = requests.get(page_url)
                             ds = BeautifulSoup(response.content, 'html.parser')
+
                             if 'tel:' in str(ds):
                                 telephone = ds.find('a', href=lambda href: href and href.startswith('tel:')).text
                                 break
@@ -278,8 +294,10 @@ def scrapper():
 
                 # write to the csv if not exist
                 if write_csv(file_name,
-                             ['Rent', property_type, address, bed, bath, price, details_url, telephone, managed, pool,
-                              furnished]) is True:
+                             ['Buy', str(property_type), str(address), str(bed).replace('-', 'to'),
+                              str(bath).replace('-', 'to'), str(price),
+                              str(details_url),
+                              str(telephone), str(managed), str(pool), str(furnished)]) is True:
                     property_counter += 1
                     print(f'--> {property_counter}. New Property added.')
 
