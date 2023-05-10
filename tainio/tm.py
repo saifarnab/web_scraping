@@ -1,32 +1,30 @@
+import os
 import threading
 import time
+
 import requests
 import urllib3
 from bs4 import BeautifulSoup
 from lxml import etree
-from user_agent import generate_user_agent
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from user_agent import generate_user_agent
 
 # disable ssl warning
 urllib3.disable_warnings()
 
-# define output folder path
-OUTPUT_FOLDER_PATH = '/home/saif/Desktop/Works/web_scraping/tainio/downloads/'
+# define output folder path, must include the tail '/' or '\'
+OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads/'
 
 
 def config_driver() -> webdriver.Chrome:
     options = Options()
     options.add_argument("--headless")
     options.page_load_strategy = 'eager'
-    options.add_argument(
-        'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-        'Chrome/96.0.4664.45 Safari/537.36')
-    options.add_argument("window-size=1024,768")
+    options.add_argument(f'user-agent={generate_user_agent()}')
     options.add_argument("lang=en-GB")
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--allow-running-insecure-content')
@@ -37,7 +35,7 @@ def config_driver() -> webdriver.Chrome:
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--no-sandbox')
     driver = webdriver.Chrome(options=options)
-    # driver.maximize_window()
+    driver.maximize_window()
     return driver
 
 
@@ -64,8 +62,7 @@ class Downloader:
 
     def start(self):
         start = time.time()
-        print(f'File size is {int(self.file_size / 1024000)}mb approximately. Start downloading...')
-        print('Start downloading...')
+        print(f'File size is {int(self.file_size / 1024000)}mb approximately. Downloading...')
         with open(self.filename, "wb") as f:
             f.truncate(self.file_size)
 
@@ -80,8 +77,7 @@ class Downloader:
 
         for thread in threads:
             thread.join()
-        print(f"Request completed in {int((time.time() - start) / 60)} seconds")
-        print("Download successful!")
+        print(f"Download completed in {int((time.time() - start))} seconds approximately")
 
 
 def get_request_headers() -> dict:
@@ -103,16 +99,19 @@ def reverse_list(arr):
     return arr
 
 
-def get_break_pointer(url: str):
+def get_break_pointer(url: str) -> str:
     while True:
-        webpage = requests.get(url, headers=get_request_headers())
-        if 'checkcaptcha' in webpage.url:
-            print('Captcha issue occurred, retrying..')
+        try:
+            webpage = requests.get(url, headers=get_request_headers())
+            if 'checkcaptcha' in webpage.url:
+                print('Captcha issue occurred, retrying..')
+                continue
+            soup = BeautifulSoup(webpage.content, "html.parser")
+            dom = etree.HTML(str(soup))
+            movie_cards = dom.xpath('//div[@id="dle-content"]//a[@class="entryLink"]')
+            return f'{movie_cards[0].text.strip()}'
+        except Exception as e:
             continue
-        soup = BeautifulSoup(webpage.content, "html.parser")
-        dom = etree.HTML(str(soup))
-        movie_cards = dom.xpath('//div[@id="dle-content"]//a[@class="entryLink"]')
-        return f'{movie_cards[6].text}'
 
 
 def get_detail_page_links(break_pointer: str):
@@ -200,29 +199,39 @@ def get_video_link(url='https://tainio-mania.online/load/seir/deep-shit-2021/21-
         except Exception as e:
             print('Exception occurs, retrying...')
             continue
-    return None
+    return None, None
 
 
 def run():
-    print('Fetching downloadable contents..')
-    downloadable_items = reverse_list(get_detail_page_links(get_break_pointer('https://tainio-mania.online')))
-    if len(downloadable_items) < 1:
-        print('No new content available to download, waiting 60s for next try..')
-        time.sleep(60)
-
-    for content in downloadable_items:
-        print(f'Fetch video download link for -> {content["title"]}..')
-        link, name = get_video_link(content['link'])
-        if link is None:
-            print(f'`{content["title"]}` -> failed to generate downloadable link, moving next..')
+    print('Script starts running ...')
+    break_pointer = get_break_pointer('https://tainio-mania.online')
+    print(f'Content will be downloaded next to this `{break_pointer}`')
+    while True:
+        downloadable_items = reverse_list(get_detail_page_links(break_pointer))
+        print(downloadable_items)
+        if len(downloadable_items) < 1:
+            print('No new content available to download, waiting 5 minutes for next try..')
+            time.sleep(300)
             continue
-        try:
-            downloader = Downloader(link, f'{content["title"]}_{name}', num_threads=10)
-            downloader.start()
-        except Exception as e:
-            print(f'`{content["title"]}` -> failed to download this content, moving next..')
+
+        for content in downloadable_items:
+            print(f'Fetch video download link for -> {content["title"]}')
+            link, name = get_video_link(content['link'])
+            if link is None:
+                print(f'`{content["title"]}` -> failed to generate downloadable link, moving next..')
+                continue
+            try:
+                downloader = Downloader(link, f'{str(content["title"]).replace("/", " ")}_{name}', num_threads=3)
+                downloader.start()
+
+            except Exception as e:
+                print(f'`{content["title"]}` -> failed to download this content, moving next..')
+
+        break_pointer = downloadable_items[0]['title']
 
 
 if __name__ == '__main__':
-    run()
-    # print(get_video_link())
+    if not os.path.exists(OUTPUT_FOLDER_PATH):
+        print('Invalid output folder path')
+    else:
+        run()

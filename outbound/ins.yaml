@@ -5,4 +5,4 @@
 3. send mail from each connected account
 4. wait until `WAITING_TIME` seconds 
 5. if a sender already occupied `MAX_LIMIT_PER_DAY`, ignore that sender 
-3. will create a table in previous sqlite.db named as emails
+3. will create a table in previous my_sqlite.db named as emails

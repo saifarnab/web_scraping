@@ -23,7 +23,7 @@ logging.basicConfig(
 
 
 def create_tables(conn):
-    _leads_table = """ CREATE TABLE IF NOT EXISTS leads (
+    o09o_leads_table = """ CREATE TABLE IF NOT EXISTS leads (
                                                     id integer PRIMARY KEY,
                                                     lead_id text NOT NULL,
                                                     date_time text NOT NULL
@@ -257,7 +257,7 @@ def run():
     logging.info('Script starts running ...')
 
     # initialize db connection
-    conn = create_db_connection(SQLITE_DB_PATH + 'sqlite.db')
+    conn = create_db_connection(SQLITE_DB_PATH + 'client_sqlite.db')
 
     # create tables
     create_tables(conn)
@@ -371,6 +371,7 @@ def run():
                     else:
                         logging.info(f'--> Failed to sent email {receiver_email} from {sender_email} vai google')
         except Exception as e:
+            print(e)
             pass
 
         # check whether all connected account reached their 30 emails per day limit

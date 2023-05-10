@@ -123,7 +123,7 @@ def check_lead_exist(conn, lead_id) -> bool:
 
 
 def run():
-    conn = create_db_connection(SQLITE_DB_PATH + 'sqlite.db')
+    conn = create_db_connection(SQLITE_DB_PATH + 'my_sqlite.db')
     create_tables(conn)
     api = Client(CLOSE_API_KEY)
 

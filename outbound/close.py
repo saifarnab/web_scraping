@@ -225,7 +225,7 @@ def run():
     check_gdrive_folder_id_exists(drive, INPUT_FOLDER_ID)
     check_gdrive_folder_id_exists(drive, OUTPUT_FOLDER_ID)
     create_file_download_folder()
-    conn = create_sqlite_db(SQLITE_DB_PATH + 'sqlite.db')
+    conn = create_sqlite_db(SQLITE_DB_PATH + 'my_sqlite.db')
     create_tables(conn)
 
     api = closeio_api.Client(CLOSE_API_KEY)
