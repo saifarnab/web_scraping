@@ -1,7 +1,6 @@
 import os
 import threading
 import time
-
 import requests
 import urllib3
 from bs4 import BeautifulSoup
@@ -208,7 +207,6 @@ def run():
     print(f'Content will be downloaded next to this `{break_pointer}`')
     while True:
         downloadable_items = reverse_list(get_detail_page_links(break_pointer))
-        print(downloadable_items)
         if len(downloadable_items) < 1:
             print('No new content available to download, waiting 5 minutes for next try..')
             time.sleep(300)
