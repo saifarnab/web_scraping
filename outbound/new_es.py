@@ -292,12 +292,6 @@ def run():
             logging.info(
                 f"{contacts[contacts_pointer][2]} already receive an email, ignoring...")
 
-        # check contact is available in DB
-        while check_lead_availability(conn, contacts[contacts_pointer][0]) is False:
-            logging.info(f"`{contacts[contacts_pointer][0]}` this lead id is not available in DB, ignoring...")
-            time.sleep(2)
-            contacts_pointer += 1
-
         # exit the script if all the available contacts receive email
         if contacts_pointer == total_contacts:
             logging.info('All the contacts receives email. Exiting the program.')
@@ -391,3 +385,6 @@ def run():
 
     logging.info(f'total {success_counter} email have sent via this script.')
     logging.info('Script executed successfully!')
+
+
+run()

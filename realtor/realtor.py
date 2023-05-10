@@ -294,7 +294,7 @@ def scrapper():
 
                 # write to the csv if not exist
                 if write_csv(file_name,
-                             ['Buy', str(property_type), str(address), str(bed).replace('-', 'to'),
+                             ['Rent', str(property_type), str(address), str(bed).replace('-', 'to'),
                               str(bath).replace('-', 'to'), str(price),
                               str(details_url),
                               str(telephone), str(managed), str(pool), str(furnished)]) is True:

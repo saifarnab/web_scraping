@@ -15,10 +15,14 @@ from selenium.webdriver.support.wait import WebDriverWait
 # disable ssl warning
 urllib3.disable_warnings()
 
+# define output folder path
+OUTPUT_FOLDER_PATH = '/home/saif/Desktop/Works/web_scraping/tainio/downloads/'
+
 
 def config_driver() -> webdriver.Chrome:
     options = Options()
-    # options.add_argument("--headless")
+    options.add_argument("--headless")
+    options.page_load_strategy = 'eager'
     options.add_argument(
         'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
         'Chrome/96.0.4664.45 Safari/537.36')
@@ -33,19 +37,19 @@ def config_driver() -> webdriver.Chrome:
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--no-sandbox')
     driver = webdriver.Chrome(options=options)
-    driver.maximize_window()
+    # driver.maximize_window()
     return driver
 
 
 class Downloader:
-    def __init__(self, url, num_threads=4):
+    def __init__(self, url, name, num_threads=4):
         self.url = url
         self.num_threads = num_threads
         self.file_size = int(requests.head(url, verify=False).headers["Content-Length"])
         self.chunk_size = self.file_size // self.num_threads
         self.lock = threading.Lock()
         self.bytes_written = 0
-        self.filename = url.split("/")[-1]
+        self.filename = OUTPUT_FOLDER_PATH + name
 
     def download(self, start_byte, end_byte):
         headers = {"Range": f"bytes={start_byte}-{end_byte}"}
@@ -76,7 +80,7 @@ class Downloader:
 
         for thread in threads:
             thread.join()
-        print(f"Request completed in {(time.time() - start) * 1000} seconds")
+        print(f"Request completed in {int((time.time() - start) / 60)} seconds")
         print("Download successful!")
 
 
@@ -86,11 +90,24 @@ def get_request_headers() -> dict:
     return header
 
 
+def reverse_list(arr):
+    left = 0
+    right = len(arr) - 1
+    while left < right:
+        temp = arr[left]
+        arr[left] = arr[right]
+        arr[right] = temp
+        left += 1
+        right -= 1
+
+    return arr
+
+
 def get_break_pointer(url: str):
     while True:
         webpage = requests.get(url, headers=get_request_headers())
         if 'checkcaptcha' in webpage.url:
-            print('captcha issue occurred...')
+            print('Captcha issue occurred, retrying..')
             continue
         soup = BeautifulSoup(webpage.content, "html.parser")
         dom = etree.HTML(str(soup))
@@ -105,7 +122,7 @@ def get_detail_page_links(break_pointer: str):
         url = f'https://tainio-mania.online/page/{page}/'
         webpage = requests.get(url, headers=get_request_headers())
         if 'checkcaptcha' in webpage.url:
-            print('captcha issue occurred...')
+            print('Captcha issue occurred, retrying..')
             continue
         soup = BeautifulSoup(webpage.content, "html.parser")
         dom = etree.HTML(str(soup))
@@ -120,42 +137,92 @@ def get_detail_page_links(break_pointer: str):
         page += 1
 
 
-def get_video_link(url='https://tainio-mania.online/load/seir/walker-2021/21-1-0-25272'):
-    driver = config_driver()
-    driver.get(url)
-    WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//div[@id="fake-player-btnplay"]')))
-    driver.find_element(By.XPATH, '//div[@id="fake-player-btnplay"]').click()
-    WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//iframe[1]')))
-    iframe = driver.find_element(By.XPATH, '//iframe[1]')
-    driver.switch_to.frame(iframe)
-    time.sleep(10000)
-    WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//iframe[@id='pjsfrrsplayer22serial']")))
+def get_video_link(url='https://tainio-mania.online/load/seir/deep-shit-2021/21-1-0-32979'):
+    for i in range(5):
+        try:
+            driver = config_driver()
+            driver.get(url)
+            WebDriverWait(driver, 5).until(
+                EC.visibility_of_element_located((By.XPATH, '//div[@id="fake-player-btnplay"]')))
+            driver.find_element(By.XPATH, '//div[@id="fake-player-btnplay"]').click()
 
-    time.sleep(10000)
-    driver.find_element("//iframe[@id='pjsfrrsplayer22serial']").click()
-    time.sleep(10000)
+            WebDriverWait(driver, 5).until(
+                EC.visibility_of_element_located((By.XPATH, '//iframe[1]')))
+            iframe = driver.find_elements(By.XPATH, '//iframe')[0]
+            iframe.click()
+            time.sleep(3)
+            driver.switch_to.frame(iframe)
+            WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.XPATH, '//video')))
+            video = driver.find_element(By.XPATH, '//video').get_attribute('src')
 
-    # switch to the iframe
-    iframe = driver.find_element("//iframe[@id='pjsfrrsplayer22serial']")
-    driver.switch_to.frame(iframe)
-    print('switch to iframe')
-    WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//pjsdiv[@style="display: block; transition: height 0.1s ease-out 0s; font-size: 15px; height: 0px; overflow-y: scroll; margin-right: 0px; max-height: 377px; border-top: none;"]//pjsdiv')))
-    print('found')
-    # driver.find_element(By.XPATH, '//pjsdiv[@class="pjsplplayer22serialscroll"]').click()
-    time.sleep(100000000)
+            # check movie or series
+            checker = video.split('/')[-1].split('.')[0]
+            if 'x' not in checker:
+                return video
+
+            print('Detected as a series, finding which episode of which season to download')
+
+            # check max series
+            season = 1
+            while True:
+                temp = f'{season}x01'
+                link = video.replace(checker, temp)
+                response = requests.head(link, verify=False, headers=get_request_headers())
+                if 'checkcaptcha' in response.url:
+                    print('Captcha issue occurred, retrying..')
+                    continue
+                if response.status_code != 200:
+                    break
+                season += 1
+
+            valid_season = season - 1
+
+            # check max episode
+            episode = 1
+            while True:
+                if episode <= 9:
+                    temp = f'{valid_season}x0{episode}'
+                else:
+                    temp = f'{valid_season}x{episode}'
+                link = video.replace(checker, temp)
+                response = requests.head(link, verify=False, headers=get_request_headers())
+                if 'checkcaptcha' in response.url:
+                    print('Captcha issue occurred, retrying..')
+                    continue
+                if response.status_code != 200:
+                    break
+                episode += 1
+
+            valid_episode = episode - 1
+            if valid_episode <= 9:
+                valid_episode = f'0{valid_episode}'
+            return video.replace(checker, f'{valid_season}x{valid_episode}'), f'{valid_season}x{valid_episode}'
+        except Exception as e:
+            print('Exception occurs, retrying...')
+            continue
+    return None
 
 
-def run(path: str):
-    # url = 'https://www.cdn.vidce.net/d/t7hT1KB9aNksT_JMVhC58Q/1684214312/video/Devs/1x01.mp4'
-    # downloader = Downloader(url, num_threads=10)
-    # downloader.start()
-    downloadable_items = get_detail_page_links(get_break_pointer('https://tainio-mania.online'))
-    print(downloadable_items)
+def run():
+    print('Fetching downloadable contents..')
+    downloadable_items = reverse_list(get_detail_page_links(get_break_pointer('https://tainio-mania.online')))
+    if len(downloadable_items) < 1:
+        print('No new content available to download, waiting 60s for next try..')
+        time.sleep(60)
+
+    for content in downloadable_items:
+        print(f'Fetch video download link for -> {content["title"]}..')
+        link, name = get_video_link(content['link'])
+        if link is None:
+            print(f'`{content["title"]}` -> failed to generate downloadable link, moving next..')
+            continue
+        try:
+            downloader = Downloader(link, f'{content["title"]}_{name}', num_threads=10)
+            downloader.start()
+        except Exception as e:
+            print(f'`{content["title"]}` -> failed to download this content, moving next..')
 
 
 if __name__ == '__main__':
-    # dwnld_path = str(input('Enter full path of output folder: ')).strip()
-    # if dwnld_path in [None, '']:
-    #     print('Invalid path')
-    # run('')
-    get_video_link()
+    run()
+    # print(get_video_link())

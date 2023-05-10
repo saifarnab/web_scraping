@@ -277,6 +277,7 @@ tags
 /outbound/client_secrets.json
 /outbound/Credentials.json
 /yahoo_stock/yahoo-key.json
+/tainio/downloads
 
 #**/migrations/**
 #!**/migrations

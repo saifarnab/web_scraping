@@ -192,7 +192,9 @@ def scanner(driver, postcode, store, f_name):
                     time.sleep(1)
                     rating = driver.find_element(By.XPATH,
                                                  '//div[@data-qa="restaurant-info-modal-reviews-rating"]//div[@class="_50YZr _3-Fnx"]').text
-                    review = driver.find_element(By.XPATH, '//div[@class="_2oup6D"]//div[@class="Tcels"][1]').text.replace('\n', '')
+                    review = driver.find_element(By.XPATH,
+                                                 '//div[@class="_2oup6D"]//div[@class="Tcels"][1]').text.replace('\n',
+                                                                                                                 '')
                     rating = f"{rating.strip()}{review.strip()}"
                     if rating[0:3] == rating[3:6]:
                         rating = rating[3:]
@@ -264,7 +266,6 @@ def create_csv(name: str):
 
 
 if __name__ == '__main__':
-
 
     ch_driver = config_driver()
     post_codes = open('postcodes.txt', "r")
