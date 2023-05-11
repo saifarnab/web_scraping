@@ -23,7 +23,7 @@ OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads/'
 def config_driver() -> webdriver.Chrome:
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--disable-infobars")
-    chrome_options.add_argument("start-miniimized")
+    chrome_options.add_argument("--start-miniimized")
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
@@ -139,6 +139,7 @@ def get_video_link(url):
     for i in range(5):
         try:
             driver = config_driver()
+            driver.get(url)
             time.sleep(2)
             if 'checkcaptcha' in driver.current_url:
                 print('Captcha issue occurred, retrying..')
@@ -250,6 +251,7 @@ def run():
 
 def get_proxy_ip():
     proxies = {"http": FreeProxy(rand=True, https=True).get()}
+    # res = requests.get(url, proxies=proxies, timeout=10, headers=get_request_headers())
 
 
 if __name__ == '__main__':
