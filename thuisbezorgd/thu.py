@@ -11,8 +11,8 @@ from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 
 # install dependencies
-subprocess.check_call(['pip', 'install', 'undetected-chromedriver'])
-subprocess.check_call(['pip', 'install', 'selenium'])
+# subprocess.check_call(['pip', 'install', 'undetected-chromedriver'])
+# subprocess.check_call(['pip', 'install', 'selenium'])
 
 # log format
 logging.basicConfig(
@@ -70,7 +70,7 @@ def postcode_validation(driver, postcode) -> bool:
         wait_until_find_element(driver, By.XPATH, '//iframe')
         iframe = driver.find_element(By.XPATH, '//iframe')
         driver.switch_to.frame(iframe)
-        time.sleep(2)
+        wait_until_find_element(driver, By.XPATH, '//input[@type="checkbox"]')
         driver.find_element(By.XPATH, '//input[@type="checkbox"]').click()
         driver.switch_to.default_content()
         time.sleep(1)

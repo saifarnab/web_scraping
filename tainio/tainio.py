@@ -6,35 +6,29 @@ import urllib3
 from bs4 import BeautifulSoup
 from lxml import etree
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from user_agent import generate_user_agent
+from fp.fp import FreeProxy
 
 # disable ssl warning
 urllib3.disable_warnings()
 
 # define output folder path, must include the tail '/' or '\'
-OUTPUT_FOLDER_PATH = '/home/saif/Desktop/Works/web_scraping/tainio/downloads/'
+OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads/'
 
 
 def config_driver() -> webdriver.Chrome:
-    options = Options()
-    options.add_argument("--headless")
-    options.page_load_strategy = 'eager'
-    options.add_argument(f'user-agent={generate_user_agent()}')
-    options.add_argument("lang=en-GB")
-    options.add_argument('--ignore-certificate-errors')
-    options.add_argument('--allow-running-insecure-content')
-    options.add_argument("--disable-extensions")
-    options.add_argument("--proxy-server='direct://'")
-    options.add_argument("--proxy-bypass-list=*")
-    options.add_argument('--disable-gpu')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--no-sandbox')
-    driver = webdriver.Chrome(options=options)
-    driver.maximize_window()
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--disable-infobars")
+    chrome_options.add_argument("start-miniimized")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-gpu')
+
+    driver = uc.Chrome(options=chrome_options)
     return driver
 
 
@@ -107,12 +101,12 @@ def get_break_pointer(url: str) -> str:
             webpage = requests.get(url, headers=get_request_headers(), timeout=10)
             if 'checkcaptcha' in webpage.url:
                 print('Captcha issue occurred, retrying..')
-                time.sleep(60)
+                time.sleep(10)
                 continue
             soup = BeautifulSoup(webpage.content, "html.parser")
             dom = etree.HTML(str(soup))
             movie_cards = dom.xpath('//div[@id="dle-content"]//a[@class="entryLink"]')
-            return f'{movie_cards[1].text.strip()}'
+            return f'{movie_cards[4].text.strip()}'
         except Exception as e:
             print('Website not responding, retrying...')
             continue
@@ -126,7 +120,7 @@ def get_detail_page_links(break_pointer: str):
         webpage = requests.get(url, headers=get_request_headers(), timeout=10)
         if 'checkcaptcha' in webpage.url:
             print('Captcha issue occurred, retrying..')
-            time.sleep(60)
+            time.sleep(10)
             continue
         soup = BeautifulSoup(webpage.content, "html.parser")
         dom = etree.HTML(str(soup))
@@ -141,17 +135,24 @@ def get_detail_page_links(break_pointer: str):
         page += 1
 
 
-def get_video_link(url='https://tainio-mania.online/load/seir/deep-shit-2021/21-1-0-32979'):
+def get_video_link(url):
     for i in range(5):
         try:
             driver = config_driver()
-            driver.get(url)
-            WebDriverWait(driver, 5).until(
+            time.sleep(2)
+            if 'checkcaptcha' in driver.current_url:
+                print('Captcha issue occurred, retrying..')
+                time.sleep(10)
+                continue
+
+            WebDriverWait(driver, 20).until(
                 EC.visibility_of_element_located((By.XPATH, '//div[@id="fake-player-btnplay"]')))
+
             driver.find_element(By.XPATH, '//div[@id="fake-player-btnplay"]').click()
 
-            WebDriverWait(driver, 5).until(
+            WebDriverWait(driver, 20).until(
                 EC.visibility_of_element_located((By.XPATH, '//iframe[1]')))
+
             iframe = driver.find_elements(By.XPATH, '//iframe')[0]
             iframe.click()
             time.sleep(3)
@@ -176,7 +177,7 @@ def get_video_link(url='https://tainio-mania.online/load/seir/deep-shit-2021/21-
                 response = requests.head(link, verify=False, headers=get_request_headers())
                 if 'checkcaptcha' in response.url:
                     print('Captcha issue occurred, retrying..')
-                    time.sleep(60)
+                    time.sleep(10)
                     continue
                 if response.status_code != 200:
                     break
@@ -196,7 +197,7 @@ def get_video_link(url='https://tainio-mania.online/load/seir/deep-shit-2021/21-
                 response = requests.head(link, verify=False, headers=get_request_headers())
                 if 'checkcaptcha' in response.url:
                     print('Captcha issue occurred, retrying..')
-                    time.sleep(60)
+                    time.sleep(10)
                     continue
                 if response.status_code != 200:
                     break
@@ -210,7 +211,8 @@ def get_video_link(url='https://tainio-mania.online/load/seir/deep-shit-2021/21-
                                  f'{valid_season}x{valid_episode}'), f'{valid_season}x{valid_episode}.{file_extension}'
         except Exception as e:
             print('Exception occurs, retrying...')
-            time.sleep(60)
+            print(e)
+            time.sleep(5)
             continue
     return None, None
 
@@ -243,7 +245,11 @@ def run():
             break_pointer = downloadable_items[0]['title']
         except Exception as e:
             print('Website stop responding, retrying ...')
-            time.sleep(60)
+            time.sleep(10)
+
+
+def get_proxy_ip():
+    proxies = {"http": FreeProxy(rand=True, https=True).get()}
 
 
 if __name__ == '__main__':
@@ -251,3 +257,12 @@ if __name__ == '__main__':
         print('Invalid output folder path')
     else:
         run()
+    # url = 'https://tainio-mania.online'
+    # proxy = FreeProxy(rand=True, https=True).get()
+    # proxies = {
+    #     "http": proxy
+    # }
+    # print(proxies)
+    # res = requests.get(url, proxies=proxies, timeout=10, headers=get_request_headers())
+    # print(res.status_code)
+    # print(res.url)
