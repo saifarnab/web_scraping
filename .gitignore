@@ -274,8 +274,8 @@ tags
 /banners
 /banner
 /ws
-/outbound/client_secrets.json
-/outbound/Credentials.json
+/close/client_secrets.json
+/close/Credentials.json
 /yahoo_stock/yahoo-key.json
 /tainio/downloads
 

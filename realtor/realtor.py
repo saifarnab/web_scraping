@@ -1,6 +1,6 @@
 import csv
+import datetime
 import subprocess
-import time
 
 import requests
 from bs4 import BeautifulSoup
@@ -11,8 +11,8 @@ ZIP_CODE = '33312'
 TYPE = 'apartments,condo'  # choices -> multi-family-home,mfd-mobile-home,farms-ranches,land,condo,townhome,single-family-home,apartments,any
 BEDROOMS = '2'
 BATHROOMS = '2'
-MIN_PRICE = '5000'
-MAX_PRICE = '10000'
+MIN_PRICE = '0'
+MAX_PRICE = '1000000000'
 CATEGORY = 'buy'  # choices -> buy, rent
 KEYWORDS = ''
 
@@ -33,8 +33,8 @@ def csv_file_init(file_name: str):
         with open(file_name, 'x', newline='') as output_file:
             writer = csv.writer(output_file)
             writer.writerow(
-                ["Category", "Property Type", "Address", "Bedrooms", "Bathrooms", "Price", "Link", "Telephone",
-                 "Managed", "Pool", "Furnished"])
+                ["DateTime", "Category", "Property Type", "Address", "Bedrooms", "Bathrooms", "Price", "Link",
+                 "Telephone", "Managed", "Pool", "Furnished"])
             print('File created successfully.')
     except FileExistsError:
         pass
@@ -42,12 +42,12 @@ def csv_file_init(file_name: str):
 
 def write_csv(file_name: str, new_row: list) -> bool:
     flag = True
-    add_hyperlink = f'=HYPERLINK("{new_row[6]}","{new_row[6]}")'
+    add_hyperlink = f'=HYPERLINK("{new_row[7]}","{new_row[7]}")'
     new_row[6] = add_hyperlink
     with open(file_name, "r") as f:
         reader = csv.reader(f, delimiter=",")
         for i, line in enumerate(reader):
-            if line and new_row[6].strip() == line[6].strip() and new_row[0].strip() == line[0].strip():
+            if line and new_row[7].strip() == line[7].strip():
                 flag = False
                 break
 
@@ -184,8 +184,9 @@ def scrapper():
                     bath = ''
 
                 # write to the csv if not exist
+                current_time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                 if write_csv(file_name,
-                             ['Buy', str(property_type), str(address), str(bed).replace('-', 'to'),
+                             [str(current_time), 'Buy', str(property_type), str(address), str(bed).replace('-', 'to'),
                               str(bath).replace('-', 'to'), str(price), str(details_url),
                               str(telephone), str(managed), str(pool), str(furnished)]) is True:
                     property_counter += 1
@@ -293,8 +294,9 @@ def scrapper():
                     bath = ''
 
                 # write to the csv if not exist
+                current_time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                 if write_csv(file_name,
-                             ['Rent', str(property_type), str(address), str(bed).replace('-', 'to'),
+                             [str(current_time), 'Rent', str(property_type), str(address), str(bed).replace('-', 'to'),
                               str(bath).replace('-', 'to'), str(price),
                               str(details_url),
                               str(telephone), str(managed), str(pool), str(furnished)]) is True:

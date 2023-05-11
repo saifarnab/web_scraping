@@ -16,7 +16,7 @@ from user_agent import generate_user_agent
 urllib3.disable_warnings()
 
 # define output folder path, must include the tail '/' or '\'
-OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads/'
+OUTPUT_FOLDER_PATH = '/home/saif/Desktop/Works/web_scraping/tainio/downloads/'
 
 
 def config_driver() -> webdriver.Chrome:
@@ -61,6 +61,9 @@ class Downloader:
 
     def start(self):
         start = time.time()
+        if os.path.exists(self.filename) is True:
+            print('Content already available, moving next..')
+            return
         print(f'File size is {int(self.file_size / 1024000)}mb approximately. Downloading...')
         with open(self.filename, "wb") as f:
             f.truncate(self.file_size)
@@ -101,15 +104,17 @@ def reverse_list(arr):
 def get_break_pointer(url: str) -> str:
     while True:
         try:
-            webpage = requests.get(url, headers=get_request_headers())
+            webpage = requests.get(url, headers=get_request_headers(), timeout=10)
             if 'checkcaptcha' in webpage.url:
                 print('Captcha issue occurred, retrying..')
+                time.sleep(60)
                 continue
             soup = BeautifulSoup(webpage.content, "html.parser")
             dom = etree.HTML(str(soup))
             movie_cards = dom.xpath('//div[@id="dle-content"]//a[@class="entryLink"]')
-            return f'{movie_cards[0].text.strip()}'
+            return f'{movie_cards[1].text.strip()}'
         except Exception as e:
+            print('Website not responding, retrying...')
             continue
 
 
@@ -118,9 +123,10 @@ def get_detail_page_links(break_pointer: str):
     page = 1
     while True:
         url = f'https://tainio-mania.online/page/{page}/'
-        webpage = requests.get(url, headers=get_request_headers())
+        webpage = requests.get(url, headers=get_request_headers(), timeout=10)
         if 'checkcaptcha' in webpage.url:
             print('Captcha issue occurred, retrying..')
+            time.sleep(60)
             continue
         soup = BeautifulSoup(webpage.content, "html.parser")
         dom = etree.HTML(str(soup))
@@ -153,6 +159,8 @@ def get_video_link(url='https://tainio-mania.online/load/seir/deep-shit-2021/21-
             WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.XPATH, '//video')))
             video = driver.find_element(By.XPATH, '//video').get_attribute('src')
 
+            file_extension = video.split('.')[-1]
+
             # check movie or series
             checker = video.split('/')[-1].split('.')[0]
             if 'x' not in checker:
@@ -168,9 +176,11 @@ def get_video_link(url='https://tainio-mania.online/load/seir/deep-shit-2021/21-
                 response = requests.head(link, verify=False, headers=get_request_headers())
                 if 'checkcaptcha' in response.url:
                     print('Captcha issue occurred, retrying..')
+                    time.sleep(60)
                     continue
                 if response.status_code != 200:
                     break
+                time.sleep(1)
                 season += 1
 
             valid_season = season - 1
@@ -186,17 +196,21 @@ def get_video_link(url='https://tainio-mania.online/load/seir/deep-shit-2021/21-
                 response = requests.head(link, verify=False, headers=get_request_headers())
                 if 'checkcaptcha' in response.url:
                     print('Captcha issue occurred, retrying..')
+                    time.sleep(60)
                     continue
                 if response.status_code != 200:
                     break
+                time.sleep(1)
                 episode += 1
 
             valid_episode = episode - 1
             if valid_episode <= 9:
                 valid_episode = f'0{valid_episode}'
-            return video.replace(checker, f'{valid_season}x{valid_episode}'), f'{valid_season}x{valid_episode}'
+            return video.replace(checker,
+                                 f'{valid_season}x{valid_episode}'), f'{valid_season}x{valid_episode}.{file_extension}'
         except Exception as e:
             print('Exception occurs, retrying...')
+            time.sleep(60)
             continue
     return None, None
 
@@ -206,26 +220,30 @@ def run():
     break_pointer = get_break_pointer('https://tainio-mania.online')
     print(f'Content will be downloaded next to this `{break_pointer}`')
     while True:
-        downloadable_items = reverse_list(get_detail_page_links(break_pointer))
-        if len(downloadable_items) < 1:
-            print('No new content available to download, waiting 5 minutes for next try..')
-            time.sleep(300)
-            continue
-
-        for content in downloadable_items:
-            print(f'Fetch video download link for -> {content["title"]}')
-            link, name = get_video_link(content['link'])
-            if link is None:
-                print(f'`{content["title"]}` -> failed to generate downloadable link, moving next..')
+        try:
+            downloadable_items = reverse_list(get_detail_page_links(break_pointer))
+            if len(downloadable_items) < 1:
+                print('No new content available to download, waiting for next try..')
+                time.sleep(300)
                 continue
-            try:
-                downloader = Downloader(link, f'{str(content["title"]).replace("/", " ")}_{name}', num_threads=3)
-                downloader.start()
 
-            except Exception as e:
-                print(f'`{content["title"]}` -> failed to download this content, moving next..')
+            for content in downloadable_items:
+                print(f'Fetch video download link for -> {content["title"]}')
+                link, name = get_video_link(content['link'])
+                if link is None:
+                    print(f'`{content["title"]}` -> failed to generate downloadable link, moving next..')
+                    continue
+                try:
+                    downloader = Downloader(link, f'{str(content["title"]).replace("/", " ")}_{name}', num_threads=3)
+                    downloader.start()
 
-        break_pointer = downloadable_items[0]['title']
+                except Exception as e:
+                    print(f'`{content["title"]}` -> failed to download this content, moving next..')
+
+            break_pointer = downloadable_items[0]['title']
+        except Exception as e:
+            print('Website stop responding, retrying ...')
+            time.sleep(60)
 
 
 if __name__ == '__main__':

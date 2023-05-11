@@ -1,2 +1,0 @@
-neverbounce_sdk
-PyDrive

@@ -1,0 +1,96 @@
+{
+    "seamless": {
+        "fields": [
+            {
+                "name": "FIRST_NAME",
+                "source_field": "First Name"
+            },
+            {
+                "name": "COMPANY_NAME",
+                "source_field": "Company Name"
+            },
+            {
+                "name": "WEBSITE",
+                "source_field": "Website"
+            },
+            {
+                "name": "INDIVIDUAL_LI_URL",
+                "source_field": "Contact LI Profile URL"
+            },
+            {
+                "name": "EMAIL",
+                "source_field": "Email 1"
+            },
+            {
+                "name": "PHONE",
+                "source_field": "Contact Phone 1"
+            },
+            {
+                "name": "COMPANY_DESCRIPTION",
+                "source_field": "Company Description"
+            },
+            {
+                "name": "INDUSTRY",
+                "source_field": "Company Industry"
+            },
+            {
+                "name": "COMPANY_LI_URL",
+                "source_field": "Company LI Profile Url"
+            }
+        ],
+        "email": "Email 1"
+    },
+    "apollo": {
+        "fields": [
+            {
+                "name": "FIRST_NAME",
+                "source_field": "First Name"
+            },
+            {
+                "name": "LAST_NAME",
+                "source_field": "Last Name"
+            },
+            {
+                "name": "TITLE",
+                "source_field": "Title"
+            },
+            {
+                "name": "COMPANY_NAME_FOR_EMAILS",
+                "source_field": "Company Name for Emails"
+            },
+            {
+                "name": "EMAIL",
+                "source_field": "Email"
+            },
+            {
+                "name": "SENIORITY",
+                "source_field": "Seniority"
+            },
+            {
+                "name": "PHONE",
+                "source_field": "First Phone"
+            },
+            {
+                "name": "NUM_EMPLOYEES",
+                "source_field": "# Employees"
+            },
+            {
+                "name": "INDUSTRY",
+                "source_field": "Industry"
+            },
+            {
+                "name": "INDIVIDUAL_LI_URL",
+                "source_field": "Person Linkedin Url"
+            },
+            {
+                "name": "WEBSITE",
+                "source_field": "Website"
+            },
+            {
+                "name": "COMPANY_LI_URL",
+                "source_field": "Company Linkedin Url"
+            }
+        ],
+        "email": "Email"
+    }
+}
