@@ -11,8 +11,8 @@ from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 
 # install dependencies
-# subprocess.check_call(['pip', 'install', 'undetected-chromedriver'])
-# subprocess.check_call(['pip', 'install', 'selenium'])
+subprocess.check_call(['pip', 'install', 'undetected-chromedriver'])
+subprocess.check_call(['pip', 'install', 'selenium'])
 
 # log format
 logging.basicConfig(
@@ -59,25 +59,38 @@ def handle_cookies_popup(driver):
 
 # method for scrolling the page
 def scroll_down_page(driver):
+    pre_len = len(driver.find_elements(By.XPATH, '//a[@class="_9NUh1 qT7x_"]'))
     html = driver.find_element(By.TAG_NAME, 'html')
+    counter = 0
     while len(driver.find_elements(By.XPATH, "//footer")) < 1:
         html.send_keys(Keys.ARROW_DOWN)
+        post_len = len(driver.find_elements(By.XPATH, '//a[@class="_9NUh1 qT7x_"]'))
+        counter += 1
+        if counter % 50 == 0:
+            if pre_len == post_len:
+                break
 
 
 # check valid postcode
 def postcode_validation(driver, postcode) -> bool:
-    if f'/{postcode}' in driver.current_url:
-        wait_until_find_element(driver, By.XPATH, '//iframe')
-        iframe = driver.find_element(By.XPATH, '//iframe')
-        driver.switch_to.frame(iframe)
-        wait_until_find_element(driver, By.XPATH, '//input[@type="checkbox"]')
-        driver.find_element(By.XPATH, '//input[@type="checkbox"]').click()
-        driver.switch_to.default_content()
-        time.sleep(1)
-        logging.info('bypass cloud-flare success')
-    if "redirected" in driver.current_url:
-        logging.info(f'no data available for `{postcode}` postcode')
-        return False
+    while True:
+        try:
+            if f'/{postcode}' in driver.current_url:
+                wait_until_find_element(driver, By.XPATH, '//iframe')
+                iframe = driver.find_element(By.XPATH, '//iframe')
+                driver.switch_to.frame(iframe)
+                wait_until_find_element(driver, By.XPATH, '//input[@type="checkbox"]')
+                driver.find_element(By.XPATH, '//input[@type="checkbox"]').click()
+                driver.switch_to.default_content()
+                time.sleep(1)
+                logging.info('bypass cloud-flare success')
+            if "redirected" in driver.current_url:
+                logging.info(f'no data available for `{postcode}` postcode')
+                return False
+            break
+        except Exception as e:
+            logging.error('Exception occurs, retrying.. ')
+            continue
 
     return True
 
