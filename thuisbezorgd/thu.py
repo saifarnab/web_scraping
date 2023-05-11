@@ -204,7 +204,6 @@ def scanner(driver, postcode, store, f_name):
                         rating = rating[0] + ',' + rating[1:]
                     rating = rating[0:3] + ", " + rating[3:]
                 except Exception as ex:
-                    print(ex)
                     rating = ''
 
             # extracting delivery time
