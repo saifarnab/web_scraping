@@ -1,36 +1,39 @@
 import os
 import threading
 import time
+
 import requests
+import undetected_chromedriver as uc
 import urllib3
 from bs4 import BeautifulSoup
 from lxml import etree
-from selenium import webdriver
-import undetected_chromedriver as uc
+from pySmartDL import SmartDL
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from user_agent import generate_user_agent
 
-# from fp.fp import FreeProxy
-
 # disable ssl warning
 urllib3.disable_warnings()
 
 # define output folder path, must include the tail '/' or '\'
-# OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads/'
-OUTPUT_FOLDER_PATH = 'C:\\Arnab\\web_scraping\\tainio\\downloads\\'
+# OUTPUT_FOLDER_PATH = 'C:\\Arnab\\web_scraping\\tainio\\downloads\\' # for windows
+OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads/'  # for linux & mac
 
 
-def config_driver() -> webdriver.Chrome:
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--disable-infobars")
-    chrome_options.add_argument("--start-miniimized")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--disable-gpu')
+def config_driver():
+    # chrome_options = webdriver.ChromeOptions()
+    # chrome_options.add_argument("--disable-infobars")
+    # chrome_options.add_argument("--start-miniimized")
+    # chrome_options.add_argument("--disable-extensions")
+    # chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('--disable-gpu')
+    # driver = uc.Chrome(options=chrome_options)
 
-    driver = uc.Chrome(options=chrome_options)
+    uc_options = uc.ChromeOptions()
+    # uc_options.headless = True
+    uc_options.add_argument('--headless')
+    driver = uc.Chrome(options=uc_options)
     return driver
 
 
@@ -80,23 +83,34 @@ class Downloader:
 
 def downloader_wth(filename, url: str):
     start = time.time()
-    filename = OUTPUT_FOLDER_PATH + filename
+    file_path = OUTPUT_FOLDER_PATH + filename
     if os.path.exists(filename) is True:
         print('Content already available, moving next..')
         return
     file_size = int(requests.head(url, verify=False).headers["Content-Length"])
     print(f'File size is {int(file_size / 1024000)}mb approximately. Downloading...')
+
     response = requests.get(url, headers=get_request_headers(), timeout=10, verify=False)
 
-    # check if the request was successful
-    if response.status_code == 200:
-        # open a file with the specified file name in write-binary mode
-        with open(filename, "wb") as f:
-            # write the content of the response to the file
-            f.write(response.content)
-        print(f"Download completed in {int((time.time() - start))} seconds approximately")
-    else:
-        print("Failed to download video.")
+    # Set the chunk size for each request (in bytes)
+    chunk_size = 1024 * 1024  # 1 MB
+
+    # Open a file to write the downloaded contents to
+    with open(file_path, 'wb') as file:
+        # Loop through each chunk and write it to the file
+        for chunk in response.iter_content(chunk_size=chunk_size):
+            file.write(chunk)
+    print(f"Download completed in {int((time.time() - start))} seconds approximately")
+
+
+def download_manager(filename, url: str):
+    dest = OUTPUT_FOLDER_PATH + filename
+    if os.path.exists(dest + filename) is True:
+        print('Content already available, moving next..')
+        return
+    print('Content downloading ...')
+    smart_dwnld_manager = SmartDL(url, dest, verify=False)
+    smart_dwnld_manager.start()
 
 
 def get_request_headers() -> dict:
@@ -123,7 +137,7 @@ def get_break_pointer(url: str) -> str:
         try:
             webpage = requests.get(url, headers=get_request_headers(), timeout=10)
             if 'checkcaptcha' in webpage.url:
-                print('Captcha issue occurred, retrying..')
+                print('Website have blocked you IP, retrying .. ')
                 time.sleep(10)
                 continue
             soup = BeautifulSoup(webpage.content, "html.parser")
@@ -142,7 +156,7 @@ def get_detail_page_links(break_pointer: str):
         url = f'https://tainio-mania.online/page/{page}/'
         webpage = requests.get(url, headers=get_request_headers(), timeout=10)
         if 'checkcaptcha' in webpage.url:
-            print('Captcha issue occurred, retrying..')
+            print('Website have blocked you IP, retrying .. ')
             time.sleep(10)
             continue
         soup = BeautifulSoup(webpage.content, "html.parser")
@@ -159,46 +173,33 @@ def get_detail_page_links(break_pointer: str):
 
 
 def get_video_link(driver, url):
-    print(url)
     for i in range(5):
         try:
-            print('hit')
             driver.get(url)
             time.sleep(2)
             if 'checkcaptcha' in driver.current_url:
-                print('Captcha issue occurred, retrying..')
+                print('Website have blocked you IP, retrying .. ')
                 time.sleep(10)
                 continue
-            print(driver.current_url)
             WebDriverWait(driver, 20).until(
                 EC.visibility_of_element_located((By.XPATH, '//div[@id="fake-player-btnplay"]')))
-            print('found 1')
             driver.find_element(By.XPATH, '//div[@id="fake-player-btnplay"]').click()
-            print('found 2')
             WebDriverWait(driver, 20).until(
                 EC.visibility_of_element_located((By.XPATH, '//iframe[1]')))
-            print('found 3')
             iframe = driver.find_elements(By.XPATH, '//iframe')[0]
             iframe.click()
-            print('found 4')
             time.sleep(3)
             driver.switch_to.frame(iframe)
             time.sleep(1)
-            print('found 6')
             WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.XPATH, '//video')))
-            print('found 7')
             video = driver.find_element(By.XPATH, '//video').get_attribute('src')
-            print('found 8')
 
             file_extension = video.split('.')[-1]
-            print(file_extension)
 
             # check movie or series
             checker = video.split('/')[-1].split('.')[0]
             if 'x' not in checker:
                 return video, f'.{file_extension}'
-
-            print(checker)
 
             print('Detected as a series, finding which episode of which season to download')
 
@@ -209,7 +210,7 @@ def get_video_link(driver, url):
                 link = video.replace(checker, temp)
                 response = requests.head(link, verify=False, headers=get_request_headers())
                 if 'checkcaptcha' in response.url:
-                    print('Captcha issue occurred, retrying..')
+                    print('Website have blocked you IP, retrying .. ')
                     time.sleep(10)
                     continue
                 if response.status_code != 200:
@@ -229,7 +230,7 @@ def get_video_link(driver, url):
                 link = video.replace(checker, temp)
                 response = requests.head(link, verify=False, headers=get_request_headers())
                 if 'checkcaptcha' in response.url:
-                    print('Captcha issue occurred, retrying..')
+                    print('Website have blocked you IP, retrying .. ')
                     time.sleep(10)
                     continue
                 if response.status_code != 200:
@@ -243,8 +244,7 @@ def get_video_link(driver, url):
             return video.replace(checker,
                                  f'{valid_season}x{valid_episode}'), f'{valid_season}x{valid_episode}.{file_extension}'
         except Exception as e:
-            print('Exception occurs, retrying...')
-            print(e)
+            print(f'Failed to generate video download link, retrying #{i + 1}')
             time.sleep(5)
             continue
     return None, None
@@ -258,7 +258,6 @@ def run():
     while True:
         try:
             downloadable_items = reverse_list(get_detail_page_links(break_pointer))
-            print(downloadable_items)
             if len(downloadable_items) < 1:
                 print('No new content available to download, waiting for next try..')
                 time.sleep(300)
@@ -267,48 +266,29 @@ def run():
             for content in downloadable_items:
                 print(f'Fetch video download link for -> {content["title"]}')
                 link, name = get_video_link(driver, content['link'])
-                print(link)
-                print(name)
                 if link is None:
-                    print(f'`{content["title"]}` -> failed to generate downloadable link, moving next..')
+                    print(f'`{content["title"]}` -> Failed to generate downloadable link, moving next..')
                     continue
-                try:
-                    print('downloaded')
-                    # downloader = Downloader(link, f'{str(content["title"]).replace("/", " ")}_{name}', num_threads=3)
-                    # downloader.start()
-                    # downloader_wth(f'{str(content["title"]).replace("/", " ")}_{name}', link)
 
-                except Exception as e:
-                    print(f'`{content["title"]}` -> failed to download this content, moving next..')
+                for i in range(3):
+                    try:
+                        # downloader = Downloader(link, f'{str(content["title"]).replace("/", " ")}_{name}', num_threads=3)
+                        # downloader.start()
+                        download_manager(f'{str(content["title"]).replace("/", "|")}_{name}', link)
+                        print('Successfully downloaded!')
+                        break
+                    except Exception as e:
+                        print(f'`{content["title"]}` -> Failed to download this content, retrying..')
+                        continue
 
             break_pointer = downloadable_items[0]['title']
         except Exception as e:
-            print('Website stop responding, retrying ...')
+            print('Website is not responding, retrying ...')
             time.sleep(10)
-
-
-# def get_proxy_ip():
-# proxies = {"http": FreeProxy(rand=True, https=True).get()}
-# res = requests.get(url, proxies=proxies, timeout=10, headers=get_request_headers())
-
-def test():
-    filename = "video.mp4"  # specify the file name you want to save the video as
-
-    # send an HTTP request to the server and get the response
 
 
 if __name__ == '__main__':
     if not os.path.exists(OUTPUT_FOLDER_PATH):
         print('Invalid output folder path')
     else:
-        # test()
         run()
-    # url = 'https://tainio-mania.online'
-    # proxy = FreeProxy(rand=True, https=True).get()
-    # proxies = {
-    #     "http": proxy
-    # }
-    # print(proxies)
-    # res = requests.get(url, proxies=proxies, timeout=10, headers=get_request_headers())
-    # print(res.status_code)
-    # print(res.url)

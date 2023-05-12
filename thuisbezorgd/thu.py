@@ -25,7 +25,7 @@ logging.basicConfig(
 def config_driver() -> webdriver.Chrome:
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--disable-infobars")
-    chrome_options.add_argument("start-miniimized")
+    chrome_options.add_argument("--start-miniimized")
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')

@@ -5,6 +5,7 @@ import time
 from sqlite3 import Error as sqliteError
 from datetime import date
 
+import requests
 from closeio_api import Client
 import smtplib
 from email.mime.text import MIMEText
@@ -108,8 +109,8 @@ def make_email_payload(contact_id, sender_name, sender_email, receiver_email, le
 
 
 def send_email_via_close(api, payload):
-    res_data = api.post('/activity/email/', payload)
-    # print(res_data)
+    res_data = api.post('activity/email', payload)
+    print(res_data)
     if res_data.get('id') not in ['', None]:
         return True
 
@@ -401,6 +402,48 @@ def run():
     logging.info(f'total {success_counter} email have sent via this script.')
     logging.info('Script executed successfully!')
 
+def test():
+    api = Client(CLOSE_API_KEY)
+    connected_account_res = api.get(f'/connected_account/')
+    # print(connected_account_res['data'][0]['organization_id'])
+    # print(connected_account_res['data'][1]['organization_id'])
+    # print(connected_account_res['data'][2]['organization_id'])
+    # print(connected_account_res['data'][0])
+    # print(connected_account_res['data'][1]['user_id'])
+    # print(connected_account_res['data'][2]['user_id'])
+
+    # time.sleep(100000)
+
+    # res_data = api.get(f'/lead/{lead_id}')
+    lead_id = 'lead_oyE9wA4RjYoX0jPe8cQrC4jgW9gGpzaWIBa92e9dlwH'
+    user_id = 'user_l0UqCXVwEd82vSOui1HxhVAyTAf0hOa9BDxsXizfJhV'
+    contact_id = 'cont_tNRAaXBXWZ0C84yNNjy8ToEKHL0xhkokSoEfohdlv7B'
+    payload = {
+        "contact_id": contact_id,
+        "user_id": user_id,
+        "lead_id": lead_id,
+        "direction": "outgoing",
+        "created_by_name": 'Jim Coleman',
+        "sender": "\"Jim Coleman\" <jim.coleman@discover-xf.com>",
+        "to": ['saifornab@gmail.com'],
+        "bcc": [],
+        "cc": [],
+        "status": "outbox",
+        "attachments": [],
+        "template_id": EMAIL_TEMPLATE_ID,
+    }
+    send_email_via_close(api, payload)
+    # headers = {
+    #     'Content-type': 'application/json',
+    #     'Authorization': CLOSE_API_KEY
+    # }
+    # res = requests.post(url='https://api.close.com/api/v1/activity/email/', json=payload, headers=headers)
+    #
+    # print(res.status_code)
+    # print(res.content)
+
+
 
 if __name__ == '__main__':
-    run()
+    test()
+    # run()
