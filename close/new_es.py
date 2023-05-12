@@ -62,7 +62,8 @@ def create_tables(conn):
                                                     account_email text NOT NULL,
                                                     account_password text,
                                                     send_via_close boolean NOT NULL,
-                                                    reply_to text
+                                                    reply_to text,
+                                                    account_email_id text NOT NULL
                                                 ); """
     try:
         c = conn.cursor()
@@ -91,8 +92,9 @@ def create_email_sent_confirmation(conn, sender_email, receiver_email, send_via_
     conn.commit()
 
 
-def make_email_payload(contact_id, sender_name, sender_email, receiver_email, lead_id):
+def make_email_payload(contact_id, sender_name, sender_email, receiver_email, lead_id, email_account_id):
     return {
+        "email_account_id": email_account_id,
         "contact_id": contact_id,
         "user_id": USER_ID,
         "lead_id": lead_id,
@@ -263,7 +265,7 @@ def run():
     logging.info('Script starts running ...')
 
     # initialize db connection
-    conn = create_db_connection(SQLITE_DB_PATH + 'sqlite.db')
+    conn = create_db_connection(SQLITE_DB_PATH + 'client_sqlite.db')
 
     # create tables
     create_tables(conn)
@@ -336,12 +338,14 @@ def run():
                 sender_email = connected_account[2]
                 sender_pass = connected_account[3]  # required if email sent configured via Google
                 reply_to = connected_account[5]  # will use if not null
+                email_account_id = connected_account[6]  # will use for close
 
                 # make decision which service to use (close or gmail)
                 if connected_account[4]:  # this connected account configured to send email via close
 
                     # generate payload to send email
-                    payload = make_email_payload(contact_id, sender_name, sender_email, receiver_email, lead_id)
+                    payload = make_email_payload(contact_id, sender_name, sender_email, receiver_email, lead_id,
+                                                 email_account_id)
 
                     # send email via close
                     if send_email_via_close(api, payload) is True:
@@ -402,29 +406,47 @@ def run():
     logging.info(f'total {success_counter} email have sent via this script.')
     logging.info('Script executed successfully!')
 
+
 def test():
     api = Client(CLOSE_API_KEY)
-    connected_account_res = api.get(f'/connected_account/')
-    # print(connected_account_res['data'][0]['organization_id'])
-    # print(connected_account_res['data'][1]['organization_id'])
+    # connected_account_res = api.get(f'/connected_account/')
+    # for item in connected_account_res['data']:
+    #     if item['default_identity']['name'] != 'Jim Coleman':
+    #         print(item)
+    #         break
+    # print('done')
+    # print(connected_account_res['data'][1])
+    # print(connected_account_res['data'][2])
+
+    # time.sleep(1000000000)
+    # emailacct_jVJ0bWhzmTkmfvr6d7OPnDfnDEaEt7aHnKIPgqXtjdI
+    # jcoleman@goxfusion.live
+    # Jim Coleman
+
+    # david@xfusion.io
+    # emailacct_ZFiotKd2E2n3178diEp7SRY4VMY4Ote5wEbHPIrF532
+    # David Tran
+
+    # print(connected_account_res['data'][0]['email'])
+    # print(connected_account_res['data'][0]['email'])
     # print(connected_account_res['data'][2]['organization_id'])
     # print(connected_account_res['data'][0])
     # print(connected_account_res['data'][1]['user_id'])
     # print(connected_account_res['data'][2]['user_id'])
 
-    # time.sleep(100000)
-
     # res_data = api.get(f'/lead/{lead_id}')
     lead_id = 'lead_oyE9wA4RjYoX0jPe8cQrC4jgW9gGpzaWIBa92e9dlwH'
     user_id = 'user_l0UqCXVwEd82vSOui1HxhVAyTAf0hOa9BDxsXizfJhV'
     contact_id = 'cont_tNRAaXBXWZ0C84yNNjy8ToEKHL0xhkokSoEfohdlv7B'
+    email_account_id = 'emailacct_jVJ0bWhzmTkmfvr6d7OPnDfnDEaEt7aHnKIPgqXtjdI'
     payload = {
+        "email_account_id": email_account_id,
         "contact_id": contact_id,
         "user_id": user_id,
         "lead_id": lead_id,
         "direction": "outgoing",
         "created_by_name": 'Jim Coleman',
-        "sender": "\"Jim Coleman\" <jim.coleman@discover-xf.com>",
+        "sender": "\"Jim Coleman\" <jcoleman@goxfusion.live>",
         "to": ['saifornab@gmail.com'],
         "bcc": [],
         "cc": [],
@@ -443,7 +465,8 @@ def test():
     # print(res.content)
 
 
-
 if __name__ == '__main__':
-    test()
-    # run()
+    # test()
+    # conn = create_db_connection(SQLITE_DB_PATH + 'client_sqlite.db')
+    # create_tables(conn)
+    run()

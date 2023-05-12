@@ -104,6 +104,11 @@ def downloader_wth(filename, url: str):
 
 
 def download_manager(filename, url: str):
+    special_char_list = ["$", "@", "#", "&", "%", ":", "/", "\\", "^", "!", "(", ")", "<", ">", "{", "}", "[", "]"]
+    for item in special_char_list:
+        if item in filename:
+            filename = filename.replace(item, "")
+
     dest = OUTPUT_FOLDER_PATH + filename
     if os.path.exists(dest + filename) is True:
         print('Content already available, moving next..')
