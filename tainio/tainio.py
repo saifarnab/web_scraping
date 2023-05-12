@@ -17,8 +17,8 @@ from user_agent import generate_user_agent
 urllib3.disable_warnings()
 
 # define output folder path, must include the tail '/' or '\'
-# OUTPUT_FOLDER_PATH = 'C:\\Arnab\\web_scraping\\tainio\\downloads\\' # for windows
-OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads/'  # for linux & mac
+OUTPUT_FOLDER_PATH = 'C:\\Arnab\\web_scraping\\tainio\\downloads\\' # for windows
+# OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads/'  # for linux & mac
 
 
 def config_driver():
@@ -104,15 +104,19 @@ def downloader_wth(filename, url: str):
 
 
 def download_manager(filename, url: str):
-    special_char_list = ["$", "@", "#", "&", "%", ":", "/", "\\", "^", "!", "(", ")", "<", ">", "{", "}", "[", "]"]
+    special_char_list = ["$", "@", "#", "&", "%", ":", "/", "\\", "^", "!", "(", ")", "<", ">", "{", "}", "[", "]", "|"]
     for item in special_char_list:
         if item in filename:
             filename = filename.replace(item, "")
+
+    filename = filename.replace(' ', '_')
 
     dest = OUTPUT_FOLDER_PATH + filename
     if os.path.exists(dest + filename) is True:
         print('Content already available, moving next..')
         return
+
+    print(dest)
     print('Content downloading ...')
     smart_dwnld_manager = SmartDL(url, dest, verify=False)
     smart_dwnld_manager.start()
