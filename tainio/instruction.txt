@@ -1,0 +1,18 @@
+Instructions:
+
+1. Create and acivate virual env
+2. Install pip if not installed
+3. Install all the dependencies
+    a. pip install bs4
+    b. pip install undetected_chromedriver
+    c. pip install lxml
+    d. pip install pySmartDL
+    e. pip install user_agent
+    f. pip install urllib3
+4. Change the OUTPUT_FOLDER_PATH variable in code with your destination folder path
+5. Run > python tainio.py
+
+Notes:
+1. This website has server site IP blocking machanism.
+2. If the site blocks your IP, script will w8 sometimes and retry
+3. For best result you can use proxy IPs.

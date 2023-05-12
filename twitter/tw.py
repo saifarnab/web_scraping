@@ -64,6 +64,22 @@ def config_driver() -> webdriver.Chrome:
     driver = webdriver.Chrome(options=options)
     return driver
 
+def config_driver() -> webdriver.Chrome:
+    options = Options()
+    options.add_argument("lang=en-GB")
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--allow-running-insecure-content')
+    options.add_argument("--disable-extensions")
+    options.add_argument("--proxy-server='direct://'")
+    options.add_argument("--proxy-bypass-list=*")
+    options.add_argument('--disable-gpu')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--headless')
+    driver = webdriver.Chrome(options=options)
+    return driver
+
+
 
 def login_via_tw_auto():
     tw = twAuto.twAuto(

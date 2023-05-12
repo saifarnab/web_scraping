@@ -1,5 +1,5 @@
 import os
-import threading
+import subprocess
 import time
 
 import requests
@@ -13,95 +13,28 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from user_agent import generate_user_agent
 
+# install dependencies
+subprocess.check_call(['pip', 'install', 'bs4'])
+subprocess.check_call(['pip', 'install', 'undetected_chromedriver'])
+subprocess.check_call(['pip', 'install', 'lxml'])
+subprocess.check_call(['pip', 'install', 'pySmartDL'])
+subprocess.check_call(['pip', 'install', 'user_agent'])
+subprocess.check_call(['pip', 'install', 'urllib3'])
+
 # disable ssl warning
 urllib3.disable_warnings()
 
 # define output folder path, must include the tail '/' or '\'
-OUTPUT_FOLDER_PATH = 'C:\\Arnab\\web_scraping\\tainio\\downloads\\' # for windows
-# OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads/'  # for linux & mac
+# OUTPUT_FOLDER_PATH = 'C:\\Arnab\\web_scraping\\tainio\\downloads\\' # for windows
+OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads/'  # for linux & mac
 
 
 def config_driver():
-    # chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_argument("--disable-infobars")
-    # chrome_options.add_argument("--start-miniimized")
-    # chrome_options.add_argument("--disable-extensions")
-    # chrome_options.add_argument('--headless')
-    # chrome_options.add_argument('--disable-gpu')
-    # driver = uc.Chrome(options=chrome_options)
-
     uc_options = uc.ChromeOptions()
-    # uc_options.headless = True
-    uc_options.add_argument('--headless')
+    uc_options.headless = True
+    # uc_options.add_argument('--headless')
     driver = uc.Chrome(options=uc_options)
     return driver
-
-
-class Downloader:
-    def __init__(self, url, name, num_threads=4):
-        self.url = url
-        self.num_threads = num_threads
-        self.file_size = int(requests.head(url, verify=False).headers["Content-Length"])
-        self.chunk_size = self.file_size // self.num_threads
-        self.lock = threading.Lock()
-        self.bytes_written = 0
-        self.filename = OUTPUT_FOLDER_PATH + name
-
-    def download(self, start_byte, end_byte):
-        headers = {"Range": f"bytes={start_byte}-{end_byte}"}
-        res = requests.get(self.url, headers=headers, stream=True, verify=False)
-
-        with self.lock:
-            with open(self.filename, "r+b") as f:
-                f.seek(start_byte)
-                f.write(res.content)
-
-            self.bytes_written += end_byte - start_byte
-
-    def start(self):
-        start = time.time()
-        if os.path.exists(self.filename) is True:
-            print('Content already available, moving next..')
-            return
-        print(f'File size is {int(self.file_size / 1024000)}mb approximately. Downloading...')
-        with open(self.filename, "wb") as f:
-            f.truncate(self.file_size)
-
-        threads = []
-
-        for i in range(self.num_threads):
-            start_byte = i * self.chunk_size
-            end_byte = (i + 1) * self.chunk_size - 1 if i < self.num_threads - 1 else self.file_size - 1
-            thread = threading.Thread(target=self.download, args=(start_byte, end_byte))
-            thread.start()
-            threads.append(thread)
-
-        for thread in threads:
-            thread.join()
-        print(f"Download completed in {int((time.time() - start))} seconds approximately")
-
-
-def downloader_wth(filename, url: str):
-    start = time.time()
-    file_path = OUTPUT_FOLDER_PATH + filename
-    if os.path.exists(filename) is True:
-        print('Content already available, moving next..')
-        return
-    file_size = int(requests.head(url, verify=False).headers["Content-Length"])
-    print(f'File size is {int(file_size / 1024000)}mb approximately. Downloading...')
-
-    response = requests.get(url, headers=get_request_headers(), timeout=10, verify=False)
-
-    # Set the chunk size for each request (in bytes)
-    chunk_size = 1024 * 1024  # 1 MB
-
-    # Open a file to write the downloaded contents to
-    with open(file_path, 'wb') as file:
-        # Loop through each chunk and write it to the file
-        for chunk in response.iter_content(chunk_size=chunk_size):
-            file.write(chunk)
-    print(f"Download completed in {int((time.time() - start))} seconds approximately")
-
 
 def download_manager(filename, url: str):
     special_char_list = ["$", "@", "#", "&", "%", ":", "/", "\\", "^", "!", "(", ")", "<", ">", "{", "}", "[", "]", "|"]
@@ -110,13 +43,11 @@ def download_manager(filename, url: str):
             filename = filename.replace(item, "")
 
     filename = filename.replace(' ', '_')
-
     dest = OUTPUT_FOLDER_PATH + filename
-    if os.path.exists(dest + filename) is True:
+    if os.path.exists(dest) is True:
         print('Content already available, moving next..')
         return
 
-    print(dest)
     print('Content downloading ...')
     smart_dwnld_manager = SmartDL(url, dest, verify=False)
     smart_dwnld_manager.start()
