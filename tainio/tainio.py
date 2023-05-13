@@ -8,6 +8,8 @@ import urllib3
 from bs4 import BeautifulSoup
 from lxml import etree
 from pySmartDL import SmartDL
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
@@ -29,12 +31,31 @@ urllib3.disable_warnings()
 OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads/'  # for linux & mac
 
 
-def config_driver():
+def config_driver() -> webdriver.Chrome:
+    options = Options()
+    options.add_argument(f'user-agent={generate_user_agent()}')
+    options.add_argument("lang=en-GB")
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--allow-running-insecure-content')
+    options.add_argument("--disable-extensions")
+    options.add_argument("--proxy-bypass-list=*")
+    options.add_argument("--start-maximized")
+    options.add_argument('--disable-gpu')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--headless')
+    driver = webdriver.Chrome(options=options)
+    return driver
+
+
+def config_uc_driver():
     uc_options = uc.ChromeOptions()
-    uc_options.headless = True
+    # uc_options.headless = True
     # uc_options.add_argument('--headless')
+    uc_options.add_argument(f'user-agent={generate_user_agent()}')
     driver = uc.Chrome(options=uc_options)
     return driver
+
 
 def download_manager(filename, url: str):
     special_char_list = ["$", "@", "#", "&", "%", ":", "/", "\\", "^", "!", "(", ")", "<", ">", "{", "}", "[", "]", "|"]
@@ -72,13 +93,23 @@ def reverse_list(arr):
     return arr
 
 
-def get_break_pointer(url: str) -> str:
+def handle_captcha(driver):
+    WebDriverWait(driver, 20).until(
+        EC.visibility_of_element_located((By.XPATH, '//a[@title="Ταινίες online Mobile Version"]')))
+    driver.find_element(By.XPATH, '//a[@title="Ταινίες online Mobile Version"]').click()
+    WebDriverWait(driver, 20).until(
+        EC.visibility_of_element_located((By.XPATH, '//div[@id="footmenu"]//span//a[2]')))
+    driver.find_element(By.XPATH, '//div[@id="footmenu"]//span//a[2]').click()
+    time.sleep(1)
+
+
+def get_break_pointer(url: str):
     while True:
         try:
             webpage = requests.get(url, headers=get_request_headers(), timeout=10)
             if 'checkcaptcha' in webpage.url:
-                print('Website have blocked you IP, retrying .. ')
-                time.sleep(10)
+                print('Website have blocked you IP, solve this from your browser')
+                time.sleep(5)
                 continue
             soup = BeautifulSoup(webpage.content, "html.parser")
             dom = etree.HTML(str(soup))
@@ -96,8 +127,8 @@ def get_detail_page_links(break_pointer: str):
         url = f'https://tainio-mania.online/page/{page}/'
         webpage = requests.get(url, headers=get_request_headers(), timeout=10)
         if 'checkcaptcha' in webpage.url:
-            print('Website have blocked you IP, retrying .. ')
-            time.sleep(10)
+            print('Website have blocked you IP, solve this from your browser')
+            time.sleep(5)
             continue
         soup = BeautifulSoup(webpage.content, "html.parser")
         dom = etree.HTML(str(soup))
@@ -118,8 +149,8 @@ def get_video_link(driver, url):
             driver.get(url)
             time.sleep(2)
             if 'checkcaptcha' in driver.current_url:
-                print('Website have blocked you IP, retrying .. ')
-                time.sleep(10)
+                print('Website have blocked you IP, solve this from your browser')
+                time.sleep(5)
                 continue
             WebDriverWait(driver, 20).until(
                 EC.visibility_of_element_located((By.XPATH, '//div[@id="fake-player-btnplay"]')))
@@ -150,8 +181,8 @@ def get_video_link(driver, url):
                 link = video.replace(checker, temp)
                 response = requests.head(link, verify=False, headers=get_request_headers())
                 if 'checkcaptcha' in response.url:
-                    print('Website have blocked you IP, retrying .. ')
-                    time.sleep(10)
+                    print('Website have blocked you IP, solve this from your browser')
+                    time.sleep(5)
                     continue
                 if response.status_code != 200:
                     break
@@ -170,8 +201,8 @@ def get_video_link(driver, url):
                 link = video.replace(checker, temp)
                 response = requests.head(link, verify=False, headers=get_request_headers())
                 if 'checkcaptcha' in response.url:
-                    print('Website have blocked you IP, retrying .. ')
-                    time.sleep(10)
+                    print('Website have blocked you IP, solve this from your browser')
+                    time.sleep(5)
                     continue
                 if response.status_code != 200:
                     break
@@ -193,7 +224,6 @@ def get_video_link(driver, url):
 def run():
     print('Script starts running ...')
     break_pointer = get_break_pointer('https://tainio-mania.online')
-    driver = config_driver()
     print(f'Content will be downloaded next to this `{break_pointer}`')
     while True:
         try:
@@ -205,6 +235,7 @@ def run():
 
             for content in downloadable_items:
                 print(f'Fetch video download link for -> {content["title"]}')
+                driver = config_driver()
                 link, name = get_video_link(driver, content['link'])
                 if link is None:
                     print(f'`{content["title"]}` -> Failed to generate downloadable link, moving next..')
@@ -212,14 +243,13 @@ def run():
 
                 for i in range(3):
                     try:
-                        # downloader = Downloader(link, f'{str(content["title"]).replace("/", " ")}_{name}', num_threads=3)
-                        # downloader.start()
                         download_manager(f'{str(content["title"]).replace("/", "|")}_{name}', link)
                         print('Successfully downloaded!')
                         break
                     except Exception as e:
                         print(f'`{content["title"]}` -> Failed to download this content, retrying..')
                         continue
+                driver.close()
 
             break_pointer = downloadable_items[0]['title']
         except Exception as e:
