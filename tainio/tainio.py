@@ -11,7 +11,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 # install dependencies
 subprocess.check_call(['pip', 'install', 'pySmartDL'])
-subprocess.check_call(['pip', 'install', 'user_agent'])
+subprocess.check_call(['pip', 'install', 'selenium'])
 subprocess.check_call(['pip', 'install', 'urllib3'])
 
 # define output folder path, must include the tail '/' or '\'
