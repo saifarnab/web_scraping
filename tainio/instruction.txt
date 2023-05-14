@@ -3,16 +3,12 @@ Instructions:
 1. Create and acivate virual env
 2. Install pip if not installed
 3. Install all the dependencies
-    a. pip install bs4
-    b. pip install undetected_chromedriver
-    c. pip install lxml
-    d. pip install pySmartDL
-    e. pip install user_agent
-    f. pip install urllib3
+    a. pip install selenium
+    b. pip install pySmartDL
+    c. pip install requests
 4. Change the OUTPUT_FOLDER_PATH variable in code with your destination folder path
 5. Run > python tainio.py
-
-Notes:
-1. This website has server site IP blocking machanism.
-2. If the site blocks your IP, script will w8 sometimes and retry
-3. For best result you can use proxy IPs.
+6. Do not close the automated browser
+7. If 'Website have blocked you IP, please solve the captcha.' this message generates in console,
+    open the automate brower go to mobile version & solve the captcha & click submit.
+     Minimize the browser, script will take care the rest.
