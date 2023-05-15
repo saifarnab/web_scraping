@@ -11,9 +11,9 @@ ZIP_CODE = '33312'
 TYPE = 'apartments,condo'  # choices -> multi-family-home,mfd-mobile-home,farms-ranches,land,condo,townhome,single-family-home,apartments,any
 BEDROOMS = '2'
 BATHROOMS = '2'
-MIN_PRICE = '0'
-MAX_PRICE = '1000000000'
-CATEGORY = 'buy'  # choices -> buy, rent
+MIN_PRICE = '5000'
+MAX_PRICE = '10000'
+CATEGORY = 'rent'  # choices -> buy, rent
 KEYWORDS = ''
 
 # define api key for scrapper
