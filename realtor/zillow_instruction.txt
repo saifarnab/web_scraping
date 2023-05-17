@@ -1,0 +1,10 @@
+Instructions:
+    1. create & activate virtual env
+    2. Install the dependencies (selenium, user_agent)
+    3. keep your csv generated from realtor.py script in the same directory
+    4. Run --> python zillow.py rent_properties.csv OR python zillow.py buy_properties.csv
+
+Notes:
+    1. It will create a new csv i.g (zillow_rent_properties.csv or zillow_buy_properties.csv)
+    2. It will ignore the duplicate address
+    3. Zillow site blocks IP with perimeter captcha. Thus extraction will be slow.
