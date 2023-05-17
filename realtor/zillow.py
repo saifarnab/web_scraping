@@ -136,12 +136,14 @@ def scrapper(filename: str):
                 EC.visibility_of_element_located(
                     (By.XPATH, '//span[@class="RCFAgentPhoneDesktopText__phoneNumber"]')))
             telephone = driver.find_element(By.XPATH, '//span[@class="RCFAgentPhoneDesktopText__phoneNumber"]').text
+            time.sleep(1)
             if telephone in [None, '', ' ']:
                 raise Exception('telephone number not found')
         except Exception as e:
             try:
                 zillow_url = driver.current_url
                 telephone = driver.find_element(By.XPATH, '//li[@class="ds-listing-agent-info-text"]').text
+                time.sleep(1)
             except Exception as e:
                 zillow_url = driver.current_url
                 telephone = ''
