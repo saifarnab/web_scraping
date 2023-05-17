@@ -8,11 +8,11 @@ from lxml import etree
 
 # define variables
 ZIP_CODE = '33312'
-TYPE = 'apartments,condo'  # choices -> multi-family-home,mfd-mobile-home,farms-ranches,land,condo,townhome,single-family-home,apartments,any
+TYPE = ''  # choices -> multi-family-home,mfd-mobile-home,farms-ranches,land,condo,townhome,single-family-home,apartments,any
 BEDROOMS = '2'
 BATHROOMS = '2'
-MIN_PRICE = '5000'
-MAX_PRICE = '10000'
+MIN_PRICE = '50000'
+MAX_PRICE = '100000'
 CATEGORY = 'rent'  # choices -> buy, rent
 KEYWORDS = ''
 
@@ -43,7 +43,7 @@ def csv_file_init(file_name: str):
 def write_csv(file_name: str, new_row: list) -> bool:
     flag = True
     add_hyperlink = f'=HYPERLINK("{new_row[7]}","{new_row[7]}")'
-    new_row[6] = add_hyperlink
+    new_row[7] = add_hyperlink
     with open(file_name, "r") as f:
         reader = csv.reader(f, delimiter=",")
         for i, line in enumerate(reader):
@@ -263,12 +263,14 @@ def scrapper():
                         for i in range(4):
                             page_url = f'https://api.scraperapi.com/?api_key={API_KEY}&url={details_url}'
                             response = requests.get(page_url)
+                            print(response.status_code)
                             ds = BeautifulSoup(response.content, 'html.parser')
 
                             if 'tel:' in str(ds):
                                 telephone = ds.find('a', href=lambda href: href and href.startswith('tel:')).text
                                 break
                 except Exception as e:
+                    print(e)
                     telephone = ''
 
                 # price, bed & bath

@@ -1,5 +1,6 @@
 import csv
 
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from lxml import etree
@@ -14,7 +15,7 @@ def csv_file_init(file_name: str):
     try:
         with open(file_name, 'x', newline='') as output_file:
             writer = csv.writer(output_file)
-            writer.writerow(["CompanyName", "Address", "City", "State", "ZipCode", "Telephone"])
+            writer.writerow(["CompanyName", "Address", "City", "State", "ZipCode", "Telephone", "Link"])
             print('File created successfully.')
     except FileExistsError:
         pass
@@ -50,7 +51,8 @@ def run():
             cat_links.append(link)
 
     print('Total categories: ', len(cat_links))
-    cat_links = cat_links[147:] # 112
+    cat_links = cat_links[785 + 231:]
+    issues = []
 
     # cat_links = ['https://web.raleighchamber.org/Banners/Print-My-Images-28241']
     for ind, link in enumerate(cat_links):
@@ -149,7 +151,7 @@ def run():
                     print(name, address, locality, region, postal_code, phone)
                     write_csv(filename,
                               [name.strip(), address.strip(), locality.strip(), region.strip(), postal_code.strip(),
-                               phone.strip()])
+                               phone.strip(), link])
 
                 elif dom.xpath('//div[@class="ListingDetails_Level1_HEADERBOXBOX"]//h2//a'):
                     try:
@@ -196,7 +198,7 @@ def run():
                     print(name, address, locality, region, postal_code, phone)
                     write_csv(filename,
                               [name.strip(), address.strip(), locality.strip(), region.strip(), postal_code.strip(),
-                               phone.strip()])
+                               phone.strip(), link])
 
                 elif dom.xpath('//div[@class="ListingDetails_Level5_HEADERBOXBOX"]//h2//span//span'):
                     try:
@@ -243,7 +245,7 @@ def run():
                     print(name, address, locality, region, postal_code, phone)
                     write_csv(filename,
                               [name.strip(), address.strip(), locality.strip(), region.strip(), postal_code.strip(),
-                               phone.strip()])
+                               phone.strip(), link])
 
                 elif dom.xpath('//div[@class="ListingResults_All_CONTAINER ListingResults_Level1_CONTAINER"]'):
                     items = dom.xpath('//div[@class="ListingResults_All_CONTAINER ListingResults_Level1_CONTAINER"]')
@@ -309,7 +311,7 @@ def run():
                               postal_code.strip(), phone.strip())
                         write_csv(filename,
                                   [name.strip(), address.strip(), locality.strip(), region.strip(), postal_code.strip(),
-                                   phone.strip()])
+                                   phone.strip(), link])
 
                 elif dom.xpath('//div[@id="tabber1"]//p//strong'):
                     no_ele = dom.xpath('//div[@id="tabber1"]//p//strong')
@@ -338,15 +340,16 @@ def run():
                 else:
                     print(link)
                     print('other variety found')
-                    break
+                    issues.append(link)
                 print(f'Current pointer --> {ind}')
 
             except Exception as e:
                 print(link)
-                print(e)
-                break
+                issues.append(link)
 
     print('Script successfully completed!')
+    df = pd.DataFrame(issues, columns=["link"])
+    df.to_csv('issues.csv', index=False)
 
 
 if __name__ == "__main__":

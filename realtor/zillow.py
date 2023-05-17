@@ -120,7 +120,6 @@ def scrapper(filename: str):
                 EC.visibility_of_element_located(
                     (By.XPATH, '//button[@class="ds-close-lightbox-icon hc-back-to-list"]')))
         except Exception as e:
-            print(driver.current_url)
             print('Zillow link not found')
             row = properties_data[pointer]
             row.append('')
@@ -129,6 +128,7 @@ def scrapper(filename: str):
             pointer += 1
             driver.close()
             time.sleep(1)
+            continue
 
         try:
             zillow_url = driver.current_url

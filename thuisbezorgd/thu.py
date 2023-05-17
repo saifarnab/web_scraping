@@ -5,10 +5,15 @@ import random
 import subprocess
 import time
 
+import selenium
 import undetected_chromedriver as uc
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
+from user_agent import generate_user_agent
 
 # install dependencies
 subprocess.check_call(['pip', 'install', 'undetected-chromedriver'])
@@ -22,7 +27,7 @@ logging.basicConfig(
 
 
 # chrome driver configuration
-def config_driver() -> webdriver.Chrome:
+def config_uc_driver() -> webdriver.Chrome:
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--disable-infobars")
     chrome_options.add_argument("--start-miniimized")
@@ -30,8 +35,22 @@ def config_driver() -> webdriver.Chrome:
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
 
-    driver = uc.Chrome(options=chrome_options)
+    driver = uc.Chrome(options=chrome_options, use_subprocess=True)
     return driver
+
+
+def config_driver():
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument('--ignore-certificate-errors')
+    chrome_options.add_argument('--allow-running-insecure-content')
+    chrome_options.add_argument("--disable-infobars")
+    chrome_options.add_argument("--start-miniimized")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument('--headless')
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    return webdriver.Chrome(options=chrome_options)
+
 
 
 # wait until an element is ready from DOM
@@ -82,7 +101,10 @@ def postcode_validation(driver, postcode) -> bool:
                 wait_until_find_element(driver, By.XPATH, '//input[@type="checkbox"]')
                 driver.find_element(By.XPATH, '//input[@type="checkbox"]').click()
                 driver.switch_to.default_content()
-                time.sleep(1)
+                time.sleep(10)
+                print(driver.current_url)
+                if driver.current_url == 'https://www.thuisbezorgd.nl/' + postcode:
+                    continue
                 logging.info('bypass cloud-flare success')
             if "redirected" in driver.current_url:
                 logging.info(f'no data available for `{postcode}` postcode')
@@ -277,7 +299,7 @@ def create_csv(name: str):
 
 
 def run():
-    ch_driver = config_driver()
+    ch_driver = config_uc_driver()
     post_codes = open('postcodes.txt', "r")
     logging.info('Script start running ...')
     file_name = f'data_{random.randint(1, 999999)}'
