@@ -11,3 +11,5 @@ DateTime,Category,Property Type,Address,Bedrooms,Bathrooms,Price,Link,Telephone,
 17/05/2023 20:57:37,Rent,Single family,300 Royal Plaza Dr Fort Lauderdale FL 33301,7,6.5,"$60,000","=HYPERLINK(""https://www.realtor.com/realestateandhomes-detail/300-Royal-Plaza-Dr_Fort-Lauderdale_FL_33301_M51208-21266"",""https://www.realtor.com/realestateandhomes-detail/300-Royal-Plaza-Dr_Fort-Lauderdale_FL_33301_M51208-21266"")",,,Y,N
 17/05/2023 20:57:47,Rent,Single family,310 SE 11th Ave Fort Lauderdale FL 33301,5,5,"$50,000","=HYPERLINK(""https://www.realtor.com/realestateandhomes-detail/310-SE-11th-Ave_Fort-Lauderdale_FL_33301_M57858-32011"",""https://www.realtor.com/realestateandhomes-detail/310-SE-11th-Ave_Fort-Lauderdale_FL_33301_M57858-32011"")",,,Y,N
 17/05/2023 20:57:57,Rent,Single family,2700 SE 18th St Unit 100 Fort Lauderdale FL 33301,6,5.5,"$55,000","=HYPERLINK(""https://www.realtor.com/realestateandhomes-detail/2700-SE-18th-St-Unit-100_Fort-Lauderdale_FL_33301_M96674-41794"",""https://www.realtor.com/realestateandhomes-detail/2700-SE-18th-St-Unit-100_Fort-Lauderdale_FL_33301_M96674-41794"")",,,Y,N
+
+
