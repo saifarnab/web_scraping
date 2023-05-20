@@ -75,7 +75,7 @@ def scrapper():
 
     # based on category decide which pages need to scrap
     if CATEGORY.lower() == 'buy':
-        file_name = 'buy_properties.csv'
+        file_name = 'fc/buy_properties.csv'
         csv_file_init(file_name)
         page = 1
         property_counter = 0
@@ -195,7 +195,7 @@ def scrapper():
             page += 1
 
     elif CATEGORY.lower() == 'rent':  # Rent
-        file_name = 'rent_properties.csv'
+        file_name = 'fc/rent_properties.csv'
         csv_file_init(file_name)
         page = 1
         property_counter = 0

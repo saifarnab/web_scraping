@@ -2,14 +2,14 @@ import csv
 import subprocess
 import sys
 import time
-from os.path import exists
 
 from selenium import webdriver
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
-from user_agent import generate_user_agent
+from fake_useragent import UserAgent
+
 
 # install dependencies
 subprocess.check_call(['pip', 'install', 'user_agent'])
@@ -22,7 +22,7 @@ def config_driver():
     chrome_options.add_argument('--allow-running-insecure-content')
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument('--headless')
-    chrome_options.add_argument(f'user-agent={generate_user_agent()}')
+    chrome_options.add_argument(f'user-agent={UserAgent().random}')
     return webdriver.Chrome(options=chrome_options)
 
 
@@ -72,7 +72,7 @@ def get_properties_data(filename: str) -> list:
 
 def handle_captcha(driver):
     try:
-        print('Handling captcha perimeter X')
+        print('Website blocks your IP, handling captcha perimeter-X ...')
         open_window_elem = "#px-captcha"
         x = int(driver.find_element(By.CSS_SELECTOR, open_window_elem).location['x'])
         y = int(driver.find_element(By.CSS_SELECTOR, open_window_elem).location['y'])
@@ -84,7 +84,7 @@ def handle_captcha(driver):
         action.click_and_hold()
         time.sleep(1)
         action.perform()
-        time.sleep(11)
+        time.sleep(15)
     except Exception as e:
         pass
 
@@ -102,13 +102,15 @@ def scrapper(filename: str):
     zillow_filename = f'zillow_{filename}'
     csv_file_init(zillow_filename)
     pointer = 0
+    re_try = True
+
     while pointer < len(properties_data):
+        driver = config_driver()
         if check_existence(zillow_filename, properties_data[pointer]) is True:
             print('Property already available, ignoring..')
             pointer += 1
             continue
         address = properties_data[pointer][3]  # take address from the properties list
-        driver = config_driver()
         driver.get(f'https://www.zillow.com/homes/{address}')
         time.sleep(1)
         if 'captchaPerimeterX' in driver.current_url:
@@ -116,10 +118,12 @@ def scrapper(filename: str):
             continue
 
         try:
-            WebDriverWait(driver, 5).until(
+            WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located(
                     (By.XPATH, '//button[@class="ds-close-lightbox-icon hc-back-to-list"]')))
         except Exception as e:
+            print('1')
+            print(e)
             print('Zillow link not found')
             row = properties_data[pointer]
             row.append('')
@@ -132,14 +136,22 @@ def scrapper(filename: str):
 
         try:
             zillow_url = driver.current_url
-            WebDriverWait(driver, 5).until(
-                EC.visibility_of_element_located(
-                    (By.XPATH, '//span[@class="RCFAgentPhoneDesktopText__phoneNumber"]')))
+            WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.XPATH, '//nav[@class="BuildingSkipLinksstyled__StyledSkipLinksNav-sc-1c6cf17-1 fqtVfx"]')))
+            navs = driver.find_elements(By.XPATH, '//nav[@class="BuildingSkipLinksstyled__StyledSkipLinksNav-sc-1c6cf17-1 fqtVfx"]//ul//li')
+            navs[-1].click()
+            time.sleep(1)
+            WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.XPATH, '//span[@class="RCFAgentPhoneDesktopText__phoneNumber"]')))
             telephone = driver.find_element(By.XPATH, '//span[@class="RCFAgentPhoneDesktopText__phoneNumber"]').text
             time.sleep(1)
             if telephone in [None, '', ' ']:
                 raise Exception('telephone number not found')
         except Exception as e:
+            zillow_url = driver.current_url
+            telephone = None
+
+        if telephone in [None, '', ' ']:
             try:
                 zillow_url = driver.current_url
                 telephone = driver.find_element(By.XPATH, '//li[@class="ds-listing-agent-info-text"]').text
@@ -148,22 +160,32 @@ def scrapper(filename: str):
                 zillow_url = driver.current_url
                 telephone = ''
 
-        row = properties_data[pointer]
-        row.append(zillow_url)
-        row.append(telephone)
-        write_csv(zillow_filename, row)
-        pointer += 1
+        if telephone in [None, '', ' '] and re_try is True:
+            re_try = False
+            print('Failed to get telephone number, retrying..')
+
+        else:
+            row = properties_data[pointer]
+            row.append(zillow_url)
+            row.append(telephone)
+            write_csv(zillow_filename, row)
+            pointer += 1
+            re_try = True
+
         driver.close()
-        time.sleep(1)
+        time.sleep(3)
 
 
 if __name__ == "__main__":
     try:
         file = sys.argv[1]
-        if exists(file) is False:
-            print(f'{file} not available')
-        else:
-            scrapper(file)
     except Exception as e:
-        print(e)
-        print('Something went wrong, please run the script again')
+        print('You need to provide the generated csv from realtor script')
+        file = None
+
+    if file is not None:
+        try:
+            scrapper(file)
+        except Exception as ex:
+            print(ex)
+            print('Something went wrong, please run the script again')

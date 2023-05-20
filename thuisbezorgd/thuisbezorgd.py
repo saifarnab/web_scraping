@@ -3,17 +3,12 @@ import logging
 import math
 import random
 import subprocess
+import sys
 import time
 
-import selenium
 import undetected_chromedriver as uc
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
-from user_agent import generate_user_agent
 
 # install dependencies
 subprocess.check_call(['pip', 'install', 'undetected-chromedriver'])
@@ -27,26 +22,16 @@ logging.basicConfig(
 
 
 # chrome driver configuration
-def config_uc_driver():
-    chrome_options = uc.ChromeOptions()
-    chrome_options.add_argument("--window-size=1920,1080")
+def config_driver() -> webdriver.Chrome:
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--disable-infobars")
+    chrome_options.add_argument("start-miniimized")
+    chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-gpu')
+
     driver = uc.Chrome(options=chrome_options)
     return driver
-
-
-def config_driver():
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument('--ignore-certificate-errors')
-    chrome_options.add_argument('--allow-running-insecure-content')
-    chrome_options.add_argument("--disable-infobars")
-    chrome_options.add_argument("--start-miniimized")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument('--headless')
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-    return driver
-
 
 
 # wait until an element is ready from DOM
@@ -73,63 +58,33 @@ def handle_cookies_popup(driver):
 
 
 # method for scrolling the page
-def scroll_down_page(driver):
-    pre_len = len(driver.find_elements(By.XPATH, '//a[@class="_9NUh1 qT7x_"]'))
-    html = driver.find_element(By.TAG_NAME, 'html')
-    counter = 0
-    while len(driver.find_elements(By.XPATH, "//footer")) < 1:
-        html.send_keys(Keys.ARROW_DOWN)
-        post_len = len(driver.find_elements(By.XPATH, '//a[@class="_9NUh1 qT7x_"]'))
-        counter += 1
-        if counter % 50 == 0:
-            if pre_len == post_len:
-                break
+def scroll_down(driver):
+    last_height = driver.execute_script("return document.body.scrollHeight")
+    while True:
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(1)
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            break
+        last_height = new_height
 
 
 # check valid postcode
 def postcode_validation(driver, postcode) -> bool:
-    while True:
-        try:
-            if f'/{postcode}' in driver.current_url:
-                wait_until_find_element(driver, By.XPATH, '//iframe')
-                iframe = driver.find_element(By.XPATH, '//iframe')
-                driver.switch_to.frame(iframe)
-                wait_until_find_element(driver, By.XPATH, '//input[@type="checkbox"]')
-                driver.find_element(By.XPATH, '//input[@type="checkbox"]').click()
-                driver.switch_to.default_content()
-                time.sleep(10)
-                print(driver.current_url)
-                if driver.current_url == 'https://www.thuisbezorgd.nl/' + postcode:
-                    continue
-                logging.info('bypass cloud-flare success')
-            if "redirected" in driver.current_url:
-                logging.info(f'no data available for `{postcode}` postcode')
-                return False
-            if "menu" in driver.current_url:
-                print('retrying...')
-                time.sleep(10)
-
-            break
-        except Exception as e:
-            logging.error('Exception occurs, retrying.. ')
-            continue
-
+    if "redirected" in driver.current_url:
+        logging.info(f'no data available for `{postcode}` postcode')
+        return False
     return True
 
 
 def scanner(driver, postcode, store, f_name):
     parent = driver.window_handles[0]
     logging.info(f'start loading url for <{postcode}> postcode')
-    driver.get('https://www.thuisbezorgd.nl/' + postcode)
+    driver.get('https://www.thuisbezorgd.nl/bestellen/eten/amsterdam-' + postcode)
     time.sleep(3)
     if postcode_validation(driver, postcode) is False:
         return []
 
-    try:
-        driver.find_element(By.CSS_SELECTOR, '#cf-bubbles')
-        print('cloud flare blocking')
-    except Exception as e:
-        pass
     wait_until_find_element(driver, By.XPATH, '//h1[@data-qa="restaurant-list-header"]')
     handle_cookies_popup(driver)
 
@@ -139,16 +94,15 @@ def scanner(driver, postcode, store, f_name):
     driver.execute_script("window.open('');")
     time.sleep(2)
     driver.switch_to.window(parent)
-    scroll_down_page(driver)
-    time.sleep(1)
+    scroll_down(driver)
+    driver.execute_script("window.scrollTo(0, 0);")
     logging.info(f"{math.ceil(time.time() - start_time)}s to render all the places")
+    time.sleep(1)
 
     # iterate each restaurant
     wait_until_find_element(driver, By.XPATH, '//a[@class="_9NUh1 qT7x_"]')
     restaurants = driver.find_elements(By.XPATH, '//a[@class="_9NUh1 qT7x_"]')
     logging.info(f"{len(restaurants)} places found for {postcode} location key")
-    if len(restaurants) < 1:
-        return []
 
     # get child tab
     child = driver.window_handles[1]
@@ -162,6 +116,7 @@ def scanner(driver, postcode, store, f_name):
 
             # Open a new window & Switch to the new window
             driver.switch_to.window(child)
+            # time.sleep(1)
             driver.get(details_page_link)
             time.sleep(2)
 
@@ -237,9 +192,7 @@ def scanner(driver, postcode, store, f_name):
                     time.sleep(1)
                     rating = driver.find_element(By.XPATH,
                                                  '//div[@data-qa="restaurant-info-modal-reviews-rating"]//div[@class="_50YZr _3-Fnx"]').text
-                    review = driver.find_element(By.XPATH,
-                                                 '//div[@class="_2oup6D"]//div[@class="Tcels"][1]').text.replace('\n',
-                                                                                                                 '')
+                    review = driver.find_element(By.XPATH, '//div[@class="_2oup6D"]//div[@class="Tcels"][1]').text.replace('\n', '')
                     rating = f"{rating.strip()}{review.strip()}"
                     if rating[0:3] == rating[3:6]:
                         rating = rating[3:]
@@ -247,6 +200,7 @@ def scanner(driver, postcode, store, f_name):
                         rating = rating[0] + ',' + rating[1:]
                     rating = rating[0:3] + ", " + rating[3:]
                 except Exception as ex:
+                    print(ex)
                     rating = ''
 
             # extracting delivery time
@@ -273,7 +227,7 @@ def scanner(driver, postcode, store, f_name):
                 f"---> {ind + 1}. <{name}> restaurant's data is extracted!- required time <{math.ceil(time.time() - start_time)}s>")
 
             temp_data = [postcode, name, address_str, opening_time_str, categories_str, rating,
-                         delivery_time, delivery_cost, minimum_order, details_page_link]
+                         delivery_time, delivery_cost, minimum_order]
 
             if temp_data in store:
                 logging.info("restaurant's data already exists")
@@ -285,6 +239,9 @@ def scanner(driver, postcode, store, f_name):
             # back to main tab
             driver.switch_to.window(parent)
             time.sleep(1)
+
+            if ind == 4:
+                break
 
         except Exception as e:
             continue
@@ -302,12 +259,13 @@ def create_csv(name: str):
     with open(f'{name}.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         field = ['Postcode', 'Name', 'Address', 'Opening Times', 'Categories', 'Rating', 'Delivery Time',
-                 'Delivery Cost', 'Minimum Order', 'Product Url']
+                 'Delivery Cost', 'Minimum Order']
         writer.writerow(field)
 
 
-def run():
-    ch_driver = config_uc_driver()
+if __name__ == '__main__':
+
+    ch_driver = config_driver()
     post_codes = open('postcodes.txt', "r")
     logging.info('Script start running ...')
     file_name = f'data_{random.randint(1, 999999)}'
@@ -323,7 +281,3 @@ def run():
 
     ch_driver.close()
     logging.info(f'Script executed successfully and data is saved to <{file_name}.csv>')
-
-
-if __name__ == "__main__":
-    run()
