@@ -1,5 +1,6 @@
 print("Environment Creating......")
 import subprocess
+
 subprocess.check_call(['pip', 'install', 'pandas'])
 subprocess.check_call(['pip', 'install', 'selenium'])
 subprocess.check_call(['pip', 'install', 'webdriver_manager'])
@@ -11,11 +12,13 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 import time
 from webdriver_manager.chrome import ChromeDriverManager
+
 chrome_options = Options()
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('--disable-gpu')
 chrome_options.add_argument(
-    'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36')
+    'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 '
+    'Safari/537.36')
 # options.add_argument("--window-size=1920,1080")
 chrome_options.add_argument("--start-maximized")
 chrome_options.add_argument("lang=en-GB")
@@ -70,7 +73,8 @@ for d in range(len(gc)):
         time.sleep(2)
         td = driver.find_elements(By.CSS_SELECTOR,
                                   "#franchise_movies_overview > tbody > tr:nth-child(n) > td:nth-child(2) > b > a")
-        td1 = driver.find_elements(By.CSS_SELECTOR, "#franchise_movies_overview > tbody > tr:nth-child(n) > td.sorting_1")
+        td1 = driver.find_elements(By.CSS_SELECTOR,
+                                   "#franchise_movies_overview > tbody > tr:nth-child(n) > td.sorting_1")
         for c in range(len(td)):
             try:
                 if td[c].text.split(" ")[0] != "Untitled":
@@ -104,7 +108,8 @@ for d in range(len(gc)):
                     im = driver.current_url
                     imdb = im.split("/")[-2]
                     # print(imdb)
-                    Dic = {'Franchise': gc1.Franchise[e], 'Movie_title': gc1.Movie_title[e], 'Release_Year': gc1.Release_date[e],
+                    Dic = {'Franchise': gc1.Franchise[e], 'Movie_title': gc1.Movie_title[e],
+                           'Release_Year': gc1.Release_date[e],
                            'IMDB_id': imdb}
 
                 except:
@@ -115,11 +120,12 @@ for d in range(len(gc)):
                 gc2 = pd.concat([gc2, pd.DataFrame([Dic])], ignore_index=True)
                 if len(gc2) % 10 == 0:
                     # gc2 = gc2.drop(gc2.columns[0], axis=1)
-                    gc2.loc[:, ['Franchise', 'Movie_title','Release_Year','IMDB_id']].to_excel("Output.xlsx", index=False)
+                    gc2.loc[:, ['Franchise', 'Movie_title', 'Release_Year', 'IMDB_id']].to_excel("Output.xlsx",
+                                                                                                 index=False)
                     print(f"Extraxted {len(gc2)} Data")
             except:
                 continue
     except:
         continue
-gc2.loc[:, ['Franchise', 'Movie_title','Release_Year','IMDB_id']].to_excel("Output.xlsx", index=False)
+gc2.loc[:, ['Franchise', 'Movie_title', 'Release_Year', 'IMDB_id']].to_excel("Output.xlsx", index=False)
 print("Extraction Successfully Completed!!!!")

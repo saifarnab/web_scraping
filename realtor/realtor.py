@@ -93,7 +93,7 @@ def scrapper():
             # take all available cards
             property_cards = dom.xpath('//div[@data-testid="property-card"]')
             if len(property_cards) < 1:
-                close_program('No data avaialble, exiting program..')
+                close_program('No data available, exiting program..')
 
             # iterate each card to extract data
             for property_card in property_cards:

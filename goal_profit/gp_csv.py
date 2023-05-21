@@ -1,11 +1,9 @@
+import csv
 import logging
-import random
 import subprocess
-import pathlib
 import time
 from datetime import date
 
-import pyodbc
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -21,38 +19,47 @@ logging.basicConfig(
     level=logging.INFO)
 
 
-def config_driver(maximize_window: bool) -> webdriver.Chrome:
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    driver = webdriver.Chrome(options=chrome_options)
-    if maximize_window is True:
-        driver.maximize_window()
-    return driver
+def csv_file_init():
+    try:
+        with open('game.csv', 'x', newline='') as output_file:
+            writer = csv.writer(output_file)
+            writer.writerow(
+                ['GameDate', 'Game', 'Home', 'HTHome', 'HTAway', 'HTDraw', 'HomeOn', 'HomeOff', 'HomeDA', 'AwayOn',
+                 'AwayOff', 'AwayDA', 'HTScore'])
+            print('File created successfully.')
+    except FileExistsError:
+        pass
 
 
-def ms_access_exist(game_date, game) -> bool:
-    conn = pyodbc.connect(
-        r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=' + f'{pathlib.Path(__file__).parent.resolve()}\gamedb.accdb;')
-    cursor = conn.cursor()
-    cursor.execute('select * from data')
-    for row in cursor.fetchall():
-        if row[1] == game_date and row[2] == game:
-            conn.close()
-            return True
-
-    conn.close()
+def check_existence(current_date, game: str) -> bool:
+    with open('game.csv', "r") as f:
+        reader = csv.reader(f, delimiter=",")
+        for i, line in enumerate(reader):
+            if line and current_date == line[0] and game == line[1]:
+                return True
     return False
 
 
-def ms_access_insert(game_date, game, home, ht_home, ht_away, ht_draw, home_on, home_off, home_da, away_on, away_off,
-                     away_da, ht_score):
-    conn = pyodbc.connect(
-        r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:\Users\User\Documents\goal\gamedb.accdb;')
-    cursor = conn.cursor()
-    cursor.execute(f"INSERT INTO data (GameDate, Game, Home, HTHome, HTAway, HTDraw, HomeOn, HomeOff, HomeDA, AwayOn, AwayOff, AwayDA, HTScore) \
-                    VALUES ('{game_date}', '{game}', '{home}', '{ht_home}', '{ht_away}', '{ht_draw}', '{home_on}', '{home_off}', '{home_da}', '{away_on}', '{away_off}', '{away_da}', '{ht_score}')")
-    conn.commit()
-    conn.close()
+def write_csv(game_date, game, home, ht_home, ht_away, ht_draw, home_on, home_off, home_da, away_on,
+              away_off, away_da, ht_score) -> bool:
+    new_row = [game_date, game, home, ht_home, ht_away, ht_draw, home_on, home_off, home_da, away_on, away_off, away_da,
+               ht_score]
+
+    with open('game.csv', 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(new_row)
+    print('--> New game added.')
+    return True
+
+
+def config_driver(maximize_window: bool) -> webdriver.Chrome:
+    chrome_options = Options()
+    # chrome_options.add_argument('--headless')
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.execute_cdp_cmd('Emulation.setScriptExecutionDisabled', {'value': True})
+    if maximize_window is True:
+        driver.maximize_window()
+    return driver
 
 
 def scanner():
@@ -89,11 +96,11 @@ def scanner():
             table_elements = driver.find_elements(By.XPATH, '//div[@id="html2"]//table')
             # wait till 60s if no live games are available 
             if len(table_elements) == 0:
-                logging.info('--> no live games are playing, waiting 60s for next try.')
-                time.sleep(60)
+                logging.info('--> no live games are playing, waiting 5s for next try.')
+                time.sleep(5)
                 continue
 
-            # iterate each tr     
+            # iterate each tr
             for table_ind in range(len(table_elements)):
                 tr_elements = table_elements[table_ind].find_elements(By.XPATH, './/tbody//tr')
                 tr_ind = 0
@@ -109,9 +116,9 @@ def scanner():
                         game_time = 'N/A'
 
                     # if game time is not HT then return
-                    if game_time != 'HT':
-                        tr_ind += 2
-                        continue
+                    # if game_time != 'HT':
+                    #     tr_ind += 2
+                    #     continue
 
                     # extract required data from 1st tr
 
@@ -182,7 +189,7 @@ def scanner():
                         away_off = td_elements2[2].text
                         logging.info(f'away_off --> {away_off}')
                     except Exception as exx:
-                        away_on = 'N/A'
+                        away_off = 'N/A'
 
                     try:
                         away_da = td_elements2[7].text
@@ -195,9 +202,9 @@ def scanner():
                     game = team1 + ' v ' + team2
                     logging.info(f'game --> {game}')
 
-                    # return if data already avalaible in accdb
-                    if ms_access_exist(current_date, game) is True:
-                        logging.info('data already avalaible in accdb')
+                    # return if data already available in accdb
+                    if check_existence(current_date, game) is True:
+                        logging.info('data already available in accdb')
                         continue
 
                     # extract data from i button which will open a modal
@@ -220,19 +227,21 @@ def scanner():
                     for close_button in close_buttons:
                         try:
                             close_button.click()
-                            logging.info('clieck close button to close the modal')
+                            logging.info('click close button to close the modal')
                         except Exception as e:
                             continue
 
                     time.sleep(1)
 
                     # insert data to accdb
-                    ms_access_insert(current_date, game, home, ht_home, ht_away, ht_draw, home_on,
-                                     home_off, home_da, away_on, away_off, away_da, ht_score)
-                    logging.info('storeed in access db')
+                    write_csv(current_date, game, home, ht_home, ht_away, ht_draw, home_on,
+                              home_off, home_da, away_on, away_off, away_da, ht_score)
+                    logging.info('stored in access db')
 
                     tr_ind += 2
                     logging.info(f'--> <{game}> data is fetched and stored to accdb!')
+
+                time.sleep(15555)
 
         except Exception as ex:
             continue
@@ -240,4 +249,6 @@ def scanner():
 
 if __name__ == '__main__':
     logging.info('Script start running ...')
+    csv_file_init()
     data = scanner()
+
