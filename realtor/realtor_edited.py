@@ -16,18 +16,19 @@ subprocess.check_call(['pip', 'install', 'selenium'])
 subprocess.check_call(['pip', 'install', 'fake_useragent'])
 
 # define variables
-ZIP_CODE = 'Fort-Lauderdale_FL' #Area -> Fort Lauderdale = Fort-Lauderdal_FL, Scottsdale = Scottsdale_AZ
-TYPE = 'single-family-home'  
-    # buy choices -> multi-family-home, mfd-mobile-home, farms-ranches, land, condo, townhome, single-family-home,any
-    # rent choices -> condo, townhome, single-family-home, apartments, any
-BEDROOMS = '3'
-BATHROOMS = '3'
-MIN_PRICE = '5000'
-MAX_PRICE = '5100'
+ZIP_CODE = 'Fort-Lauderdale_FL'  # Area -> Fort Lauderdale = Fort-Lauderdal_FL, Scottsdale = Scottsdale_AZ
+TYPE = ''
+# buy choices -> multi-family-home, mfd-mobile-home, farms-ranches, land, condo, townhome, single-family-home,any
+# rent choices -> condo, townhome, single-family-home, apartments, any
+BEDROOMS = '2'
+BATHROOMS = '2'
+MIN_PRICE = '0'
+MAX_PRICE = '5100000'
 CATEGORY = 'rent'  # choices -> buy, rent
 KEYWORDS = ''
 
 HEADERS = ({'User-Agent': UserAgent().random})
+
 
 def config_driver():
     chrome_options = webdriver.ChromeOptions()
@@ -37,6 +38,7 @@ def config_driver():
     chrome_options.add_argument('--headless')
     chrome_options.add_argument(f'user-agent={UserAgent().random}')
     return webdriver.Chrome(options=chrome_options)
+
 
 def csv_file_init(file_name: str):
     try:
@@ -206,7 +208,7 @@ def scrapper():
     elif CATEGORY.lower() == 'rent':  # Rent
         file_name = 'rent_properties.csv'
         csv_file_init(file_name)
-        page = 1
+        page = 2
         property_counter = 0
         while True:
             # generate url
@@ -215,7 +217,11 @@ def scrapper():
             else:
                 url = f'https://www.realtor.com/apartments/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWORDS}/sby-6/pg-{page}'
             print(f'scrapping from --> {url}')
-            webpage = requests.get(url, headers=HEADERS)
+
+            webpage = requests.post(url, headers=HEADERS)
+            if webpage.status_code != 200:
+                print('Something about your browser made us think you might be a bot')
+                exit()
             soup = BeautifulSoup(webpage.content, "html.parser")
             dom = etree.HTML(str(soup))
 
@@ -247,14 +253,19 @@ def scrapper():
                     address = address.split('?')[0]
 
                 # property type
-                try:
-                    property_type = details_dom.xpath(
-                        '//li[@class="ListingKeyFactItemstyles__StyledListingKeyFactItem-rui__sc-1txoqt4-0 '
-                        'gIIZKk"]//div[@class="Text__StyledText-rui__sc-19ei9fn-0 wdTNy '
-                        'TypeBody__StyledBody-rui__sc-163o7f1-0 hHKKwr"]')[
-                        0].text
-                except Exception as e:
-                    property_type = ''
+                p_types = ['Single family', 'Condo', 'Condos', 'Apartment', 'Townhomes', 'Multi-Family', 'Mfd/Mobile',
+                           'Land', 'Farm', 'Condo townhome rowhome coop', 'Multi family']
+                property_type = ''
+                property_types = details_dom.xpath(
+                    '//div[@class="Text__StyledText-rui__sc-19ei9fn-0 wdTNy TypeBody__StyledBody-rui__sc-163o7f1-0 hHKKwr"]')
+                for property_type in property_types:
+                    try:
+                        print(property_type.text)
+                        if property_type.text.strip() in p_types:
+                            property_type = property_type.text
+                            break
+                    except Exception as e:
+                        pass
 
                 # pool & furnished feature
                 pool, furnished = 'N', 'N'
@@ -268,15 +279,15 @@ def scrapper():
                 managed_by = ''
                 telephone = ''
 
-                for i in range(3):
-                    driver = config_driver()
-                    driver.get(details_url)
-                    telephones = driver.find_elements(By.XPATH, '//a[@data-testid="action-button"]')
-                    if len(telephones) > 0:
-                        telephone = telephones[0].text
-                    driver.close()
-                    if telephone != '':
-                        break
+                # for i in range(3):
+                #     driver = config_driver()
+                #     driver.get(details_url)
+                #     telephones = driver.find_elements(By.XPATH, '//a[@data-testid="action-button"]')
+                #     if len(telephones) > 0:
+                #         telephone = telephones[0].text
+                #     driver.close()
+                #     if telephone != '':
+                #         break
 
                 # price, bed & bath
                 try:
