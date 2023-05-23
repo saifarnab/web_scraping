@@ -1,12 +1,6 @@
 import csv
 import subprocess
-
-import requests
-from bs4 import BeautifulSoup
-from fake_useragent import UserAgent
-from lxml import etree
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+import time
 
 # install dependencies
 subprocess.check_call(['pip', 'install', 'bs4'])
@@ -15,6 +9,14 @@ subprocess.check_call(['pip', 'install', 'lxml'])
 subprocess.check_call(['pip', 'install', 'selenium'])
 subprocess.check_call(['pip', 'install', 'fake_useragent'])
 
+import requests
+from bs4 import BeautifulSoup
+from fake_useragent import UserAgent
+from lxml import etree
+import undetected_chromedriver as uc
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
 # define variables
 ZIP_CODE = 'Fort-Lauderdale_FL'  # Area -> Fort Lauderdale = Fort-Lauderdal_FL, Scottsdale = Scottsdale_AZ
 TYPE = ''
@@ -22,22 +24,22 @@ TYPE = ''
 # rent choices -> condo, townhome, single-family-home, apartments, any
 BEDROOMS = '2'
 BATHROOMS = '2'
-MIN_PRICE = '0'
-MAX_PRICE = '5100000'
+MIN_PRICE = '4000'
+MAX_PRICE = '5100'
 CATEGORY = 'rent'  # choices -> buy, rent
 KEYWORDS = ''
 
+# define api key for scrapper
+API_KEY = 'c333d3ec36f9c6e6d5c7969de4bb1695'
+
 HEADERS = ({'User-Agent': UserAgent().random})
 
-
 def config_driver():
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument('--ignore-certificate-errors')
-    chrome_options.add_argument('--allow-running-insecure-content')
+    chrome_options = uc.ChromeOptions()
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument(f'user-agent={UserAgent().random}')
-    return webdriver.Chrome(options=chrome_options)
+    # chrome_options.add_argument('--headless')
+    driver = uc.Chrome(options=chrome_options)
+    return driver
 
 
 def csv_file_init(file_name: str):
@@ -98,7 +100,18 @@ def scrapper():
             else:
                 url = f'https://www.realtor.com/realestateandhomes-search/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWORDS}/sby-6/pg-{page}'
             print(f'scrapping from --> {url}')
-            webpage = requests.get(url, headers=HEADERS)
+            while True:
+                webpage = requests.get(url, headers=HEADERS)
+                if webpage.status_code == 200:
+                    break
+
+                page_url = f'https://api.scraperapi.com/?api_key={API_KEY}&url={url}'
+                webpage = requests.get(page_url)
+                if webpage.status_code != 200:
+                    print('Realtor blocks your IP, will re-try after 60 seconds... ')
+                    time.sleep(30)
+                else:
+                    break
             soup = BeautifulSoup(webpage.content, "html.parser")
             dom = etree.HTML(str(soup))
 
@@ -181,6 +194,9 @@ def scrapper():
                 except Exception as e:
                     address = ''
 
+                if '?' in address:
+                    address = address.split('?')[0]
+
                 # price, bed & bath
                 try:
                     price = property_card.xpath('..//span[@data-label="pc-price"]')[0].text.strip()
@@ -208,7 +224,7 @@ def scrapper():
     elif CATEGORY.lower() == 'rent':  # Rent
         file_name = 'rent_properties.csv'
         csv_file_init(file_name)
-        page = 2
+        page = 6
         property_counter = 0
         while True:
             # generate url
@@ -218,10 +234,18 @@ def scrapper():
                 url = f'https://www.realtor.com/apartments/{ZIP_CODE}/beds-{BEDROOMS}/baths-{BATHROOMS}/type-{TYPE.lower()}/price-{MIN_PRICE}-{MAX_PRICE}/keyword-{KEYWORDS}/sby-6/pg-{page}'
             print(f'scrapping from --> {url}')
 
-            webpage = requests.post(url, headers=HEADERS)
-            if webpage.status_code != 200:
-                print('Something about your browser made us think you might be a bot')
-                exit()
+            while True:
+                webpage = requests.get(url, headers=HEADERS)
+                if webpage.status_code == 200:
+                    break
+
+                page_url = f'https://api.scraperapi.com/?api_key={API_KEY}&url={url}'
+                webpage = requests.get(page_url)
+                if webpage.status_code != 200:
+                    print('Something about your browser made us think you might be a bot, will re-try after 60 seconds... ')
+                    time.sleep(30)
+                else:
+                    break
             soup = BeautifulSoup(webpage.content, "html.parser")
             dom = etree.HTML(str(soup))
 
@@ -257,10 +281,9 @@ def scrapper():
                            'Land', 'Farm', 'Condo townhome rowhome coop', 'Multi family']
                 property_type = ''
                 property_types = details_dom.xpath(
-                    '//div[@class="Text__StyledText-rui__sc-19ei9fn-0 wdTNy TypeBody__StyledBody-rui__sc-163o7f1-0 hHKKwr"]')
+                    '//div[@class="sc-idiyUo fwJiso"]//div[@class="Text__StyledText-rui__sc-19ei9fn-0 wdTNy TypeBody__StyledBody-rui__sc-163o7f1-0 hHKKwr"]')
                 for property_type in property_types:
                     try:
-                        print(property_type.text)
                         if property_type.text.strip() in p_types:
                             property_type = property_type.text
                             break
@@ -279,15 +302,38 @@ def scrapper():
                 managed_by = ''
                 telephone = ''
 
-                # for i in range(3):
-                #     driver = config_driver()
-                #     driver.get(details_url)
-                #     telephones = driver.find_elements(By.XPATH, '//a[@data-testid="action-button"]')
-                #     if len(telephones) > 0:
-                #         telephone = telephones[0].text
-                #     driver.close()
-                #     if telephone != '':
-                #         break
+                try:
+                    if 'tel:' in str(details_soup):
+                        telephone = details_soup.find('a', href=lambda href: href and href.startswith('tel:')).text
+                    else:
+                        print(f'Failed to get telephone, retrying...')
+                        for i in range(1):
+                            page_url = f'https://api.scraperapi.com/?api_key={API_KEY}&url={details_url}'
+                            response = requests.get(page_url)
+                            ds = BeautifulSoup(response.content, 'html.parser')
+
+                            if 'tel:' in str(ds):
+                                print('ok')
+                                telephone = ds.find('a', href=lambda href: href and href.startswith('tel:')).text
+                                break
+                except Exception as e:
+                    print(e)
+                    telephone = ''
+
+                # if telephone == '':
+                #     for i in range(3):
+                #         try:
+                #             driver = config_driver()
+                #             driver.get(details_url)
+                #             telephones = driver.find_elements(By.XPATH, '//a[@data-testid="action-button"]')
+                #             if len(telephones) > 0:
+                #                 telephone = telephones[0].text
+                #             driver.close()
+                #             if telephone != '':
+                #                 break
+                #         except Exception as ex:
+                #             time.sleep(10000)
+                #             print('Failed to extract telephone number, retrying..')
 
                 # price, bed & bath
                 try:

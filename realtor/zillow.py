@@ -14,6 +14,7 @@ from fake_useragent import UserAgent
 # install dependencies
 subprocess.check_call(['pip', 'install', 'user_agent'])
 subprocess.check_call(['pip', 'install', 'selenium'])
+subprocess.check_call(['pip', 'install', 'fake_useragent'])
 
 
 def config_driver():
@@ -31,7 +32,7 @@ def csv_file_init(file_name: str):
         with open(file_name, 'x', newline='') as output_file:
             writer = csv.writer(output_file)
             writer.writerow(
-                ["DateTime", "Category", "Property Type", "Address", "Bedrooms", "Bathrooms", "Price", "Link",
+                ["Category", "Property Type", "Address", "Bedrooms", "Bathrooms", "Price", "Link",
                  "Telephone", "Managed", "Pool", "Furnished", "zillow Link", "zillow Number"])
             print('File created successfully.')
     except FileExistsError:
@@ -43,16 +44,16 @@ def check_existence(file_name: str, new_row: list) -> bool:
     with open(file_name, "r") as f:
         reader = csv.reader(f, delimiter=",")
         for i, line in enumerate(reader):
-            if line and new_row[3].strip() == line[3].strip():
+            if line and new_row[2].strip() == line[2].strip():
                 return True
 
     return False
 
 
 def write_csv(file_name: str, new_row: list) -> bool:
-    new_row[12] = new_row[12].replace('%20', '')
-    add_hyperlink = f'=HYPERLINK("{new_row[12]}","{new_row[12]}")'
-    new_row[12] = add_hyperlink
+    new_row[11] = new_row[11].replace('%20', '')
+    add_hyperlink = f'=HYPERLINK("{new_row[11]}","{new_row[11]}")'
+    new_row[11] = add_hyperlink
 
     with open(file_name, 'a', newline='') as file:
         writer = csv.writer(file)
@@ -110,7 +111,7 @@ def scrapper(filename: str):
             print('Property already available, ignoring..')
             pointer += 1
             continue
-        address = properties_data[pointer][3]  # take address from the properties list
+        address = properties_data[pointer][2]  # take address from the properties list
         driver.get(f'https://www.zillow.com/homes/{address}')
         time.sleep(1)
         if 'captchaPerimeterX' in driver.current_url:
