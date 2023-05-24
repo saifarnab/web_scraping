@@ -1,29 +1,45 @@
 import os
 import subprocess
 import time
+import urllib3
 
 import requests
 from pySmartDL import SmartDL
+import undetected_chromedriver as uc
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver import ActionChains
+from user_agent import generate_user_agent
 
 # install dependencies
 subprocess.check_call(['pip', 'install', 'pySmartDL'])
-subprocess.check_call(['pip', 'install', 'selenium'])
+subprocess.check_call(['pip', 'install', 'user_agent'])
 subprocess.check_call(['pip', 'install', 'urllib3'])
 
 # define output folder path, must include the tail '/' or '\'
-# OUTPUT_FOLDER_PATH = 'C:\\Arnab\\web_scraping\\tainio\\downloads\\' # for windows
-OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads/'  # for linux & mac
+# OUTPUT_FOLDER_PATH = 'C:\tool_downloads' # for windows
+OUTPUT_FOLDER_PATH = 'Z:\\'  # for linux & mac
+
+urllib3.disable_warnings()
 
 
 def config_driver():
-    chrome_options = webdriver.ChromeOptions()
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = webdriver.Chrome()
     driver.minimize_window()
     return driver
+
+
+def handle_freeze(driver):
+    try:
+        print('Handling captcha perimeter X')
+        open_window_elem = '//a[@style="display: block"]'
+        driver.find_element(By.XPATH, open_window_elem).click()
+        # ActionChains(driver).move_to_element(open_window_elem).click(open_window_elem).perform()
+        time.sleep(2)
+    except Exception as e:
+        print(e)
 
 
 def download_manager(filename, url: str):
@@ -39,7 +55,7 @@ def download_manager(filename, url: str):
         return
 
     print('Content downloading ...')
-    smart_dwnld_manager = SmartDL(url, dest, verify=False)
+    smart_dwnld_manager = SmartDL(url, dest, verify=False, threads=15)
     smart_dwnld_manager.start()
 
 
@@ -64,7 +80,8 @@ def reverse_list(arr):
 def handle_captcha(driver):
     driver.get('https://tainio-mania.online/checkcaptcha/')
     print('Website have blocked you IP, please solve the captcha.')
-    WebDriverWait(driver, 3600).until(EC.visibility_of_element_located((By.XPATH, '//a[@id="go2full"]')))
+    time.sleep(120)
+    # WebDriverWait(driver, 3600).until(EC.visibility_of_element_located((By.XPATH, '//a[@id="go2full"]')))
     driver.find_element(By.XPATH, '//a[@id="go2full"]').click()
     time.sleep(2)
 
@@ -80,7 +97,7 @@ def get_break_pointer(driver, url: str):
             WebDriverWait(driver, 20).until(
                 EC.visibility_of_element_located((By.XPATH, '//div[@id="dle-content"]//a[@class="entryLink"]')))
             cards = driver.find_elements(By.XPATH, '//div[@id="dle-content"]//a[@class="entryLink"]')
-            return f'{cards[1].text.strip()}'
+            return f'{cards[2].text.strip()}'
         except Exception as e:
             print('Website not responding, retrying...')
             time.sleep(10)
@@ -118,14 +135,16 @@ def get_video_link(driver, url):
             if 'checkcaptcha' in driver.current_url:
                 handle_captcha(driver)
                 continue
-
+            # handle_freeze(driver)
             WebDriverWait(driver, 20).until(
                 EC.visibility_of_element_located((By.XPATH, '//div[@id="fake-player-btnplay"]')))
-            driver.find_element(By.XPATH, '//div[@id="fake-player-btnplay"]').click()
+            btn_play = driver.find_element(By.XPATH, '//div[@id="fake-player-btnplay"]')
+            driver.execute_script("arguments[0].click();", btn_play)
+            time.sleep(3)
             WebDriverWait(driver, 20).until(
                 EC.visibility_of_element_located((By.XPATH, '//iframe[1]')))
-            iframe = driver.find_elements(By.XPATH, '//iframe')[0]
-            iframe.click()
+            iframe = driver.find_elements(By.XPATH, '//iframe')[1]
+            driver.execute_script("arguments[0].click();", iframe)
             time.sleep(3)
             driver.switch_to.frame(iframe)
             time.sleep(1)
@@ -180,6 +199,7 @@ def get_video_link(driver, url):
             return video.replace(checker,
                                  f'{valid_season}x{valid_episode}'), f'{valid_season}x{valid_episode}.{file_extension}'
         except Exception as e:
+            print(e)
             print(f'Failed to generate video download link, retrying #{i + 1}')
             time.sleep(5)
             continue

@@ -79,6 +79,9 @@ def extract_movies(driver, franchises):
                                   "#franchise_movies_overview > tbody > tr:nth-child(n) > td:nth-child(2) > b > a")
         td1 = driver.find_elements(By.CSS_SELECTOR,
                                    "#franchise_movies_overview > tbody > tr:nth-child(n) > td.sorting_1")
+
+        if len(td) < 2:
+            continue
         for c in range(len(td)):
             try:
                 if td[c].text.split(" ")[0] != "Untitled":
@@ -114,18 +117,12 @@ def extract_imdb(driver, movies):
 
             try:
                 first_choice = driver.find_elements(By.XPATH, '//a[@class="ipc-metadata-list-summary-item__t"]')[0]
-                if calculate_similarity(str(movie_txt).lower().strip(), str(first_choice.text).lower().strip()) > 95:
-                    first_choice.click()
-                    mo_title = driver.find_element(By.XPATH, '//h1[@data-testid="hero__pageTitle"]//span').text
-                    imdb = driver.current_url.split('title')[1].split('?')[0][1:-1]
-                    dic = {'Franchise': movies.Franchise[e], 'Movie_title': mo_title,
-                           'Release_Year': movies.Release_date[e],
-                           'IMDB_id': imdb}
-
-                else:
-                    dic = {'Franchise': movies.Franchise[e], 'Movie_title': movie_txt,
-                           'Release_Year': movies.Release_date[e],
-                           'IMDB_id': 'NA'}
+                first_choice.click()
+                mo_title = driver.find_element(By.XPATH, '//h1[@data-testid="hero__pageTitle"]//span').text
+                imdb = driver.current_url.split('title')[1].split('?')[0][1:-1]
+                dic = {'Franchise': movies.Franchise[e], 'Movie_title': mo_title,
+                       'Release_Year': movies.Release_date[e],
+                       'IMDB_id': imdb}
 
             except Exception as e:
                 dic = {'Franchise': movies.Franchise[e], 'Movie_title': movie_txt,
@@ -143,9 +140,7 @@ def extract_imdb(driver, movies):
 
 
 if __name__ == '__main__':
-    # ch_driver = config_driver()
-    # franchises_df = extract_franchises(ch_driver)
-    # movies_df = extract_movies(ch_driver, franchises_df)
-    # extract_imdb(ch_driver, movies_df)
-    v = calculate_similarity('star wars: the rise of skyw...', 'Star Wars: Episode IX - The Rise of Skywalker')
-    print(v)
+    ch_driver = config_driver()
+    franchises_df = extract_franchises(ch_driver)
+    movies_df = extract_movies(ch_driver, franchises_df)
+    extract_imdb(ch_driver, movies_df)
