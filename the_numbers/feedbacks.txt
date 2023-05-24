@@ -1,0 +1,14 @@
+For 1. Thanks for the complement. I really appriciate it.
+
+For 2. All of these movies you mentaioned here fillup with N/A imdb_id beacuse of the calculate_similarity function.
+        For example the numbers givee a movie named `star wars: the rise of skyw... 2019` but the imdb site
+        enlist this movie as `Star Wars: Episode IX - The Rise of Skywalker`. We took those who have above 95% similarity.
+        I remove the calculate_similarity function so it will take take the frst suggested movie from imdb.
+
+For 3. Script will skip all the franchises with only one movie
+
+For 4. i undestand your consern to save all the content in a dataframe then put all of them to excel file.
+        there are 2 major impact on this. Currently, it saves the extracted data to the excel realtime. so any sort of intruption
+        in the script you can still have all the extracted data before intruption.
+        And, to save all the data in dataframe can produce load in your computer memory (RAM). Which can be drive to slow down the computer
+        and eventually hang the extraction process.
