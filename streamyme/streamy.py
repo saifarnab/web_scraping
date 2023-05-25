@@ -1,9 +1,9 @@
 import csv
 import datetime
-import os
 import random
 import subprocess
 import time
+import pyperclip
 
 import pandas as pd
 import requests
@@ -24,6 +24,7 @@ TELEGRAM_CHANNEL_ID = '10016402776821'
 subprocess.check_call(['pip', 'install', 'pandas'])
 subprocess.check_call(['pip', 'install', 'selenium'])
 subprocess.check_call(['pip', 'install', 'requests'])
+subprocess.check_call(['pip', 'install', 'pyperclip'])
 
 
 def config_driver():
@@ -31,7 +32,7 @@ def config_driver():
     chrome_options.add_argument('--ignore-certificate-errors')
     chrome_options.add_argument('--allow-running-insecure-content')
     chrome_options.add_argument("--window-size=1920,1080")
-    # chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--headless')
     return webdriver.Chrome(options=chrome_options)
 
 
@@ -95,7 +96,7 @@ def new_post(driver, title, content) -> bool:
         driver.switch_to.frame(iframe)
         time.sleep(1)
 
-        os.system("echo %s| clip" % content)
+        pyperclip.copy(content)
         element = driver.find_element(By.XPATH, '//body[@id="tinymce"]')
         element.send_keys(Keys.CONTROL, 'v')
 
@@ -114,13 +115,20 @@ def new_post(driver, title, content) -> bool:
         time.sleep(1)
 
         # publish
-        WebDriverWait(driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, '//input[@class="button button-primary button-large"]')))
-        driver.find_element(By.ID, 'publish').click()
-        time.sleep(5)
+        while True:
+            try:
+                WebDriverWait(driver, 20).until(
+                    EC.visibility_of_element_located(
+                        (By.XPATH, '//input[@class="button button-primary button-large"]')))
+                driver.find_element(By.ID, 'publish').click()
+                time.sleep(5)
+                break
+            except Exception as e:
+                continue
 
         return True
     except Exception as e:
+        print(e)
         return False
 
 
@@ -183,7 +191,7 @@ def scrapper():
             update_id = message['update_id']
             if update_id > last_telegram_id:
                 try:
-                    content = message['channel_post']['text'].replace('\n', '\\n')
+                    content = message['channel_post']['text']
                     title = f'Update - {get_current_datetime()}'
                     if new_post(driver, title, content) is True:
                         if update_id > new_last_telegram_id:
