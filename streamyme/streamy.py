@@ -1,5 +1,6 @@
 import csv
 import datetime
+import os
 import random
 import subprocess
 import time
@@ -30,7 +31,7 @@ def config_driver():
     chrome_options.add_argument('--ignore-certificate-errors')
     chrome_options.add_argument('--allow-running-insecure-content')
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('--headless')
     return webdriver.Chrome(options=chrome_options)
 
 
@@ -94,11 +95,15 @@ def new_post(driver, title, content) -> bool:
         driver.switch_to.frame(iframe)
         time.sleep(1)
 
-        content = str(content).replace("'", "\\'")
+        os.system("echo %s| clip" % content)
         element = driver.find_element(By.XPATH, '//body[@id="tinymce"]')
-        driver.execute_script("arguments[0].innerHTML = '{}'".format(content), element)
-        element.send_keys('.')
-        element.send_keys(Keys.BACKSPACE)
+        element.send_keys(Keys.CONTROL, 'v')
+
+        # content = str(content).replace("'", "\\'")
+        # element = driver.find_element(By.XPATH, '//body[@id="tinymce"]')
+        # driver.execute_script("arguments[0].innerHTML = '{}'".format(content), element)
+        # element.send_keys('.')
+        # element.send_keys(Keys.BACKSPACE)
 
         time.sleep(1)
         driver.switch_to.default_content()
@@ -136,7 +141,7 @@ def get_channel_messages() -> list:
 
 
 def get_current_datetime():
-    return datetime.datetime.now().strftime("%d.%m.%Y / %H:%M %p")
+    return datetime.datetime.now().strftime("%d.%m.%Y / %H:%M")
 
 
 def waiting_time():
