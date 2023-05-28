@@ -1,14 +1,12 @@
 import time
-from difflib import SequenceMatcher
 
 import pandas as pd
-
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 def config_driver():
@@ -33,12 +31,6 @@ def config_driver():
     driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
     driver.maximize_window()
     return driver
-
-
-def calculate_similarity(string1, string2):
-    matcher = SequenceMatcher(None, string1, string2)
-    similarity = matcher.ratio() * 100
-    return similarity
 
 
 def extract_franchises(driver):
@@ -132,15 +124,15 @@ def extract_imdb(driver, movies):
             print(f'{dic["Franchise"]} --> {dic["Movie_title"]} --> {dic["Release_Year"]} --> {dic["IMDB_id"]}')
 
             dataframe_3 = pd.concat([dataframe_3, pd.DataFrame([dic])], ignore_index=True)
-            dataframe_3.loc[:, ['Franchise', 'Movie_title', 'Release_Year', 'IMDB_id']].to_excel(
-                "Output.xlsx", index=False)
 
         except Exception as e:
             continue
+    return dataframe_3
 
 
 if __name__ == '__main__':
     ch_driver = config_driver()
     franchises_df = extract_franchises(ch_driver)
     movies_df = extract_movies(ch_driver, franchises_df)
-    extract_imdb(ch_driver, movies_df)
+    data = extract_imdb(ch_driver, movies_df)
+    data.loc[:, ['Franchise', 'Movie_title', 'Release_Year', 'IMDB_id']].to_csv("output.csv", index=False)

@@ -17,6 +17,7 @@ import pyperclip
 import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -24,7 +25,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 STREAMY_USER_ID = 'temp123'
 STREAMY_USER_PASS = '%$OV^@Kxc!44s3ez)KWQy#Kk'
 TELEGRAM_TOKEN = '6082996789:AAHGb1brvQfJzjrHy9H4WsCw-QRmESXXq7M'
-TELEGRAM_CHANNEL_ID = '10016402776821'  # '10016402776821'
+TELEGRAM_CHANNEL_ID = '1001712710485'  # '10016402776821'
 
 
 def config_driver():
@@ -232,9 +233,4 @@ def scrapper():
 
 
 if __name__ == "__main__":
-    # scrapper()
-    ms = get_channel_messages()
-    print(demoji.replace(ms[1]['channel_post']['text'].replace("\n\n", "\n")))
-    print(demoji.replace(ms[4]['channel_post']['text'].replace("\n\n", "\n")))
-
-
+    scrapper()
