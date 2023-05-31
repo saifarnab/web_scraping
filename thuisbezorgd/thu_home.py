@@ -133,7 +133,7 @@ def scanner(driver, postcode, store, f_name):
 
     if postcode_validation(driver, postcode) is False:
         return []
-
+    driver.switch_to.default_content()
     try:
         driver.find_element(By.CSS_SELECTOR, '#cf-bubbles')
         print('cloud flare blocking')
@@ -146,6 +146,7 @@ def scanner(driver, postcode, store, f_name):
     start_time = time.time()
     logging.info('--> rendering places ...')
     driver.execute_script("window.open('');")
+    # driver.execute_script("window.open('https://www.youtube.com');")
     time.sleep(2)
     driver.switch_to.window(parent)
     scroll_down_page(driver)

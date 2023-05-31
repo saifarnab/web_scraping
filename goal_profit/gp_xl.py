@@ -1,22 +1,19 @@
+import subprocess
+
+subprocess.check_call(['pip', 'install', 'selenium'])
+subprocess.check_call(['pip', 'install', 'openpyxl'])
+
 import logging
 import os
-import subprocess
-import pathlib
 from openpyxl import Workbook
 from openpyxl.reader.excel import load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font
 import time
 from datetime import date
-
-import pyodbc
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-
-# install dependencies
-subprocess.check_call(['pip', 'install', 'selenium'])
-subprocess.check_call(['pip', 'install', 'openpyxl'])
 
 # log format
 logging.basicConfig(
@@ -50,13 +47,9 @@ def config_driver(maximize_window: bool) -> webdriver.Chrome:
 def ms_exist(game_date, game) -> bool:
     workbook = load_workbook("gamedb.xlsx")
     sheet = workbook.active
-    # Get the next available row
-    next_row = sheet.max_row + 1
-    # Check for duplicates in the first two columns
-    if any(row[col_num].value == col_value for row in sheet.iter_rows(min_row=2, max_row=next_row - 1) for
-           col_num, col_value in [(1, game_date), (2, game)]):
-        return True
-
+    for row in sheet.iter_rows(values_only=True):
+        if row[0] == game_date and row[1] == game:
+            return True
     return False
 
 
@@ -91,14 +84,14 @@ def ms_insert(game_date, game, home, ht_home, ht_away, ht_draw, home_on, home_of
     sheet[f"C{next_row}"] = home
     sheet[f"D{next_row}"] = ht_home
     sheet[f"E{next_row}"] = ht_away
-    sheet[f"E{next_row}"] = ht_draw
-    sheet[f"E{next_row}"] = home_on
-    sheet[f"E{next_row}"] = home_off
-    sheet[f"E{next_row}"] = home_da
-    sheet[f"E{next_row}"] = away_on
-    sheet[f"E{next_row}"] = away_off
-    sheet[f"E{next_row}"] = away_da
-    sheet[f"E{next_row}"] = ht_score
+    sheet[f"F{next_row}"] = ht_draw
+    sheet[f"G{next_row}"] = home_on
+    sheet[f"H{next_row}"] = home_off
+    sheet[f"I{next_row}"] = home_da
+    sheet[f"J{next_row}"] = away_on
+    sheet[f"K{next_row}"] = away_off
+    sheet[f"L{next_row}"] = away_da
+    sheet[f"M{next_row}"] = ht_score
 
     workbook.save("gamedb.xlsx")
 
@@ -164,9 +157,9 @@ def scanner():
                         game_time = 'N/A'
 
                     # if game time is not HT then return
-                    # if game_time != 'HT':
-                    #     tr_ind += 2
-                    #     continue
+                    if game_time != 'HT':
+                        tr_ind += 2
+                        continue
 
                     # extract required data from 1st tr
 
@@ -281,14 +274,14 @@ def scanner():
 
                     # insert data to gamedb
                     ms_insert(current_date, game, home, ht_home, ht_away, ht_draw, home_on,
-                                     home_off, home_da, away_on, away_off, away_da, ht_score)
+                              home_off, home_da, away_on, away_off, away_da, ht_score)
                     logging.info('stored in access db')
 
                     tr_ind += 2
                     logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
 
         except Exception as ex:
-            print(ex)
+            # print(ex)
             continue
 
 
