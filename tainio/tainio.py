@@ -20,7 +20,7 @@ subprocess.check_call(['pip', 'install', 'urllib3'])
 
 # define output folder path, must include the tail '/' or '\'
 # OUTPUT_FOLDER_PATH = 'C:\tool_downloads' # for windows
-OUTPUT_FOLDER_PATH = 'Z:\\'  # for linux & mac
+OUTPUT_FOLDER_PATH = '/home/dfs/Documents/web_scraping/tainio/downloads'  # for linux & mac
 
 urllib3.disable_warnings()
 
