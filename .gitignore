@@ -278,6 +278,7 @@ tags
 /close/Credentials.json
 /yahoo_stock/yahoo-key.json
 /tainio/downloads
+/thuisbezorgd/data
 
 #**/migrations/**
 #!**/migrations

@@ -266,7 +266,7 @@ def create_csv(name: str):
 if __name__ == '__main__':
 
     ch_driver = config_driver()
-    post_codes = open('postcodes.txt', "r")
+    post_codes = open('all_postcodes.txt', "r")
     logging.info('Script start running ...')
     file_name = f'data_{random.randint(1, 999999)}'
     create_csv(file_name)

@@ -48,7 +48,6 @@ def config_driver():
     return driver
 
 
-
 # wait until an element is ready from DOM
 def wait_until_find_element(driver, selector, param):
     start_time = time.time()
@@ -182,7 +181,7 @@ def scanner(driver, postcode, store, f_name):
             try:
                 i_button = driver.find_element(By.XPATH, '//span[@data-qa="restaurant-header-action-info"]')
                 i_button.click()
-                time.sleep(2)
+                time.sleep(4)
             except Exception as e:
                 pass
 
@@ -199,10 +198,9 @@ def scanner(driver, postcode, store, f_name):
                 # extract address
                 address_str = ''
                 try:
-                    wait_until_find_element(driver, By.XPATH, '//div[@data-qa="restaurant-info-modal-header"]')
                     wait_until_find_element(driver, By.XPATH,
-                                            '//div[@data-qa="restaurant-info-modal-info-address-element"]//div['
-                                            '@data-qa="text"]')
+                                            '//div[@data-qa="restaurant-info-modal-info-address-element"]')
+                    wait_until_find_element(driver, By.XPATH, '//b[@data-qa="text"]')
                     addresses = driver.find_elements(By.XPATH,
                                                      '//div[@data-qa="restaurant-info-modal-info-address-element"]//div['
                                                      '@data-qa="text"]')
@@ -308,9 +306,9 @@ def create_csv(name: str):
 
 def run():
     ch_driver = config_uc_driver()
-    post_codes = open('postcodes.txt', "r")
+    post_codes = open('ofc_postcodes.txt', "r")
     logging.info('Script start running ...')
-    file_name = f'data_{random.randint(1, 999999)}'
+    file_name = f'data/data_{random.randint(1, 999999)}'
     create_csv(file_name)
     logging.info(f'<{file_name}> file is created to store data actively')
     all_data = []
