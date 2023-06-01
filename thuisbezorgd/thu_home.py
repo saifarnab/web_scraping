@@ -319,7 +319,7 @@ def run():
     ch_driver = config_uc_driver()
     post_codes = open('home_postcodes.txt', "r")
     logging.info('Script start running ...')
-    file_name = f'data/data_2'
+    file_name = f'data/data_{random.randint(1, 999999)}'
     create_csv(file_name)
     logging.info(f'<{file_name}> file is created to store data actively')
     all_data = []
