@@ -2,9 +2,9 @@ import pandas as pd
 
 
 def remove_duplicates():
-    df = pd.read_csv('storage/1016-5000.csv')
+    df = pd.read_csv('storage/5001-9999.csv')
     df = df.drop_duplicates()
-    df.to_csv('1016-5000-rd.csv', index=False)
+    df.to_csv('5001-9999-rd.csv', index=False)
 
 
 def remove_duplicates2():
@@ -17,7 +17,7 @@ def remove_duplicates2():
 
 def merge_csv():
     # Read the two CSV files into separate pandas DataFrames
-    df1 = pd.read_csv('storage/1016-5000-rd.csv', )
+    df1 = pd.read_csv('storage/1016-5000.csv', )
     df2 = pd.read_csv('storage/5001-9999.csv')
     merged_df = pd.concat([df1, df2], ignore_index=True)
     merged_df.to_csv('storage/1016-9999.csv', index=False)
@@ -33,4 +33,4 @@ def replace_value():
 
 
 if __name__ == "__main__":
-    replace_value()
+    merge_csv()
