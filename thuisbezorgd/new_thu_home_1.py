@@ -316,9 +316,9 @@ def check_existence(name, column_name, value):
 
 def run():
     ch_driver = config_uc_driver()
-    post_codes = open('home_postcodes_1.txt', "r")
+    post_codes = open('ofc_postcodes.txt', "r")
     logging.info('Script start running ...')
-    file_name = f'thu_data_home_3001'
+    file_name = f'1000-1015'
     create_csv(file_name)
     logging.info(f'<{file_name}> file is created to store data actively')
     all_data = []
