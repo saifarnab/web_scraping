@@ -79,7 +79,7 @@ def scanner():
     driver.find_element(By.XPATH, '//input[@id="wlm_form_field_wp-submit"]').click()
     time.sleep(2)
 
-    # iterate to extract game data
+    # iterate to extract game data.bson
     while True:
 
         try:

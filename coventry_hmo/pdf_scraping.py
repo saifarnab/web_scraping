@@ -15,7 +15,7 @@ import pdfplumber
 # text = [t.text for t in text_elements]
 # test_list = [list(g) for k, g in groupby(text, lambda x: x == 'Licensee ') if not k]
 #
-# data = []
+# data.bson = []
 # for index, item in enumerate(test_list):
 #     item = [i.strip() for i in item]
 #     item.insert(0, "Licensee")
@@ -24,7 +24,7 @@ import pdfplumber
 #         if j != '':
 #             print(f"{i} -> {j}")
 #
-#     data.append({
+#     data.bson.append({
 #         'date': item[10],
 #         'reference': item[1]
 #     })

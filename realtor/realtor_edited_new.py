@@ -124,15 +124,15 @@ def scrapper():
             dom = etree.HTML(str(soup))
 
             # take all available cards
-            property_cards = dom.xpath('//div[@data-testid="property-card"]')
+            property_cards = dom.xpath('//div[@data.bson-testid="property-card"]')
             if len(property_cards) < 1:
-                close_program('No data avaialble, exiting program..')
+                close_program('No data.bson avaialble, exiting program..')
 
-            # iterate each card to extract data
+            # iterate each card to extract data.bson
             for property_card in property_cards:
                 details_url = \
                     property_card.xpath(
-                        '..//div[@data-testid="property-card"]//a[@data-testid="property-anchor"]/@href')[0]
+                        '..//div[@data.bson-testid="property-card"]//a[@data.bson-testid="property-anchor"]/@href')[0]
                 if details_url is not None:
                     details_url = str(details_url).strip()
 
@@ -157,7 +157,7 @@ def scrapper():
                 # managed
                 managed = ''
                 try:
-                    providers = details_dom.xpath('//div[@class="provider-data"]//ul[@class="content"]')
+                    providers = details_dom.xpath('//div[@class="provider-data.bson"]//ul[@class="content"]')
                     for provider in providers:
                         items = provider.xpath('..//li')
                         if 'Brokered by' in items[0].text:
@@ -166,11 +166,11 @@ def scrapper():
                             elif items[1].xpath('..//span'):
                                 managed = items[1].xpath('..//span')[0].text
 
-                            elif len(details_dom.xpath('//a[@data-testid="provider-link"]')) == 2:
-                                managed = details_dom.xpath('//a[@data-testid="provider-link"]')[1].text
+                            elif len(details_dom.xpath('//a[@data.bson-testid="provider-link"]')) == 2:
+                                managed = details_dom.xpath('//a[@data.bson-testid="provider-link"]')[1].text
 
-                            elif len(details_dom.xpath('//a[@data-testid="provider-link"]')) == 1:
-                                managed = details_dom.xpath('//a[@data-testid="provider-link"]')[0].text
+                            elif len(details_dom.xpath('//a[@data.bson-testid="provider-link"]')) == 1:
+                                managed = details_dom.xpath('//a[@data.bson-testid="provider-link"]')[0].text
 
                     if managed is None:
                         managed = ''
@@ -199,7 +199,7 @@ def scrapper():
                 # take the broker telephone number
                 try:
                     telephone = ''
-                    telephone_parser = details_dom.xpath('//a[@data-testid="office-phone-link"]')
+                    telephone_parser = details_dom.xpath('//a[@data.bson-testid="office-phone-link"]')
                     if telephone_parser:
                         telephone = telephone_parser[0].text
                 except Exception as e:
@@ -215,15 +215,15 @@ def scrapper():
 
                 # price, bed & bath
                 try:
-                    price = property_card.xpath('..//span[@data-label="pc-price"]')[0].text.strip()
+                    price = property_card.xpath('..//span[@data.bson-label="pc-price"]')[0].text.strip()
                 except Exception as e:
                     price = ''
                 try:
-                    bed = property_card.xpath('..//li[@data-label="pc-meta-beds"]//span[1]')[0].text.strip()
+                    bed = property_card.xpath('..//li[@data.bson-label="pc-meta-beds"]//span[1]')[0].text.strip()
                 except Exception as e:
                     bed = ''
                 try:
-                    bath = property_card.xpath('..//li[@data-label="pc-meta-baths"]//span[1]')[0].text.strip()
+                    bath = property_card.xpath('..//li[@data.bson-label="pc-meta-baths"]//span[1]')[0].text.strip()
                 except Exception as e:
                     bath = ''
 
@@ -279,13 +279,13 @@ def scrapper():
 
             # take all available cards
             property_cards = dom.xpath(
-                '//section[@class="PropertiesList_propertiesContainer__7NakV PropertiesList_listViewGrid__TYNow"]//div[@data-testid="card-content"]')
+                '//section[@class="PropertiesList_propertiesContainer__7NakV PropertiesList_listViewGrid__TYNow"]//div[@data.bson-testid="card-content"]')
             if len(property_cards) < 1:
                 close_program('All the available property have been extracted based on input params, exiting program..')
 
-            # iterate each card to extract data
+            # iterate each card to extract data.bson
             for property_card in property_cards:
-                details_url = property_card.xpath('..//a[@data-testid="card-link"]/@href')[0]
+                details_url = property_card.xpath('..//a[@data.bson-testid="card-link"]/@href')[0]
                 if details_url is not None:
                     details_url = str(details_url).strip()
 
@@ -350,7 +350,7 @@ def scrapper():
                             time.sleep(60)
                             counter -= 1
                             continue
-                        telephones = driver.find_elements(By.XPATH, '//a[@data-testid="action-button"]')
+                        telephones = driver.find_elements(By.XPATH, '//a[@data.bson-testid="action-button"]')
                         if len(telephones) > 0:
                             telephone = telephones[0].text
                         driver.close()
@@ -362,21 +362,21 @@ def scrapper():
 
                 # price, bed & bath
                 try:
-                    price = property_card.xpath('..//div[@data-testid="card-price"]')[0].text
+                    price = property_card.xpath('..//div[@data.bson-testid="card-price"]')[0].text
                     if price is not None:
                         price = str(price).strip()
                 except Exception as e:
                     price = ''
 
                 try:
-                    bed = property_card.xpath('..//li[@data-testid="property-meta-beds"]//span')[0].text
+                    bed = property_card.xpath('..//li[@data.bson-testid="property-meta-beds"]//span')[0].text
                     if bed is not None:
                         bed = str(bed).strip()
                 except Exception as e:
                     bed = ''
 
                 try:
-                    bath = property_card.xpath('..//li[@data-testid="property-meta-baths"]//span')[0].text
+                    bath = property_card.xpath('..//li[@data.bson-testid="property-meta-baths"]//span')[0].text
                     if bath is not None:
                         bath = str(bath).strip()
                 except Exception as e:

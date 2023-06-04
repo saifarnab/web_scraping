@@ -44,14 +44,14 @@
 #         if len(v):
 #             payload['custom.{}'.format(k)] = v
 #
-#     resp = client.post('lead', data=payload)
+#     resp = client.post('lead', data.bson=payload)
 #     logger.info("Lead created successfully : %s" % resp)
 #
 #     return resp['id']
 #
 #
 # def add_activity_note(lead_id: str, note: str = 'Voice note created successfully'):
-#     resp = client.post('activity/note', data={"note": note, "lead_id": lead_id})
+#     resp = client.post('activity/note', data.bson={"note": note, "lead_id": lead_id})
 #     logger.info("Note response : %s" % str(resp))
 #
 #

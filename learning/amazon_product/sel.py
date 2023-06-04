@@ -38,7 +38,7 @@ def config_driver(maximize_window: bool) -> webdriver.Chrome:
 def get_input() -> str:
     print('Enter the product name you want to search: ')
     searchable_product = str(input('> '))
-    print('Start storing data...')
+    print('Start storing data.bson...')
     return searchable_product
 
 
@@ -102,7 +102,7 @@ def get_products():
                                                   '.image.item.maintain-height.selected img').get_attribute(
                         'src').strip()
                     img_extension = img_url.split('.')[-1]
-                    with open(f"{Path().absolute().__str__()}/amazon_product_scraping/data/images/{product_name}_{img_ind + 1}.{img_extension}",
+                    with open(f"{Path().absolute().__str__()}/amazon_product_scraping/data.bson/images/{product_name}_{img_ind + 1}.{img_extension}",
                               "wb") as f:
                         f.write(requests.get(img_url).content)
                         if img_ind + 1 == 1:
@@ -144,7 +144,7 @@ def get_products():
 
 def make_xls(products: list, searchable_product: str):
     df = pd.DataFrame(products, columns=["title", "url", "price", "img1", "img2", "img3", "img4", "img5"])
-    df.to_excel(f"data/{searchable_product}.xlsx", index=False)
+    df.to_excel(f"data.bson/{searchable_product}.xlsx", index=False)
 
 
 if __name__ == '__main__':

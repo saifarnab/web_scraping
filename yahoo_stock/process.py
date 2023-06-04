@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # parse worksheet
     market_data = client.open('Stocks').worksheet('MarketData')
 
-    # find the insertable row for market data
+    # find the insertable row for market data.bson
     next_available_row = len(list(filter(None, market_data.col_values(1)))) + 1
 
     print('------> process code being processed...')
@@ -103,4 +103,4 @@ if __name__ == "__main__":
 
     # market_data.batch_update([add_rule_request, delete_rule_request])
 
-    print("All the data have been pushed to spreadsheet from stock_data.csv!!!!")
+    print("All the data.bson have been pushed to spreadsheet from stock_data.csv!!!!")

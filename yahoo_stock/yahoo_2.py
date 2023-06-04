@@ -106,7 +106,7 @@ for item in stock_basket.get_all_records():
 
     except Exception as ex:
         pass
-        # print(f"Website is not responding, failed to extract data for the stock name `{item['Stock Name']}`")
+        # print(f"Website is not responding, failed to extract data.bson for the stock name `{item['Stock Name']}`")
 
-print(f"{extracted_data_count} data have been extracted.")
+print(f"{extracted_data_count} data.bson have been extracted.")
 print("Extraction Successfully Completed!!!!")

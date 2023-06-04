@@ -82,8 +82,8 @@ def scroll_down_page(driver, last_position, num_seconds_to_load=0.5, scroll_atte
 
 def collect_all_tweets_from_current_view(driver, lookback_limit=25):
     wait = WebDriverWait(driver, 20)
-    wait.until(EC.presence_of_element_located((By.XPATH, '//article[@data-testid="tweet"]')))
-    page_cards = driver.find_elements(By.XPATH, '//article[@data-testid="tweet"]')
+    wait.until(EC.presence_of_element_located((By.XPATH, '//article[@data.bson-testid="tweet"]')))
+    page_cards = driver.find_elements(By.XPATH, '//article[@data.bson-testid="tweet"]')
     if len(page_cards) <= lookback_limit:
         return page_cards
     else:
@@ -112,16 +112,16 @@ def extract_data_from_current_tweet_card(driver, parent, child, card, search_key
         responding = ''
 
     try:
-        reply_count = card.find_element(By.XPATH, './/div[@data-testid="reply"]').text.strip()
+        reply_count = card.find_element(By.XPATH, './/div[@data.bson-testid="reply"]').text.strip()
     except Exception as exx:
         reply_count = ""
     try:
-        retweet_count = card.find_element(By.XPATH, './/div[@data-testid="retweet"]').text.strip()
+        retweet_count = card.find_element(By.XPATH, './/div[@data.bson-testid="retweet"]').text.strip()
     except Exception as exx:
         retweet_count = ""
 
     try:
-        like_count = card.find_element(By.XPATH, './/div[@data-testid="like"]').text.strip()
+        like_count = card.find_element(By.XPATH, './/div[@data.bson-testid="like"]').text.strip()
     except Exception as exx:
         like_count = ""
 
@@ -138,7 +138,7 @@ def extract_data_from_current_tweet_card(driver, parent, child, card, search_key
 
     images_to_link = ''
     try:
-        images = card.find_elements(By.XPATH, ".//div[@data-testid='tweetPhoto']//img")
+        images = card.find_elements(By.XPATH, ".//div[@data.bson-testid='tweetPhoto']//img")
         for image in images:
             images_to_link += f"{image.get_attribute('src').strip()}, "
     except Exception as exx:
@@ -146,7 +146,7 @@ def extract_data_from_current_tweet_card(driver, parent, child, card, search_key
 
     videos_to_link = ''
     try:
-        videos = card.find_elements(By.XPATH, '//div[@data-testid="videoPlayer"]//video')
+        videos = card.find_elements(By.XPATH, '//div[@data.bson-testid="videoPlayer"]//video')
         for video in videos:
             videos_to_link += f"{video.get_attribute('src').strip()}, "
     except Exception as exx:
@@ -157,9 +157,9 @@ def extract_data_from_current_tweet_card(driver, parent, child, card, search_key
         driver.switch_to.window(child)
         time.sleep(1)
         driver.get(tweet_website)
-        wait_until_find_element(driver, By.XPATH, '//article[@data-testid="tweet"]')
+        wait_until_find_element(driver, By.XPATH, '//article[@data.bson-testid="tweet"]')
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        replies = driver.find_elements(By.XPATH, '//article[@data-testid="tweet"]')
+        replies = driver.find_elements(By.XPATH, '//article[@data.bson-testid="tweet"]')
         for replay in replies:
             try:
                 replay_user = replay.find_element(By.XPATH, './/span').text.strip()
@@ -258,4 +258,4 @@ if __name__ == '__main__':
     file_name = f'data_{random.randint(1, 9999)}'
     create_csv(file_name)
     scrapper(file_name, KEYWORDS)
-    logging.info(f'Script successfully executed & saved data at `{file_name}.csv`')
+    logging.info(f'Script successfully executed & saved data.bson at `{file_name}.csv`')

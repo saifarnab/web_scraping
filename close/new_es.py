@@ -322,7 +322,7 @@ def run():
                     connected_accounts_pointer += 1
                     continue
 
-                # extract required data
+                # extract required data.bson
                 receiver_email = contact[2]
                 receiver_name = contact[1]
                 lead_id = contact[0]

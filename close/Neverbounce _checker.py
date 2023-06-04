@@ -50,7 +50,7 @@ def process_csv_using_neverbounce(filename, api_key, source_csv_filename):
         while True:
             logging.debug(f'Processing API response page #{results.page}...')
             for result in results.data['results']:
-                email = result['data']['email']
+                email = result['data.bson']['email']
                 status = result['verification']['result']
                 if status == 'valid':
                     valid_emails[email] = 1

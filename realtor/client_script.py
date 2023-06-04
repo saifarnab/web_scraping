@@ -13,14 +13,14 @@
 # # Select the active worksheet
 # ws = wb.active
 #
-# # Define the starting row for the data
+# # Define the starting row for the data.bson
 # row = 2
 #
 # ws.cell(row=1, column=4, value="Phone #1")
 # ws.cell(row=1, column=5, value="Phone #2")
 # ws.cell(row=1, column=6, value="Phone #3")
 #
-# # Loop through the URLs in column C and scrape the data
+# # Loop through the URLs in column C and scrape the data.bson
 # for cell in ws['C'][1:]:
 # # Get the URL from the cell value
 #     url = cell.value
@@ -47,7 +47,7 @@
 # text = soup.get_text()
 # phone_numbers = re.findall(r'\(\d{3}\) \d{3}-\d{4}', text)
 #
-# # Write the data to the worksheet
+# # Write the data.bson to the worksheet
 # if tel_link:
 #     ws.cell(row=row, column=4, value=tel_link['href'])
 # elif phone_numbers:
@@ -88,7 +88,7 @@
 # text = soup.get_text()
 # phone_numbers = re.findall(r'\(\d{3}\) \d{3}-\d{4}', text)
 #
-# # Write the data to the worksheet
+# # Write the data.bson to the worksheet
 # if tel_link:
 #     ws.cell(row=cell.row, column=5, value=tel_link['href'])
 # elif phone_numbers:
@@ -126,7 +126,7 @@
 # text = soup.get_text()
 # phone_numbers = re.findall(r'\(\d{3}\) \d{3}-\d{4}', text)
 #
-# # Write the data to the worksheet
+# # Write the data.bson to the worksheet
 # if tel_link:
 #     ws.cell(row=cell.row, column=6, value=tel_link['href'])
 # elif phone_numbers:
@@ -155,14 +155,14 @@
 # # Select the active worksheet
 # ws = wb.active
 #
-# # Define the starting row for the data
+# # Define the starting row for the data.bson
 # row = 2
 #
 # ws.cell(row=1, column=4, value="Phone #1")
 # ws.cell(row=1, column=5, value="Phone #2")
 # ws.cell(row=1, column=6, value="Phone #3")
 #
-# # Loop through the URLs in column C and scrape the data
+# # Loop through the URLs in column C and scrape the data.bson
 # for cell in ws['C'][1:]:
 # # Get the URL from the cell value
 # url = cell.value
@@ -188,7 +188,7 @@
 # text = soup.get_text()
 # phone_numbers = re.findall(r'\(\d{3}\) \d{3}-\d{4}', text)
 #
-# # Write the data to the worksheet
+# # Write the data.bson to the worksheet
 # if tel_link:
 #     ws.cell(row=row, column=4, value=tel_link['href'])
 # elif phone_numbers:
@@ -229,7 +229,7 @@
 # text = soup.get_text()
 # phone_numbers = re.findall(r'\(\d{3}\) \d{3}-\d{4}', text)
 #
-# # Write the data to the worksheet
+# # Write the data.bson to the worksheet
 # if tel_link:
 #     ws.cell(row=cell.row, column=5, value=tel_link['href'])
 # elif phone_numbers:
@@ -267,7 +267,7 @@
 # text = soup.get_text()
 # phone_numbers = re.findall(r'\(\d{3}\) \d{3}-\d{4}', text)
 #
-# # Write the data to the worksheet
+# # Write the data.bson to the worksheet
 # if tel_link:
 #     ws.cell(row=cell.row, column=6, value=tel_link['href'])
 # elif phone_numbers:

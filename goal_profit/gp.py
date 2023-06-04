@@ -34,7 +34,7 @@ def ms_access_exist(game_date, game) -> bool:
     conn = pyodbc.connect(
         r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=' + f'{pathlib.Path(__file__).parent.resolve()}\gamedb.accdb;')
     cursor = conn.cursor()
-    cursor.execute('select * from data')
+    cursor.execute('select * from data.bson')
     for row in cursor.fetchall():
         if row[1] == game_date and row[2] == game:
             conn.close()
@@ -49,7 +49,7 @@ def ms_access_insert(game_date, game, home, ht_home, ht_away, ht_draw, home_on, 
     conn = pyodbc.connect(
         r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:\Users\User\Documents\goal\gamedb.accdb;')
     cursor = conn.cursor()
-    cursor.execute(f"INSERT INTO data (GameDate, Game, Home, HTHome, HTAway, HTDraw, HomeOn, HomeOff, HomeDA, AwayOn, AwayOff, AwayDA, HTScore) \
+    cursor.execute(f"INSERT INTO data.bson (GameDate, Game, Home, HTHome, HTAway, HTDraw, HomeOn, HomeOff, HomeDA, AwayOn, AwayOff, AwayDA, HTScore) \
                     VALUES ('{game_date}', '{game}', '{home}', '{ht_home}', '{ht_away}', '{ht_draw}', '{home_on}', '{home_off}', '{home_da}', '{away_on}', '{away_off}', '{away_da}', '{ht_score}')")
     conn.commit()
     conn.close()
@@ -70,7 +70,7 @@ def scanner():
     driver.find_element(By.XPATH, '//input[@id="wlm_form_field_wp-submit"]').click()
     time.sleep(2)
 
-    # iterate to extract game data
+    # iterate to extract game data.bson
     while True:
 
         try:
@@ -113,7 +113,7 @@ def scanner():
                         tr_ind += 2
                         continue
 
-                    # extract required data from 1st tr
+                    # extract required data.bson from 1st tr
 
                     team1 = td_elements[1].text.index('(')
                     team1 = td_elements[1].text[:team1].strip()
@@ -163,9 +163,9 @@ def scanner():
                     except Exception as exx:
                         home_da = 'N/A'
 
-                    logging.info('extracted required data from 1st tr')
+                    logging.info('extracted required data.bson from 1st tr')
 
-                    # extract required data from 2nd tr
+                    # extract required data.bson from 2nd tr
                     td_elements2 = tr_elements[tr_ind + 1].find_elements(By.XPATH, ".//td")
 
                     team2 = td_elements2[0].text.index('(')
@@ -190,17 +190,17 @@ def scanner():
                     except Exception as exx:
                         away_da = 'N/A'
 
-                    logging.info('extracted required data from 2nd tr')
+                    logging.info('extracted required data.bson from 2nd tr')
 
                     game = team1 + ' v ' + team2
                     logging.info(f'game --> {game}')
 
-                    # return if data already avalaible in accdb
+                    # return if data.bson already avalaible in accdb
                     if ms_access_exist(current_date, game) is True:
-                        logging.info('data already avalaible in accdb')
+                        logging.info('data.bson already avalaible in accdb')
                         continue
 
-                    # extract data from i button which will open a modal
+                    # extract data.bson from i button which will open a modal
                     td_elements[2].find_element(By.XPATH, './/a[2]').click()
                     logging.info(f'i button 1st click done')
                     time.sleep(1)
@@ -226,13 +226,13 @@ def scanner():
 
                     time.sleep(1)
 
-                    # insert data to accdb
+                    # insert data.bson to accdb
                     ms_access_insert(current_date, game, home, ht_home, ht_away, ht_draw, home_on,
                                      home_off, home_da, away_on, away_off, away_da, ht_score)
                     logging.info('storeed in access db')
 
                     tr_ind += 2
-                    logging.info(f'--> <{game}> data is fetched and stored to accdb!')
+                    logging.info(f'--> <{game}> data.bson is fetched and stored to accdb!')
 
         except Exception as ex:
             continue

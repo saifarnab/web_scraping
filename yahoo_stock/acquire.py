@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     print('------> acquire code being processed...')
 
-    # extract data
+    # extract data.bson
     dataframe = scrapper()
 
     # create csv

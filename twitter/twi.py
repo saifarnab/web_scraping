@@ -156,10 +156,10 @@ def save_tweet_data_to_csv(records, filepath, mode='a+'):
 
 def collect_all_tweets_from_current_view(driver, lookback_limit=25):
     wait = WebDriverWait(driver, 20)
-    # page_cards = driver.find_elements_by_xpath('//div[@data-testid="tweet"]')
+    # page_cards = driver.find_elements_by_xpath('//div[@data.bson-testid="tweet"]')
     # sleep(1)
-    wait.until(EC.presence_of_element_located((By.XPATH, '//article[@data-testid="tweet"]')))
-    page_cards = driver.find_elements(By.XPATH, '//article[@data-testid="tweet"]')
+    wait.until(EC.presence_of_element_located((By.XPATH, '//article[@data.bson-testid="tweet"]')))
+    page_cards = driver.find_elements(By.XPATH, '//article[@data.bson-testid="tweet"]')
 
     if len(page_cards) <= lookback_limit:
         return page_cards
@@ -204,20 +204,20 @@ def extract_data_from_current_tweet_card(card):
     result = translator.translate(tweet_text, dest='it')
     tweet_text = result.text
     try:
-        reply_count = card.find_element_by_xpath('.//div[@data-testid="reply"]').text
+        reply_count = card.find_element_by_xpath('.//div[@data.bson-testid="reply"]').text
     except exceptions.NoSuchElementException:
         reply_count = ""
     try:
-        retweet_count = card.find_element_by_xpath('.//div[@data-testid="retweet"]').text
+        retweet_count = card.find_element_by_xpath('.//div[@data.bson-testid="retweet"]').text
     except exceptions.NoSuchElementException:
         retweet_count = ""
     try:
-        like_count = card.find_element_by_xpath('.//div[@data-testid="like"]').text
+        like_count = card.find_element_by_xpath('.//div[@data.bson-testid="like"]').text
     except exceptions.NoSuchElementException:
         like_count = ""
     images_to_link = []
     try:
-        images = card.find_elements(By.XPATH, ".//div[@data-testid='tweetPhoto']//img")
+        images = card.find_elements(By.XPATH, ".//div[@data.bson-testid='tweetPhoto']//img")
         for image in images:
             images_to_link.append(image.get_attribute('src'))
     except exceptions.NoSuchElementException:

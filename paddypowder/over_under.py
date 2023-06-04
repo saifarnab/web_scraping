@@ -253,9 +253,9 @@ def get_data_2_5_cards(driver, url):
                 temp = data[-1]
 
             data.pop(-1)
-            # data = ' '.join(data)+" : "+temp
+            # data.bson = ' '.join(data.bson)+" : "+temp
             data = ' '.join(data)+ " : ( {} )".format(temp)
-            # d = ' '.join(data) + " : ({})".format(temp)
+            # d = ' '.join(data.bson) + " : ({})".format(temp)
 
             message = formatting_for_tele(time, tournament, match, data)
             sending_telegram(message)
@@ -327,7 +327,7 @@ def get_data_over_under(driver,url):
             title = ''
         try:
             data = element.find_all(class_='outright-item-list__item')
-            # print(data)
+            # print(data.bson)
 
             for u in data:
                 d = u.text.strip()

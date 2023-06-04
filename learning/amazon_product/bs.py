@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 def get_products():
     print('Enter the product name you want to search: ')
     searchable_product = str(input('> '))
-    print('Start storing data...')
+    print('Start storing data.bson...')
 
     # get the number available for the searchable products
     url = f"https://www.amazon.in/s?k={searchable_product}"
@@ -46,13 +46,13 @@ def get_products():
 
             products_n_price_list.append([product_name.text, product_price.text])
 
-        print(f"{data_count} data stored.")
+        print(f"{data_count} data.bson stored.")
         page_number += 1
         if page_number >= total_page:
             break
 
     df = pd.DataFrame(products_n_price_list, columns=["Product Name", "Product Price"])
-    df.to_excel(f"data/{searchable_product}.xlsx", index=False)
+    df.to_excel(f"data.bson/{searchable_product}.xlsx", index=False)
 
 
 if __name__ == '__main__':

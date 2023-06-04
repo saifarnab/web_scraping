@@ -72,7 +72,7 @@ def scroll_down(driver):
 # check valid postcode
 def postcode_validation(driver, postcode) -> bool:
     if "redirected" in driver.current_url:
-        logging.info(f'no data available for `{postcode}` postcode')
+        logging.info(f'no data.bson available for `{postcode}` postcode')
         return False
     return True
 
@@ -85,7 +85,7 @@ def scanner(driver, postcode, store, f_name):
     if postcode_validation(driver, postcode) is False:
         return []
 
-    wait_until_find_element(driver, By.XPATH, '//h1[@data-qa="restaurant-list-header"]')
+    wait_until_find_element(driver, By.XPATH, '//h1[@data.bson-qa="restaurant-list-header"]')
     handle_cookies_popup(driver)
 
     # load the page completely by scrolling bottom
@@ -111,7 +111,7 @@ def scanner(driver, postcode, store, f_name):
         try:
             start_time = time.time()
             # extract name, rating, reviews & details page link
-            name = item.find_element(By.XPATH, './/h3[@data-qa="restaurant-info-name"]').text
+            name = item.find_element(By.XPATH, './/h3[@data.bson-qa="restaurant-info-name"]').text
             details_page_link = item.get_attribute('href')
 
             # Open a new window & Switch to the new window
@@ -135,7 +135,7 @@ def scanner(driver, postcode, store, f_name):
 
             # click to i button
             try:
-                i_button = driver.find_element(By.XPATH, '//span[@data-qa="restaurant-header-action-info"]')
+                i_button = driver.find_element(By.XPATH, '//span[@data.bson-qa="restaurant-header-action-info"]')
                 i_button.click()
                 time.sleep(2)
             except Exception as e:
@@ -154,13 +154,13 @@ def scanner(driver, postcode, store, f_name):
                 # extract address
                 address_str = ''
                 try:
-                    wait_until_find_element(driver, By.XPATH, '//div[@data-qa="restaurant-info-modal-header"]')
+                    wait_until_find_element(driver, By.XPATH, '//div[@data.bson-qa="restaurant-info-modal-header"]')
                     wait_until_find_element(driver, By.XPATH,
-                                            '//div[@data-qa="restaurant-info-modal-info-address-element"]//div['
-                                            '@data-qa="text"]')
+                                            '//div[@data.bson-qa="restaurant-info-modal-info-address-element"]//div['
+                                            '@data.bson-qa="text"]')
                     addresses = driver.find_elements(By.XPATH,
-                                                     '//div[@data-qa="restaurant-info-modal-info-address-element"]//div['
-                                                     '@data-qa="text"]')
+                                                     '//div[@data.bson-qa="restaurant-info-modal-info-address-element"]//div['
+                                                     '@data.bson-qa="text"]')
 
                     for addr in addresses:
                         if addr.text != '':
@@ -172,14 +172,14 @@ def scanner(driver, postcode, store, f_name):
                 opening_time_str = ''
                 try:
                     wait_until_find_element(driver, By.XPATH,
-                                            '//div[@data-qa="restaurant-info-modal-info-shipping-times-element-element'
+                                            '//div[@data.bson-qa="restaurant-info-modal-info-shipping-times-element-element'
                                             '"]//div[@class="_1sMed _1wlHd _2cDMI"]')
                     opening_times = driver.find_elements(By.XPATH,
-                                                         '//div[@data-qa="restaurant-info-modal-info-shipping-times'
+                                                         '//div[@data.bson-qa="restaurant-info-modal-info-shipping-times'
                                                          '-element-element"]//div[@class="_1sMed _1wlHd _2cDMI"]')
 
                     for opening_time_ind, opening_time_item in enumerate(opening_times):
-                        elements = opening_time_item.find_elements(By.XPATH, './/div[@data-qa="text"]')
+                        elements = opening_time_item.find_elements(By.XPATH, './/div[@data.bson-qa="text"]')
                         opening_time_str += f"{elements[0].text}: {elements[1].text}"
                         opening_time_str += '\n'
                 except Exception as e:
@@ -191,7 +191,7 @@ def scanner(driver, postcode, store, f_name):
                     rating_button.click()
                     time.sleep(1)
                     rating = driver.find_element(By.XPATH,
-                                                 '//div[@data-qa="restaurant-info-modal-reviews-rating"]//div[@class="_50YZr _3-Fnx"]').text
+                                                 '//div[@data.bson-qa="restaurant-info-modal-reviews-rating"]//div[@class="_50YZr _3-Fnx"]').text
                     review = driver.find_element(By.XPATH, '//div[@class="_2oup6D"]//div[@class="Tcels"][1]').text.replace('\n', '')
                     rating = f"{rating.strip()}{review.strip()}"
                     if rating[0:3] == rating[3:6]:
@@ -205,32 +205,32 @@ def scanner(driver, postcode, store, f_name):
 
             # extracting delivery time
             try:
-                delivery_time = driver.find_element(By.XPATH, '//div[@data-qa="shipping-time-indicator-content"]').text
+                delivery_time = driver.find_element(By.XPATH, '//div[@data.bson-qa="shipping-time-indicator-content"]').text
             except Exception as e:
                 delivery_time = ''
 
             # extracting delivery cost
             try:
                 delivery_cost = driver.find_element(
-                    By.XPATH, '//div[@data-qa="delivery-costs-indicator"]//span[@class="_2PRj3E"]').text
+                    By.XPATH, '//div[@data.bson-qa="delivery-costs-indicator"]//span[@class="_2PRj3E"]').text
             except Exception as e:
                 delivery_cost = ''
 
             # extracting minimum order
             try:
                 minimum_order = driver.find_element(
-                    By.XPATH, '//div[@data-qa="mov-indicator-content"]//span[@class="_2PRj3E"]').text
+                    By.XPATH, '//div[@data.bson-qa="mov-indicator-content"]//span[@class="_2PRj3E"]').text
             except Exception as e:
                 minimum_order = ''
 
             logging.info(
-                f"---> {ind + 1}. <{name}> restaurant's data is extracted!- required time <{math.ceil(time.time() - start_time)}s>")
+                f"---> {ind + 1}. <{name}> restaurant's data.bson is extracted!- required time <{math.ceil(time.time() - start_time)}s>")
 
             temp_data = [postcode, name, address_str, opening_time_str, categories_str, rating,
                          delivery_time, delivery_cost, minimum_order]
 
             if temp_data in store:
-                logging.info("restaurant's data already exists")
+                logging.info("restaurant's data.bson already exists")
 
             else:
                 store.append(temp_data)
@@ -270,7 +270,7 @@ if __name__ == '__main__':
     logging.info('Script start running ...')
     file_name = f'data_{random.randint(1, 999999)}'
     create_csv(file_name)
-    logging.info(f'<{file_name}> file is created to store data actively')
+    logging.info(f'<{file_name}> file is created to store data.bson actively')
     all_data = []
 
     for code in post_codes:
@@ -280,4 +280,4 @@ if __name__ == '__main__':
             all_data = data
 
     ch_driver.close()
-    logging.info(f'Script executed successfully and data is saved to <{file_name}.csv>')
+    logging.info(f'Script executed successfully and data.bson is saved to <{file_name}.csv>')

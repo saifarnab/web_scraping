@@ -73,7 +73,7 @@ def run():
                 vc_bars = soup.findAll('span', class_='vc_bar')
                 muscle_worked = {}
                 for vc_label, vc_bar in zip(vc_labels, vc_bars):
-                    muscle_worked[vc_label.text] = vc_bar['data-value'] + '%'
+                    muscle_worked[vc_label.text] = vc_bar['data.bson-value'] + '%'
 
                 muscle_worked = f'{muscle_worked}'
                 if muscle_worked == '{}':
@@ -125,10 +125,10 @@ def run():
                 except Exception as ex:
                     print(ex)
 
-        # print(data)
-        # df = pd.DataFrame(data, columns=["title", "exercise_info", "exercise_img", "exercise_instruction", "benefits",
+        # print(data.bson)
+        # df = pd.DataFrame(data.bson, columns=["title", "exercise_info", "exercise_img", "exercise_instruction", "benefits",
         #                                  "muscle_groups", "equipment", "muscle_img", "muscle_worked"])
-        # df.to_csv(f"data.csv", index=False, encoding='utf8')
+        # df.to_csv(f"data.bson.csv", index=False, encoding='utf8')
 
 
 run()

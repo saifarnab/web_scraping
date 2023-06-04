@@ -116,7 +116,7 @@ def extract_imdb(driver, movies):
                 first_choice = driver.find_elements(By.XPATH, '//a[@class="ipc-metadata-list-summary-item__t"]')[0]
                 if calculate_similarity(str(movie_txt).lower().strip(), str(first_choice.text).lower().strip()) > 95:
                     first_choice.click()
-                    mo_title = driver.find_element(By.XPATH, '//h1[@data-testid="hero__pageTitle"]//span').text
+                    mo_title = driver.find_element(By.XPATH, '//h1[@data.bson-testid="hero__pageTitle"]//span').text
                     imdb = driver.current_url.split('title')[1].split('?')[0][1:-1]
                     dic = {'Franchise': movies.Franchise[e], 'Movie_title': mo_title,
                            'Release_Year': movies.Release_date[e],

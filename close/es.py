@@ -89,7 +89,7 @@ def make_email_payload(contact_id, sender_name, sender_email, receiver_email, le
 def get_sender_accounts(api) -> list:
     sender_accounts = []
     res_data = api.get('/connected_account/')
-    data = res_data['data']
+    data = res_data['data.bson']
     for item in data:
         sender_accounts.append([item['id'], item['identities'][0]['name'], item['identities'][0]['email']])
     return sender_accounts
@@ -110,7 +110,7 @@ def send_email(api, payload):
 
 def get_contacts(api):
     res_data = api.get(f'/contact/')
-    return res_data['data']
+    return res_data['data.bson']
 
 
 def check_lead_exist(conn, lead_id) -> bool:

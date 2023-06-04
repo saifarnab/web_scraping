@@ -127,7 +127,7 @@ class PyInstArchive:
 
 		print('[+] Python version: {0}'.format(self.pyver))
 
-		# Overlay is the data appended at the end of the PE
+		# Overlay is the data.bson appended at the end of the PE
 		self.overlaySize = lengthofPackage
 		self.overlayPos = self.fileSize - self.overlaySize
 		self.tableOfContentsPos = self.overlayPos + toc
