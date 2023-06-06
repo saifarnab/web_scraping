@@ -1,25 +1,29 @@
 import subprocess
 
+import pandas as pd
+
 subprocess.check_call(['pip', 'install', 'selenium'])
-subprocess.check_call(['pip', 'install', 'pandas'])
+subprocess.check_call(['pip', 'install', 'openpyxl'])
 
 import logging
 import os
-import pandas as pd
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import Font
 import time
 from datetime import date
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
-# log format
-logging.basicConfig(
-    format='%(asctime)s %(levelname)s --> %(message)s',
-    datefmt='%H:%M:%S',
-    level=logging.INFO)
-
 # excel db path
 GAMEDB = 'gamedb.xlsx'
+
+# log format
+logging.basicConfig(
+    format='%(asctime)s %(levelname)s %(message)s',
+    datefmt='%H:%M:%S',
+    level=logging.INFO)
 
 
 def config_driver(maximize_window: bool) -> webdriver.Chrome:
@@ -47,11 +51,18 @@ def config_driver(maximize_window: bool) -> webdriver.Chrome:
 def create_excel_file():
     if os.path.exists(GAMEDB):
         return
+
+    workbook = Workbook()
+    sheet = workbook.active
+    # Set column headers
     headers = ["GameDate", "Game", "Home", "HTHome", "HTAway", "HTDraw", "HomeOn", "HomeOff", "HomeDA", "AwayOn",
                "AwayOff", "AwayDA", "HTScore"]
-    df = pd.DataFrame(columns=headers)
-    df.to_excel(GAMEDB, index=False)
-    logging.info("Game db with headers created successfully.")
+    for col_num, header in enumerate(headers, 1):
+        col_letter = get_column_letter(col_num)
+        sheet[f"{col_letter}1"] = header
+        sheet[f"{col_letter}1"].font = Font(bold=True)
+
+    workbook.save(GAMEDB)
 
 
 def insert_or_update_row(new_data: list):
@@ -76,7 +87,7 @@ def insert_or_update_row(new_data: list):
         df.loc[update_index, 'AwayOff'] = new_data[10]
         df.loc[update_index, 'AwayDA'] = new_data[11]
         df.loc[update_index, 'HTScore'] = new_data[12]
-        df.to_excel('gamedb.xlsx', index=False)
+        df.to_excel(GAMEDB, index=False)
 
 
     else:
@@ -131,21 +142,18 @@ def scanner():
                 logging.info('login or live not found')
                 continue
 
-            for i in range(5):
-                live_games_button = driver.find_element(By.XPATH, '//a[@href="#live"]')
-                driver.execute_script("arguments[0].click();", live_games_button)
-                time.sleep(2)
-                table_elements = driver.find_elements(By.XPATH, '//div[@id="html2"]//table')
-                if len(table_elements) == 0:
-                    continue
-                break
+            live_games_button = driver.find_element(By.XPATH, '//a[@href="#live"]')
+            driver.execute_script("arguments[0].click();", live_games_button)
+            time.sleep(1)
+            driver.execute_script("arguments[0].click();", live_games_button)
+            time.sleep(1)
 
             # find available live games
             table_elements = driver.find_elements(By.XPATH, '//div[@id="html2"]//table')
             # wait till 60s if no live games are available
             if len(table_elements) == 0:
                 time.sleep(60)
-                logging.info('no live games are playing, waiting 60s for next try.')
+                logging.info('--> no live games are playing, waiting 60s for next try.')
                 continue
 
             # iterate each tr
@@ -159,12 +167,14 @@ def scanner():
                     current_date = date.today().strftime('%d/%m/%y')
                     try:
                         game_time = td_elements[0].text.strip()
+                        # logging.info(f'game_time --> {game_time}')
                     except Exception as exx:
                         game_time = 'N/A'
 
                     # if game time is not HT then return
                     if game_time != 'HT':
                         tr_ind += 2
+                        logging.info('Waiting to detect HT')
                         continue
 
                     # extract required data from 1st tr
@@ -180,19 +190,19 @@ def scanner():
                         ht_score = 'N/A'
 
                     try:
-                        ht_home = td_elements[21].text.replace('\n', '').split('%')[0].split(' ')[1].strip()
+                        ht_home = td_elements[20].text.replace('\n', '').split('%')[0].split(' ')[1].strip()
                         # logging.info(f'ht_home --> {ht_home}')
                     except Exception as exx:
                         ht_home = 'N/A'
 
                     try:
-                        ht_away = td_elements[21].text.replace('\n', '').split('%')[2].split(' ')[1].strip()
+                        ht_away = td_elements[20].text.replace('\n', '').split('%')[2].split(' ')[1].strip()
                         # logging.info(f'ht_away --> {ht_away}')
                     except Exception as exx:
                         ht_away = 'N/A'
 
                     try:
-                        ht_draw = td_elements[21].text.replace('\n', '').split('%')[1].split(' ')[1].strip()
+                        ht_draw = td_elements[20].text.replace('\n', '').split('%')[1].split(' ')[1].strip()
                         # logging.info(f'ht_draw --> {ht_draw}')
                     except Exception as exx:
                         ht_draw = 'N/A'
@@ -247,11 +257,10 @@ def scanner():
                     game = team1 + ' v ' + team2
 
                     # extract data from i button which will open a modal
-                    driver.execute_script("arguments[0].click();", td_elements[2].find_element(By.XPATH, './/a[2]'))
+                    td_elements[2].find_element(By.XPATH, './/a[2]').click()
                     # logging.info(f'i button 1st click done')
                     time.sleep(1)
-                    driver.execute_script("arguments[0].click();",
-                                          driver.find_element(By.XPATH, '//a[@id="pregame-tab"]'))
+                    driver.find_element(By.XPATH, '//a[@id="pregame-tab"]').click()
                     # logging.info(f'i button 2nd click done')
                     time.sleep(1)
                     try:
@@ -266,7 +275,7 @@ def scanner():
                     close_buttons = driver.find_elements(By.XPATH, '//button[@class="close"]')
                     for close_button in close_buttons:
                         try:
-                            driver.execute_script("arguments[0].click();", close_button)
+                            close_button.click()
                             # logging.info('clieck close button to close the modal')
                         except Exception as e:
                             continue
@@ -277,14 +286,13 @@ def scanner():
                     insert_or_update_row([current_date, game, home, ht_home, ht_away, ht_draw, home_on,
                                           home_off, home_da, away_on, away_off, away_da, ht_score])
                     tr_ind += 2
-                    logging.info(f'<{game}> data is fetched and stored to gamedb!')
+                    logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
 
         except Exception as ex:
-            print(ex)
+            # print(ex)
             continue
 
 
 if __name__ == '__main__':
     logging.info('----------------- Script start running ... -----------------')
-    scanner()
-
+    data = scanner()
