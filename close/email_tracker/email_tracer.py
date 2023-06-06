@@ -1,5 +1,6 @@
 import imaplib
 import email
+import json
 import time
 import logging
 import sqlite3
@@ -53,7 +54,7 @@ def check_email_replies():
     server.login(EMAIL_ADDRESS, PASSWORD)
 
     # Select the inbox folder
-    server.select('"[Gmail]/Sent Mail"')
+    server.select('INBOX')
 
     # Search for emails with the subject line of the original email you sent
     result, data = server.search(None, f'SUBJECT "Quick question"')
@@ -65,8 +66,9 @@ def check_email_replies():
     # Fetch the email and parse it
     result, data = server.fetch(latest_email_id, '(RFC822)')
     raw_email = data[0][1]
-    email_message = email.message_from_bytes(raw_email)
 
+    email_message = email.message_from_bytes(raw_email)
+    print(email_message)
     # Check if the email is a reply to the original email
     in_reply_to = email_message['In-Reply-To']
     if in_reply_to is not None:
