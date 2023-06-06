@@ -1,3 +1,6 @@
+import imaplib
+import email
+import time
 import logging
 import sqlite3
 from sqlite3 import Error as sqliteError
@@ -9,6 +12,10 @@ SQLITE_DB_PATH = ''  # left empty for current directory
 EMAIL_TRACER_BASE_URL = 'https://d8b9-2a09-bac5-49f-101e-00-19b-131.ngrok-free.app'
 EMAIL_TRACER_FETCH_OPEN_API_URL = EMAIL_TRACER_BASE_URL + '/email-tracker/api/open-counter'
 EMAIL_TRACER_API_KEY = 'emailtracerB3ldJfYdp65j2iisO9ruBev2Lq7WrUaezy1bEJ14NFHyHIs9DSNu9'
+SMTP_SERVER = 'imap.gmail.com'
+SMTP_PORT = 993
+EMAIL_ADDRESS = 'arnabhasan69@gmail.com'
+PASSWORD = 'pmxrclfacwfknchn'
 
 # log format
 logging.basicConfig(
@@ -40,6 +47,38 @@ def get_email_opened_data(conn):
             update_opened_counter(conn, item['email'], item['count'], item['last_opened'])
 
 
+def check_email_replies():
+    # Connect to the SMTP server
+    server = imaplib.IMAP4_SSL(SMTP_SERVER, SMTP_PORT)
+    server.login(EMAIL_ADDRESS, PASSWORD)
+
+    # Select the inbox folder
+    server.select('"[Gmail]/Sent Mail"')
+
+    # Search for emails with the subject line of the original email you sent
+    result, data = server.search(None, f'SUBJECT "Quick question"')
+
+    # Get the latest email matching the search criteria
+    email_ids = data[0].split()
+    latest_email_id = email_ids[-1]
+
+    # Fetch the email and parse it
+    result, data = server.fetch(latest_email_id, '(RFC822)')
+    raw_email = data[0][1]
+    email_message = email.message_from_bytes(raw_email)
+
+    # Check if the email is a reply to the original email
+    in_reply_to = email_message['In-Reply-To']
+    if in_reply_to is not None:
+        print('The receiver has replied to this email.')
+    else:
+        print('The receiver has not replied to this email.')
+
+    # Close the connection to the SMTP server
+    server.close()
+    server.logout()
+
+
 def tracer():
     logging.info('Email Tracer Script starts running ...')
     # send_message_to_slack('SendEmails Script has started running ...')
@@ -54,4 +93,5 @@ def tracer():
 
 
 if __name__ == '__main__':
-    tracer()
+    # tracer()
+    check_email_replies()
