@@ -1,28 +1,34 @@
 import logging
-import pytracking
 
+from django.conf import settings
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .models import EmailTracer
+
 logger = logging.getLogger(__name__)
 
 
-class PixelImgApiView(APIView):
+class FakeImgApiView(APIView):
 
     def __init__(self):
-        super(PixelImgApiView, self).__init__()
-        self.lang = 'en'
+        super(FakeImgApiView, self).__init__()
 
-    def get(self, request):
+    @staticmethod
+    def get(request):
+        EmailTracer.objects.insert(request.query_params.get('e', ''))
+        return Response(status=status.HTTP_200_OK)
 
-        print('hit')
 
-        return Response(
-            {
-                'code': str(status.HTTP_200_OK),
-                'lang': self.lang,
-                'message': 'success',
-                'data': {'url': 'https://'}
-            }
-        )
+class OpenEmailTracerApiView(APIView):
+
+    def __init__(self):
+        super(OpenEmailTracerApiView, self).__init__()
+
+    @staticmethod
+    def get(request):
+        if request.headers.get('Secret', '') != settings.SECRET_KEY:
+            return Response(data='HTTP_401_UNAUTHORIZED', status=status.HTTP_401_UNAUTHORIZED)
+        data = EmailTracer.objects.get_total_opened()
+        return Response(data, status=status.HTTP_200_OK)

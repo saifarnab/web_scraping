@@ -1,0 +1,4 @@
+python-dotenv==1.0.0
+django==4.2.1
+djangorestframework==3.14.0
+requests==2.28.2

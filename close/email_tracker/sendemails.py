@@ -15,13 +15,15 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# your close api secret key
+# your close api secret key & api urls
 CLOSE_API_KEY = 'api_6UOHiS0CDzQtMWeUePrqfX.6dMY8E1N4Nzu3i3olfEDPE'
 USER_ID = 'user_l0UqCXVwEd82vSOui1HxhVAyTAf0hOa9BDxsXizfJhV'
 EMAIL_TEMPLATE_ID = 'tmpl_6i4qWyPodtm0pfpJPR19W58EL9LfzNSJfKaPsH98en2'
 SQLITE_DB_PATH = ''  # left empty for current directory
 PER_DAY_SENT_MAX_LIMIT = 30  # Emails
 WAITING_TIME_BETWEEN_TWO_CONSECUTIVE_EMAILS = 16  # minutes
+EMAIL_TRACER_BASE_URL = 'https://d8b9-2a09-bac5-49f-101e-00-19b-131.ngrok-free.app'
+EMAIL_TRACER_FAKE_IMG_API_URL = EMAIL_TRACER_BASE_URL + '/email-tracker/api/fake_img'
 
 # log format
 logging.basicConfig(
@@ -79,7 +81,9 @@ def create_tables(conn):
                                                 receiver_email text NOT NULL,
                                                 send_via_close boolean NOT NULL,
                                                 sending_date text NOT NULL,
-                                                email_template text 
+                                                email_template text,
+                                                opened_counter int,
+                                                last_opened text
                                             ); """
     _connected_accounts_table = """ CREATE TABLE IF NOT EXISTS connected_accounts (
                                                     id integer PRIMARY KEY,
@@ -101,7 +105,6 @@ def create_tables(conn):
 
 
 def create_db_connection(db_file):
-    conn = None
     try:
         conn = sqlite3.connect(db_file)
     except sqliteError as ex:
@@ -148,7 +151,7 @@ def send_email_via_close(api, payload):
     return False
 
 
-def send_email_via_google(sender_email, sender_pass, receiver_email, receiver_name, reply_to: str) -> (bool, str):
+def send_email_via_google(sender_email, sender_pass, receiver_email, receiver_name, reply_to: str) -> str:
     try:
 
         # set up the SMTP server connection
@@ -180,7 +183,7 @@ def send_email_via_google(sender_email, sender_pass, receiver_email, receiver_na
                     href=\"http://xfusion.io/\" rel=\"noopener noreferrer noopener\" style=\"user-select: 
                     auto;\">xFusion.io</a></div><div color=\"rgb(75, 81, 93)\" data-en-clipboard=\"true\" data-pm-slice=\"1 1 []\">(
                     If you want me gone like a bad haircut, let me know and I\'ll disappear faster than a toupee in a 
-                    hurricane)</div>"""
+                    hurricane)<img src="{EMAIL_TRACER_FAKE_IMG_API_URL}?e={receiver_email}"  alt=""/></div>"""
         html = f"""
         <html>
           <head></head>
@@ -223,10 +226,10 @@ def send_email_via_google(sender_email, sender_pass, receiver_email, receiver_na
 
         # close the SMTP server connection
         smtp_connection.quit()
-        return True, raw_template
+        return raw_template
 
     except Exception as ex:
-        return False, ""
+        return ""
 
 
 def get_contacts(conn):
@@ -427,10 +430,10 @@ def run():
 
                 else:  # this connected account configured to send email via Google
 
-                    confirmation, template = send_email_via_google(sender_email, sender_pass, receiver_email,
-                                                                   receiver_name, reply_to)
+                    template = send_email_via_google(sender_email, sender_pass, receiver_email,
+                                                     receiver_name, reply_to)
 
-                    if confirmation is True:
+                    if template != "":
                         # create confirmation entry in email table
                         create_email_sent_confirmation(conn, sender_email, receiver_email, False,
                                                        date.today().strftime("%m/%d/%Y"), str(template))
