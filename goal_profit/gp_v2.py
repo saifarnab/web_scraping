@@ -118,7 +118,6 @@ def scanner():
     while True:
 
         try:
-
             driver.get('https://live.goalprofits.com/')
             # print(f'{pathlib.Path(__file__).parent.resolve()}\gamedb.gamedb;')
 
@@ -170,10 +169,10 @@ def scanner():
                         game_time = 'N/A'
 
                     # if game time is not HT then return
-                    if game_time != 'HT':
-                        tr_ind += 2
-                        logging.info('Waiting to detect HT')
-                        continue
+                    # if game_time != 'HT':
+                    #     tr_ind += 2
+                    #     logging.info('Waiting to detect HT')
+                    #     continue
 
                     # extract required data from 1st tr
 
@@ -186,6 +185,17 @@ def scanner():
                         # logging.info(f'ht_score --> {ht_score}')
                     except Exception as exx:
                         ht_score = 'N/A'
+
+
+                    try:
+                        v = td_elements[2].find_element(By.XPATH, './/a/img[@data-toggle="tooltip"]')
+                        tooltip = v.get_attribute('data-original-title').replace('\n', '').replace("<div class='tooltip-prices'>", '').replace('<br>', '').replace('</div>', '').replace('<div>', '')
+                        tooltip = "".join(tooltip.split())
+                        print(tooltip)
+                    except Exception as e:
+                        print(e)
+
+                    time.sleep(10000)
 
                     try:
                         ht_home = td_elements[20].text.replace('\n', '').split('%')[0].split(' ')[1].strip()
@@ -287,7 +297,7 @@ def scanner():
                     logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
 
         except Exception as ex:
-            # print(ex)
+            print(ex)
             continue
 
 
