@@ -1,10 +1,5 @@
 import subprocess
-
 import pandas as pd
-
-subprocess.check_call(['pip', 'install', 'selenium'])
-subprocess.check_call(['pip', 'install', 'openpyxl'])
-
 import logging
 import os
 from openpyxl import Workbook
@@ -15,6 +10,9 @@ from datetime import date
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+
+subprocess.check_call(['pip', 'install', 'selenium'])
+subprocess.check_call(['pip', 'install', 'openpyxl'])
 
 # excel db path
 GAMEDB = 'gamedb.xlsx'

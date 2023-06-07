@@ -1,6 +1,8 @@
+import datetime
+
 from django.db import models
 from django.db.models import Count
-from django.utils.timezone import localtime
+from django.utils import timezone
 
 
 class EmailTracerManager(models.Manager):
@@ -8,7 +10,13 @@ class EmailTracerManager(models.Manager):
         if email == '':
             pass
         else:
-            self.create(receiver_email=email)
+            last_entry = self.filter(receiver_email=email).last()
+            if last_entry is not None:
+                print(timezone.now() - last_entry.created_at)
+                if (timezone.now() - last_entry.created_at) > datetime.timedelta(seconds=30):
+                    self.create(receiver_email=email)
+            else:
+                self.create(receiver_email=email)
 
     def get_total_opened(self):
         data = []
@@ -19,7 +27,7 @@ class EmailTracerManager(models.Manager):
                 {
                     'email': item['receiver_email'],
                     'count': item['count'],
-                    'last_opened': localtime(_time).strftime("%Y-%m-%d %H:%M:%S")
+                    'last_opened': timezone.localtime(_time).strftime("%Y-%m-%d %H:%M:%S")
                 }
             )
         return data

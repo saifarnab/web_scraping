@@ -22,7 +22,7 @@ EMAIL_TEMPLATE_ID = 'tmpl_6i4qWyPodtm0pfpJPR19W58EL9LfzNSJfKaPsH98en2'
 SQLITE_DB_PATH = ''  # left empty for current directory
 PER_DAY_SENT_MAX_LIMIT = 30  # Emails
 WAITING_TIME_BETWEEN_TWO_CONSECUTIVE_EMAILS = 16  # minutes
-EMAIL_TRACER_BASE_URL = 'https://d8b9-2a09-bac5-49f-101e-00-19b-131.ngrok-free.app'
+EMAIL_TRACER_BASE_URL = 'https://e189-2a09-bac5-49f-101e-00-19b-131.ngrok-free.app'
 EMAIL_TRACER_FAKE_IMG_API_URL = EMAIL_TRACER_BASE_URL + '/email-tracker/api/fake_img'
 
 # log format
@@ -82,8 +82,12 @@ def create_tables(conn):
                                                 send_via_close boolean NOT NULL,
                                                 sending_date text NOT NULL,
                                                 email_template text,
+                                                reply_to text,
+                                                email_opened boolean,
                                                 opened_counter int,
-                                                last_opened text
+                                                last_opened_at text,
+                                                lead_replied boolean,
+                                                lead_replied_at text
                                             ); """
     _connected_accounts_table = """ CREATE TABLE IF NOT EXISTS connected_accounts (
                                                     id integer PRIMARY KEY,
@@ -113,8 +117,8 @@ def create_db_connection(db_file):
     return conn
 
 
-def create_email_sent_confirmation(conn, sender_email, receiver_email, send_via_close, sending_date, email_template):
-    sql = f"""INSERT INTO emails (sender_email, receiver_email, send_via_close, sending_date, email_template) VALUES ('{sender_email}','{receiver_email}', '{send_via_close}', '{sending_date}', '{email_template}')"""
+def create_email_sent_confirmation(conn, sender_email, receiver_email, send_via_close, sending_date, email_template, reply_to):
+    sql = f"""INSERT INTO emails (sender_email, receiver_email, send_via_close, sending_date, email_template, reply_to) VALUES ('{sender_email}','{receiver_email}', '{send_via_close}', '{sending_date}', '{email_template}', '{reply_to}')"""
     cur = conn.cursor()
     cur.execute(sql)
     conn.commit()
@@ -221,8 +225,7 @@ def send_email_via_google(sender_email, sender_pass, receiver_email, receiver_na
         message.attach(html_part)
 
         # send the email
-        smtp_connection.sendmail(
-            sender_email, receiver_email, message.as_string())
+        smtp_connection.sendmail(sender_email, receiver_email, message.as_string())
 
         # close the SMTP server connection
         smtp_connection.quit()
@@ -410,7 +413,7 @@ def run():
                     if send_email_via_close(api, payload) is True:
                         # create confirmation entry in email table
                         create_email_sent_confirmation(conn, sender_email, receiver_email, True,
-                                                       date.today().strftime("%m/%d/%Y"), "")
+                                                       date.today().strftime("%m/%d/%Y"), "", reply_to)
 
                         # update the timestamp & limit for the used connected account
                         connected_accounts_time_limits = update_timestamp_with_limit(connected_accounts_time_limits,
@@ -436,7 +439,7 @@ def run():
                     if template != "":
                         # create confirmation entry in email table
                         create_email_sent_confirmation(conn, sender_email, receiver_email, False,
-                                                       date.today().strftime("%m/%d/%Y"), str(template))
+                                                       date.today().strftime("%m/%d/%Y"), str(template), reply_to)
 
                         # update the timestamp & limit for the used connected account
                         connected_accounts_time_limits = update_timestamp_with_limit(connected_accounts_time_limits,
