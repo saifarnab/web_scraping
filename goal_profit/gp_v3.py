@@ -1,4 +1,3 @@
-import re
 import subprocess
 import pandas as pd
 import logging
@@ -119,7 +118,6 @@ def scanner():
     while True:
 
         try:
-
             driver.get('https://live.goalprofits.com/')
             # print(f'{pathlib.Path(__file__).parent.resolve()}\gamedb.gamedb;')
 
@@ -177,7 +175,6 @@ def scanner():
                         continue
 
                     # extract required data from 1st tr
-
                     team1 = td_elements[1].text.index('(')
                     team1 = td_elements[1].text[:team1].strip()
                     # logging.info(f'team1 --> {team1}')
@@ -189,22 +186,14 @@ def scanner():
                         ht_score = 'N/A'
 
                     try:
-                        ht_home = td_elements[20].text.replace('\n', '').split('%')[0].split(' ')[1].strip()
-                        # logging.info(f'ht_home --> {ht_home}')
-                    except Exception as exx:
-                        ht_home = 'N/A'
-
-                    try:
-                        ht_away = td_elements[20].text.replace('\n', '').split('%')[2].split(' ')[1].strip()
-                        # logging.info(f'ht_away --> {ht_away}')
-                    except Exception as exx:
-                        ht_away = 'N/A'
-
-                    try:
-                        ht_draw = td_elements[20].text.replace('\n', '').split('%')[1].split(' ')[1].strip()
-                        # logging.info(f'ht_draw --> {ht_draw}')
-                    except Exception as exx:
-                        ht_draw = 'N/A'
+                        v = td_elements[2].find_element(By.XPATH, './/a/img[@data-toggle="tooltip"]')
+                        tooltip = v.get_attribute('data-original-title').replace('\n', '').replace(
+                            "<div class='tooltip-prices'>", '').replace('<br>', '').replace('</div>', '').replace(
+                            '<div>', '')
+                        tooltip = "".join(tooltip.split())
+                        ht_home, ht_draw, ht_away = tooltip[2:6], tooltip[8:12], tooltip[14:18]
+                    except Exception as e:
+                        ht_home, ht_draw, ht_away = 'N/A', 'N/A', 'N/A'
 
                     try:
                         home_on = td_elements[4].text
@@ -254,8 +243,6 @@ def scanner():
                     # logging.info('extracted required data from 2nd tr')
 
                     game = team1 + ' v ' + team2
-                    game = game.replace('has been in charge for', '').replace("games", '')
-                    game = re.sub("\d", "", game)
 
                     # extract data from i button which will open a modal
                     td_elements[2].find_element(By.XPATH, './/a[2]').click()
@@ -290,10 +277,11 @@ def scanner():
                     logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
 
         except Exception as ex:
-            # print(ex)
+            print(ex)
             continue
 
 
 if __name__ == '__main__':
     logging.info('----------------- Script start running ... -----------------')
-    data = scanner()
+    scanner()
+
