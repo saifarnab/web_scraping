@@ -1,0 +1,105 @@
+wait pls
+ok
+
+---------------------------------------
+Date: 9th June
+
+let me know what to do
+
+i will show you how dbmvs works and how it adds movies and series to the webpage, ok?
+ok
+
+lets say we want to add a movie, we search the name i will click on + icon         and the movie is added     ok>?
+
+ii want to add a series ok?
+
+now what i want is whatever series or movies is published on tainio-mania.online to auto published to my webpage
+this is your webpage admin? or tanio ?
+
+this is mine --> https://tenies-online1.gr
+
+ok you want to add the content of tainio online to your website, right ? new content published
+
+ok
+
+this descriptions also needs to extract from tainio site ?
+
+you only need to extract the title
+
+                                                                                                                                    then, other info?
+
+my website is using dbmvs, with this tool you add movie title and auto takes info and images from tmdb and imdb
+
+ok i got it
+
+
+look again       i am going to add a series   you understand??
+
+yes. what i want to know is, you need a script to extract the tv series name from tainio online site & put them in your admin site to publish automatically, right ? yes, series and movies
+
+ok, i got it.
+please provied the site url & credentials
+
+https://tenies-online1.gr/sindesi/
+
+Username: imtyzooel71n
+
+Email: imtyzooel71n@mail.com
+
+ok let me check it, it will let you know asap
+
+ok
+
+it's the email address
+need pass to loged in
+
+yes
+
+to my website??
+
+yes
+ yes
+
+i need to login your wp-admin
+need username & password
+
+
+those i give you is user with administration
+
+https://tenies-online1.gr/sindesi/ i visit this page it required username or email id & password
+
+Username: imtyzooel71n
+
+Email: imtyzooel71n@mail.com
+
+
+pasw: S7VF5Xe9y6C6VWhDWf5omIeh
+
+
+i successfully loged in to the site. i have question though. there are 2 tabs in the Dbmovies. One is movies & other one is shows? for family guy i need to serach shows. right ? cause it is a tv series. c
+correct
+
+all right, then. how could i know from the title of tainio it is a tv series or movie ?
+
+does it content Tv series keyword in title always ? No, in the script that downloads videos how it knows if it is series or movie>?
+
+
+
+that script are doing a lot of works to fetch that, ok no worries, i will find a way do it.
+
+in the series are this keywords Προστέθηκε το 11ο Επεισόδιο
+
+but not always
+
+ok, i understand.
+
+this in the link shows that is a series --> seir
+
+and this for movie --> load
+
+ok, got it
+
+
+
+
+

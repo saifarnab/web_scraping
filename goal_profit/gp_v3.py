@@ -277,7 +277,7 @@ def scanner():
                     logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
 
         except Exception as ex:
-            print(ex)
+            # print(ex)
             continue
 
 

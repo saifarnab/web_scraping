@@ -22,7 +22,7 @@ EMAIL_TEMPLATE_ID = 'tmpl_6i4qWyPodtm0pfpJPR19W58EL9LfzNSJfKaPsH98en2'
 SQLITE_DB_PATH = ''  # left empty for current directory
 PER_DAY_SENT_MAX_LIMIT = 30  # Emails
 WAITING_TIME_BETWEEN_TWO_CONSECUTIVE_EMAILS = 16  # minutes
-EMAIL_TRACER_BASE_URL = 'https://e189-2a09-bac5-49f-101e-00-19b-131.ngrok-free.app'
+EMAIL_TRACER_BASE_URL = 'https://a73a-203-95-220-195.ngrok-free.app'
 EMAIL_TRACER_FAKE_IMG_API_URL = EMAIL_TRACER_BASE_URL + '/email-tracker/api/fake_img'
 
 # log format
