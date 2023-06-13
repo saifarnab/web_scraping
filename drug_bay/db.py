@@ -7,8 +7,8 @@ import pymysql
 DATABASE_NAME = 'drug_bay'
 HOST = 'localhost'
 PORT = '3306'
-USER = 'admin'
-PASS = 'admin'
+USER = 'saif'
+PASS = 'saif'
 TXT_FILE_PATH = 'listings.txt'
 
 
@@ -26,7 +26,6 @@ def read_txt() -> list:
 
 def db_insertion(conn, cur, data):
 
-    counter = 0
     for idx, item in enumerate(data):
         if len(item) < 1:
             continue
@@ -47,16 +46,19 @@ def db_insertion(conn, cur, data):
                           f" category_id = VALUES(category_id), user_id = VALUES(user_id), created_at = VALUES(created_at)," \
                           f" updated_at = VALUES(updated_at), types = VALUES(types)"
 
-            physical_sql = f"INSERT INTO physical_products (id, countries_option, countries, country_from, created_at," \
-                           f" updated_at) VALUES ('{listing_id}', 'all', ' ', '{shipping_from}', NOW(), NOW()) ON DUPLICATE " \
-                           f"KEY UPDATE countries_option=VALUES(countries_option), countries=VALUES(countries)," \
-                           f" country_from=VALUES(country_from), created_at=VALUES(created_at), updated_at=VALUES(updated_at)"
             cur.execute(product_sql)
-            cur.execute(physical_sql)
             conn.commit()
-            print(f'{title} inserted')
+
+            # physical_sql = f"INSERT INTO physical_products (id, countries_option, countries, country_from, created_at," \
+            #                f" updated_at) VALUES ('{listing_id}', 'all', ' ', '{shipping_from}', NOW(), NOW()) ON DUPLICATE " \
+            #                f"KEY UPDATE countries_option=VALUES(countries_option), countries=VALUES(countries)," \
+            #                f" country_from=VALUES(country_from), created_at=VALUES(created_at), updated_at=VALUES(updated_at)"
+            # cur.execute(product_sql)
+            # cur.execute(physical_sql)
+            # conn.commit()
         except Exception as e:
             print(e)
+            break
 
 
 
