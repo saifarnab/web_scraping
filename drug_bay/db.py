@@ -7,8 +7,8 @@ import pymysql
 DATABASE_NAME = 'drug_bay'
 HOST = 'localhost'
 PORT = '3306'
-USER = 'saif'
-PASS = 'saif'
+USER = 'admin'
+PASS = 'admin'
 TXT_FILE_PATH = 'listings.txt'
 
 

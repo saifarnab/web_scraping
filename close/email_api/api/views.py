@@ -10,10 +10,10 @@ from .models import EmailTracer
 logger = logging.getLogger(__name__)
 
 
-class FakeImgApiView(APIView):
+class PixelApiView(APIView):
 
     def __init__(self):
-        super(FakeImgApiView, self).__init__()
+        super(PixelApiView, self).__init__()
 
     @staticmethod
     def get(request):

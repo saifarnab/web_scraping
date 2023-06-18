@@ -242,12 +242,15 @@ def get_contacts(conn):
     leads = lead_cursor.fetchall()
 
     for lead in leads:
-        contact_cursor = conn.execute(
-            "SELECT * FROM contacts WHERE lead_ref_id=?", (lead[0],))
-        contact = contact_cursor.fetchone()
-        contact_first_name = contact[2]
-        contact_email = contact[8]
-        contacts.append([lead[1], contact_first_name, contact_email])
+        try:
+            contact_cursor = conn.execute(
+                "SELECT * FROM contacts WHERE lead_ref_id=?", (lead[0],))
+            contact = contact_cursor.fetchone()
+            contact_first_name = contact[2]
+            contact_email = contact[8]
+            contacts.append([lead[1], contact_first_name, contact_email])
+        except Exception:
+            pass
 
     return contacts
 
