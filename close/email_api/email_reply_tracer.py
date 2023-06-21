@@ -4,14 +4,10 @@ import logging
 import sqlite3
 from sqlite3 import Error as sqliteError
 
-import requests
 from dateutil import parser
 
 # configuration
-SQLITE_DB_PATH = ''  # left empty for current directory
-EMAIL_TRACER_BASE_URL = 'https://e189-2a09-bac5-49f-101e-00-19b-131.ngrok-free.app'
-EMAIL_TRACER_FETCH_OPEN_API_URL = EMAIL_TRACER_BASE_URL + '/email-tracker/api/open-counter'
-EMAIL_TRACER_API_KEY = 'django-insecure-n#bd(hj#v1dx+alxyk3)_tg)h6qm+xi26=brznx@p984&!%g$w'
+SQLITE_DB_PATH = 'client_sqlite.db'
 
 # log format
 logging.basicConfig(
@@ -29,13 +25,6 @@ def create_db_connection(db_file):
     return conn
 
 
-def update_opened_counter(conn, receiver_email, opened_counter, last_opened):
-    sql = f"UPDATE emails SET email_opened='{True}', opened_counter='{opened_counter}', last_opened_at='{last_opened}' WHERE receiver_email='{receiver_email}'"
-    cur = conn.cursor()
-    cur.execute(sql)
-    conn.commit()
-
-
 def update_replied_by_lead(conn, lead_replied, lead_replied_at, email_id):
     sql = f"UPDATE emails SET lead_replied='{lead_replied}', lead_replied_at='{lead_replied_at}' WHERE id='{email_id}'"
     cur = conn.cursor()
@@ -43,17 +32,7 @@ def update_replied_by_lead(conn, lead_replied, lead_replied_at, email_id):
     conn.commit()
 
 
-def get_email_opened_data(conn):
-    res = requests.get(url=EMAIL_TRACER_FETCH_OPEN_API_URL, headers={'secret': EMAIL_TRACER_API_KEY})
-    if res.status_code == 200:
-        for item in res.json():
-            update_opened_counter(conn, item['email'], item['count'], item['last_opened'])
-    else:
-        logging.error(f'Invalid response from email api service, status = {res.status_code}')
-
-
 def check_email_replies(replied_lead_email, send_date, inbox_cred):
-
     try:
         # Connect to the SMTP server
         server = imaplib.IMAP4_SSL('imap.gmail.com', 993)
@@ -100,14 +79,10 @@ def get_sender_email_credentials(conn, receiver_email) -> bool:
 
 
 def tracer():
-    logging.info('Email Tracer Script starts running ...')
-    # send_message_to_slack('SendEmails Script has started running ...')
+    logging.info('Email reply tracer script starts running ...')
 
     # initialize db connection
-    conn = create_db_connection(SQLITE_DB_PATH + 'sqlite.db')
-
-    # get data
-    get_email_opened_data(conn)
+    conn = create_db_connection(SQLITE_DB_PATH)
 
     # trace lead reply
     data = get_desired_emails(conn)
@@ -127,7 +102,7 @@ def tracer():
         if result is not None:
             update_replied_by_lead(conn, True, parser.parse(result).strftime("%m/%d/%Y %H:%M:%S"), item[0])
 
-    logging.info('Email Tracer Script executed successfully!')
+    logging.info('Email reply tracer script executed successfully!')
 
 
 if __name__ == '__main__':

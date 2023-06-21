@@ -19,11 +19,11 @@ from email.mime.multipart import MIMEMultipart
 CLOSE_API_KEY = 'api_6UOHiS0CDzQtMWeUePrqfX.6dMY8E1N4Nzu3i3olfEDPE'
 USER_ID = 'user_l0UqCXVwEd82vSOui1HxhVAyTAf0hOa9BDxsXizfJhV'
 EMAIL_TEMPLATE_ID = 'tmpl_6i4qWyPodtm0pfpJPR19W58EL9LfzNSJfKaPsH98en2'
-SQLITE_DB_PATH = ''  # left empty for current directory
+SQLITE_DB_PATH = 'client_sqlite.db'
 PER_DAY_SENT_MAX_LIMIT = 30  # Emails
 WAITING_TIME_BETWEEN_TWO_CONSECUTIVE_EMAILS = 16  # minutes
-EMAIL_TRACER_BASE_URL = 'https://a73a-203-95-220-195.ngrok-free.app'
-EMAIL_TRACER_FAKE_IMG_API_URL = EMAIL_TRACER_BASE_URL + '/email-tracker/api/fake_img'
+EMAIL_TRACER_BASE_URL = 'https://3826-2a09-bac1-b00-8-00-13-2c9.ngrok-free.app'
+EMAIL_TRACER_FAKE_IMG_API_URL = EMAIL_TRACER_BASE_URL + '/email/api/pixel'
 
 # log format
 logging.basicConfig(
@@ -84,7 +84,7 @@ def create_tables(conn):
                                                 email_template text,
                                                 reply_to text,
                                                 email_opened boolean,
-                                                opened_counter int,
+                                                opened_counter int DEFAULT 0,
                                                 last_opened_at text,
                                                 lead_replied boolean,
                                                 lead_replied_at text
@@ -325,7 +325,7 @@ def run():
     # send_message_to_slack('SendEmails Script has started running ...')
 
     # initialize db connection
-    conn = create_db_connection(SQLITE_DB_PATH + 'sqlite.db')
+    conn = create_db_connection(SQLITE_DB_PATH)
 
     # create tables
     create_tables(conn)
