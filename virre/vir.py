@@ -59,13 +59,12 @@ def validate_date(date_text: str):
 
 
 def take_input() -> (str, str):
-    # start_date = str(input('Enter start date (format: dd.mm.YYYY): ')).strip()
-    # validate_date(start_date)
-    # end_date = str(input('Enter end date (format: dd.mm.YYYY): ')).strip()
-    # validate_date(end_date)
-    # return start_date, end_date
-
-    return '01.06.2023', '02.06.2023'
+    start_date = str(input('Enter start date (format: dd.mm.YYYY): ')).strip()
+    validate_date(start_date)
+    end_date = str(input('Enter end date (format: dd.mm.YYYY): ')).strip()
+    validate_date(end_date)
+    return start_date, end_date
+    # return '01.06.2023', '02.06.2023'
 
 
 def search(driver: webdriver.Chrome, start_date: str, end_date: str) -> webdriver.Chrome:
@@ -107,7 +106,7 @@ def scrapper():
     print('-----------------------------------------------------')
     print('Script starts running ...')
     start_date, end_date = take_input()
-    file_name = f'data_{datetime.datetime.now().strftime("%d.%m.%Y_%H:%M:%S")}.csv'
+    file_name = f'data_{datetime.datetime.now().strftime("%d.%m.%Y_%H.%M.%S")}.csv'
     csv_file_init(file_name)
     driver = config_driver()
     driver = search(driver, start_date, end_date)
