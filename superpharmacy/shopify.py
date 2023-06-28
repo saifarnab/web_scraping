@@ -63,13 +63,13 @@ def write_csv(file_name: str, new_row: list):
 
 
 def scrapper():
-    file_name = 'shopify_data.csv'
-    exp_file_name = 'exp_data.csv'
+    file_name = 'data_shopify_data.csv'
+    exp_file_name = 'data_exp_data.csv'
     csv_file_init(file_name)
     csv_file_init_exp(exp_file_name)
     urls = read_excel()
     print(f'--> Total {len(urls)} urls found!')
-    url_ind = 0
+    url_ind = 3571
     status_counter = 0
     while True:
         try:
@@ -224,6 +224,7 @@ def scrapper():
 
         except Exception as e:
             write_csv(exp_file_name, [urls[url_ind]])
+            url_ind += 1
 
     print('Execution done!')
 
