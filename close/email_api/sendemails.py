@@ -20,6 +20,7 @@ CLOSE_API_KEY = 'api_6UOHiS0CDzQtMWeUePrqfX.6dMY8E1N4Nzu3i3olfEDPE'
 USER_ID = 'user_l0UqCXVwEd82vSOui1HxhVAyTAf0hOa9BDxsXizfJhV'
 EMAIL_TEMPLATE_ID = 'tmpl_6i4qWyPodtm0pfpJPR19W58EL9LfzNSJfKaPsH98en2'
 SQLITE_DB_PATH = 'client_sqlite.db'
+EMAIL_SUBJECT = 'Quick question'
 PER_DAY_SENT_MAX_LIMIT = 30  # Emails
 WAITING_TIME_BETWEEN_TWO_CONSECUTIVE_EMAILS = 16  # minutes
 EMAIL_TRACER_BASE_URL = 'https://3826-2a09-bac1-b00-8-00-13-2c9.ngrok-free.app'
@@ -220,7 +221,7 @@ def send_email_via_google(sender_email, sender_pass, receiver_email, receiver_na
         message['To'] = receiver_email
         if reply_to:
             message['reply-to'] = reply_to
-        message['Subject'] = 'Quick question'
+        message['Subject'] = EMAIL_SUBJECT
         html_part = MIMEText(html, 'html')
         message.attach(html_part)
 

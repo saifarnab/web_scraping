@@ -8,6 +8,8 @@ from dateutil import parser
 
 # configuration
 SQLITE_DB_PATH = 'client_sqlite.db'
+EMAIL_SUBJECT = 'Quick question'
+
 
 # log format
 logging.basicConfig(
@@ -42,7 +44,7 @@ def check_email_replies(replied_lead_email, send_date, inbox_cred):
         server.select('INBOX')
 
         # Search for emails with the subject line of the original email you sent
-        result, data = server.search(None, f'SUBJECT "Quick question"')
+        result, data = server.search(None, f'SUBJECT "{EMAIL_SUBJECT}"')
 
         if result == "OK":
             for item in [x.decode('utf-8') for x in data][0].split(' '):

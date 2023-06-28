@@ -2,8 +2,7 @@ import logging
 import sqlite3
 from sqlite3 import Error as sqliteError
 from os.path import exists
-
-from django.utils import timezone
+from datetime import datetime
 from django.conf import settings
 from rest_framework import status
 from rest_framework.response import Response
@@ -32,7 +31,7 @@ class PixelApiView(APIView):
             logging.error(ex)
 
     def update_opened_counter(self, receiver_email):
-        last_opened = timezone.now().strftime("%d-%b-%Y %H:%M %p")
+        last_opened = datetime.now().strftime("%d-%b-%Y %H:%M %p")
         sql = f"UPDATE emails SET email_opened='{True}', opened_counter=opened_counter+1, last_opened_at='{last_opened}' WHERE receiver_email='{receiver_email}'"
         cur = self.conn.cursor()
         cur.execute(sql)
@@ -54,15 +53,3 @@ class PixelApiView(APIView):
         except Exception as e:
             logging.exception(e)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-# class OpenEmailTracerApiView(APIView):
-#
-#     def __init__(self):
-#         super(OpenEmailTracerApiView, self).__init__()
-#
-#     @staticmethod
-#     def get(request):
-#         if request.headers.get('Secret', '') != settings.SECRET_KEY:
-#             return Response(data='HTTP_401_UNAUTHORIZED', status=status.HTTP_401_UNAUTHORIZED)
-#         data = EmailTracer.objects.get_total_opened()
-#         return Response(data, status=status.HTTP_200_OK)
