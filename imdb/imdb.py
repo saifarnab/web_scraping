@@ -1,6 +1,7 @@
 import logging
 import random
 import subprocess
+import time
 
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -36,7 +37,7 @@ def convert_runtime(time_str):
 
 def run():
     logging.info('Script Start running ...')
-    df = pd.read_csv('ids to scrape.csv')
+    df = pd.read_csv('new.csv')
     ids = df['0']
     data = []
     for ind, each_id in enumerate(ids):
@@ -49,6 +50,9 @@ def run():
                 ul = soup.find('ul',
                                class_='ipc-inline-list ipc-inline-list--show-dividers sc-afe43def-4 kdXikI baseAlt')
                 lis = ul.findAll('li', class_="ipc-inline-list__item")
+
+                print(lis)
+
                 if len(lis) == 4:
                     data.append(
                         [title.strip(), lis[0].text.strip(), convert_runtime(lis[3].text.strip()), lis[1].text.strip().replace('–', '-'),
@@ -64,6 +68,7 @@ def run():
                 logging.info(f'--> data is extracted for id = {each_id}')
 
         except Exception as ex:
+            print(ex)
             logging.error(f'--> failed to extract data from id = {each_id}')
             continue
 

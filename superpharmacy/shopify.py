@@ -2,15 +2,41 @@ import csv
 import re
 import time
 
-from fake_useragent import UserAgent
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+from fake_useragent import UserAgent
 from lxml import etree
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 
 HEADERS = ({'User-Agent': UserAgent().random})
 
 CLEANR = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
+
+
+def config_driver() -> webdriver.Chrome:
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument("--start-maximized")
+    chrome_options.add_argument("lang=en-GB")
+    chrome_options.add_argument('--ignore-certificate-errors')
+    chrome_options.add_argument('--allow-running-insecure-content')
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--proxy-server='direct://'")
+    chrome_options.add_argument("--proxy-bypass-list=*")
+    chrome_options.add_argument("--start-maximized")
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument("--log-level=3")
+    # chrome_options.add_argument(f'user-agent={UserAgent().random}')
+    driver = webdriver.Chrome(options=chrome_options)
+    return driver
 
 
 def cleanhtml(raw_html):
@@ -19,7 +45,7 @@ def cleanhtml(raw_html):
 
 
 def read_excel() -> list:
-    df = pd.read_excel('urls.xlsx')
+    df = pd.read_excel('1.xlsx')
     return df['URL']
     # return ['https://www.superpharmacy.com.au/products/epipen-junior-adrenaline-150mcg-auto-injector-1-pre-filled-syringe']
 
@@ -63,13 +89,14 @@ def write_csv(file_name: str, new_row: list):
 
 
 def scrapper():
-    file_name = 'data_shopify_data.csv'
-    exp_file_name = 'data_exp_data.csv'
+    file_name = 'data/data_shopify_data_9000_to_rest.csv'
+    exp_file_name = 'data/data_exp_data_9000_to_rest.csv'
     csv_file_init(file_name)
     csv_file_init_exp(exp_file_name)
+    driver = config_driver()
     urls = read_excel()
     print(f'--> Total {len(urls)} urls found!')
-    url_ind = 3571
+    url_ind = 0
     status_counter = 0
     while True:
         try:
@@ -87,6 +114,7 @@ def scrapper():
                     status_counter = 0
 
                 continue
+
             soup = BeautifulSoup(webpage.content, "html.parser")
             dom = etree.HTML(str(soup))
 
@@ -123,7 +151,14 @@ def scrapper():
             variant_inv_policy = 'deny'
             variant_fulfill_service = 'manual'
 
-            price = dom.xpath("//div[@class='pdp__price']")[0].text[1:]
+            try:
+                price = dom.xpath("//div[@class='pdp__price']")[0].text[1:]
+            except:
+                driver.get(urls[url_ind])
+                WebDriverWait(driver, 10).until(
+                    EC.visibility_of_element_located((By.XPATH, '//li[@class="pdp__price selected"]')))
+                price = driver.find_element(By.XPATH, '//li[@class="pdp__price selected"]').text[1:]
+
             variant_com_price = ''
             variant_required_shipping = 'TRUE'
             variant_taxable = 'TRUE'
@@ -230,4 +265,6 @@ def scrapper():
 
 
 if __name__ == '__main__':
-    scrapper()
+    # scrapper()
+    d = config_driver()
+    login(d)

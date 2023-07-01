@@ -1,4 +1,3 @@
-import csv
 import datetime
 import subprocess
 import time
@@ -13,8 +12,8 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.wait import WebDriverWait
 
 # install dependencies
-subprocess.check_call(['pip', 'install', 'fake_useragent'])
 subprocess.check_call(['pip', 'install', 'selenium'])
+subprocess.check_call(['pip', 'install', 'pandas'])
 
 
 def config_driver() -> webdriver.Chrome:
@@ -33,7 +32,7 @@ def config_driver() -> webdriver.Chrome:
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument("--log-level=3")
-    chrome_options.add_argument(f'user-agent={UserAgent().random}')
+    # chrome_options.add_argument(f'user-agent={UserAgent().random}')
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
@@ -64,8 +63,6 @@ def take_input() -> (str, str):
     end_date = str(input('Enter end date (format: dd.mm.YYYY): ')).strip()
     validate_date(end_date)
     return start_date, end_date
-    # return '01.06.2023', '02.06.2023'
-
 
 def search(driver: webdriver.Chrome, start_date: str, end_date: str) -> webdriver.Chrome:
     while True:
@@ -127,7 +124,7 @@ def scrapper():
                 elif header == 'Puhelin':
                     phone = driver.find_element(By.XPATH, value_xp).text
                 elif header == 'Sähköposti':
-                    email = driver.find_element(By.XPATH, value_xp).text
+                    email = driver.find_element(By.XPATH, value_xp).text.replace('(a)', '@')
             except Exception as e:
                 pass
 
