@@ -7,12 +7,13 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import requests
 
+
 class GetErrorIDs:
     """
     Class to scrape runtime, title and other information given an IMDb ID 
     """
 
-    def __init__(self, id_, verbose = False):
+    def __init__(self, id_, verbose=False):
         self.id_ = id_
         self.verbose = verbose
 
@@ -36,37 +37,51 @@ class GetErrorIDs:
         # ids = df['0']
         data = []
         # for ind, each_id in enumerate(ids):
+        title = None
         try:
             url = f"https://m.imdb.com/title/{self.id_}/"
-            page = requests.post(url, headers = self.get_request_headers())
+            page = requests.post(url, headers=self.get_request_headers())
             if page.status_code == 200:
                 soup = BeautifulSoup(page.content, "html.parser")
                 title = soup.find('span', class_="sc-afe43def-1 fDTGTb").text
                 ul = soup.find('ul',
                                class_='ipc-inline-list ipc-inline-list--show-dividers sc-afe43def-4 kdXikI baseAlt')
                 lis = ul.findAll('li', class_="ipc-inline-list__item")
+
                 if len(lis) == 4:
                     data.append(
-                        [title.strip(), lis[0].text.strip(), self.convert_runtime(lis[3].text.strip()), lis[1].text.strip().replace('–', '-'),
+                        [title.strip(), lis[0].text.strip(), self.convert_runtime(lis[3].text.strip()),
+                         lis[1].text.strip().replace('–', '-'),
                          self.id_])
 
+                elif len(lis) == 1:
+                    data.append(
+                        [title.strip(), 'N/A', 'N/A', lis[0].text.strip().replace('–', '-'), self.id_])
+
                 elif len(lis) == 3:
-                    data.append([title.strip(), lis[0].text.strip(), 'N/A', lis[1].text.strip().replace('–', '-'), self.id_])
+                    data.append(
+                        [title.strip(), lis[0].text.strip(), 'N/A', lis[1].text.strip().replace('–', '-'), self.id_])
 
                 elif len(lis) == 2:
                     if 'tv' in lis[0].text.strip().lower():
                         data.append(
-                            [title.strip(), lis[0].text.strip(), self.convert_runtime(lis[1].text.strip()), 'N/A', self.id_])
+                            [title.strip(), lis[0].text.strip(), self.convert_runtime(lis[1].text.strip()), 'N/A',
+                             self.id_])
                     else:
-                        data.append([title.strip(), 'N/A', self.convert_runtime(lis[1].text.strip()), lis[0].text.strip().replace('–', '-'), self.id_])
+                        data.append([title.strip(), 'N/A', self.convert_runtime(lis[1].text.strip()),
+                                     lis[0].text.strip().replace('–', '-'), self.id_])
 
-                # logging.info(f'--> data is extracted for id = {self.id_}')
+                # print(f'--> data is extracted for id = {self.id_}')
 
         except Exception as ex:
             # logging.error(f'--> failed to extract data from id = {self.id_}')
             if self.verbose:
                 print(f'--> failed to extract data from id = {self.id_}', type(ex), ex)
-            return None
+            return {'title': title,
+                    'media_type': None,
+                    'runtime': None,
+                    'release_year': None,
+                    'imdb_id': self.id_}
 
         try:
             runtime = int(data[0][2])
@@ -76,26 +91,25 @@ class GetErrorIDs:
         # print('Corrected data: ', data)
         try:
             return {'title': data[0][0],
-                   'media_type': data[0][1],
-                   'runtime': runtime,
-                   'release_year': data[0][3],
-                   'imdb_id': data[0][4]}
+                    'media_type': data[0][1],
+                    'runtime': runtime,
+                    'release_year': data[0][3],
+                    'imdb_id': data[0][4]}
         except Exception as e:
             if self.verbose:
                 print(type(e), e)
                 print(data)
             return {'title': None,
-                   'media_type': None,
-                   'runtime': None,
-                   'release_year': None,
-                   'imdb_id': None}
-
+                    'media_type': None,
+                    'runtime': None,
+                    'release_year': None,
+                    'imdb_id': None}
 
 
 if __name__ == '__main__':
 
     # Read CSV of missing IDs
-    df_missing = pd.read_csv('new_missing.csv')
+    df_missing = pd.read_csv('missing_ids.csv')
 
     # Loop through each ID and scrape its information
     results = []
@@ -103,4 +117,4 @@ if __name__ == '__main__':
         res = GetErrorIDs(id_).run()
         results.append(res)
     # Create a dataframe out of the results and save to local file
-    pd.DataFrame(results).to_csv('output.csv', index = False)
+    pd.DataFrame(results).to_csv('output.csv', index=False)
