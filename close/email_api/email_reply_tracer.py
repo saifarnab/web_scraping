@@ -67,6 +67,7 @@ def check_email_replies(replied_lead_email, send_date, inbox_cred):
         return None
 
     except Exception as e:
+        print(e)
         return None
 
 

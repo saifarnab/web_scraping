@@ -23,7 +23,7 @@ SQLITE_DB_PATH = 'client_sqlite.db'
 EMAIL_SUBJECT = 'Quick question'
 PER_DAY_SENT_MAX_LIMIT = 30  # Emails
 WAITING_TIME_BETWEEN_TWO_CONSECUTIVE_EMAILS = 16  # minutes
-EMAIL_TRACER_BASE_URL = 'https://3826-2a09-bac1-b00-8-00-13-2c9.ngrok-free.app'
+EMAIL_TRACER_BASE_URL = 'https://4cfa-2a09-bac1-b00-8-00-13-2c9.ngrok-free.app'
 EMAIL_TRACER_FAKE_IMG_API_URL = EMAIL_TRACER_BASE_URL + '/email/api/pixel'
 
 # log format
