@@ -106,7 +106,7 @@ def scrapper():
     filename = 'opensea.xlsx'
     create_directory_if_not_exists('images')
     create_excel_with_header(filename)
-    azuki = 10
+    azuki = 0
     reloader = 0
     no = get_last_row(filename)
     print('Starting data extraction ... ')
