@@ -8,9 +8,8 @@ import requests
 from PIL import Image
 from fake_useragent import UserAgent
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.webdriver import Keys
-
+from selenium.webdriver.common.by import By
 
 # install dependencies
 subprocess.check_call(['pip', 'install', 'pillow'])
@@ -23,6 +22,8 @@ subprocess.check_call(['pip', 'install', 'fake_useragent'])
 
 def config_driver() -> webdriver.Chrome:
     chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("log-level=3")
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
     chrome_options.add_argument('--ignore-certificate-errors')
     chrome_options.add_argument('--allow-running-insecure-content')
     chrome_options.add_argument("--disable-infobars")
