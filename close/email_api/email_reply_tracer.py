@@ -2,7 +2,9 @@ import email
 import imaplib
 import logging
 import sqlite3
+from datetime import datetime
 from sqlite3 import Error as sqliteError
+from zoneinfo import ZoneInfo
 
 from dateutil import parser
 
@@ -52,8 +54,9 @@ def check_email_replies(replied_lead_email, send_date, inbox_cred):
                 raw_reply_email = data[0][1]
                 reply_email_message = email.message_from_bytes(raw_reply_email)
                 reply_email_from = reply_email_message['From'].split('<')[1].split('>')[0]
-                reply_email_send_date = parser.parse(reply_email_message['Date'].split(',')[1].strip()).date().strftime(
-                    "%m/%d/%Y")
+                reply_email_send_date = parser.parse(reply_email_message['Date'].split(',')[1].strip()).strftime("%m/%d/%Y")
+                reply_email_send_date = parser.parse(reply_email_message['Date'].split(',')[1].strip()).strftime("%m/%d/%Y")
+                reply_email_send_date = parser.parse(reply_email_message['Date'].split(',')[1].strip())
 
                 if parser.parse(reply_email_send_date).date() >= parser.parse(
                         send_date).date() and replied_lead_email.strip() == reply_email_from.strip():
@@ -103,7 +106,11 @@ def tracer():
         inbox_cred = get_sender_email_credentials(conn, inbox_to_explore)
         result = check_email_replies(receiver_email, send_date, inbox_cred)
         if result is not None:
-            update_replied_by_lead(conn, True, parser.parse(result).strftime("%m/%d/%Y %H:%M:%S"), item[0])
+            replied_at = parser.parse(result)
+
+            replied_at = datetime(replied_at.year, replied_at.month, replied_at.day,
+                                  replied_at.hour, tzinfo=ZoneInfo("America/Denver")).strftime("%d-%b-%Y %H:%M %p")
+            update_replied_by_lead(conn, True, replied_at, item[0])
 
     logging.info('Email reply tracer script executed successfully!')
 
