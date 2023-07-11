@@ -57,10 +57,17 @@ def create_directory_if_not_exists(directory):
 
 
 def save_as_jpg(src: str, name: str):
-    response = requests.get(src)
-    im = Image.open(BytesIO(response.content))
-    rgb_im = im.convert('RGB')
-    rgb_im.save(f'images/{name}.jpg')
+    reloader = 1
+    while True:
+        if reloader >= 10:
+            return False
+        response = requests.get(src)
+        if response.status_code == 200:
+            im = Image.open(BytesIO(response.content))
+            rgb_im = im.convert('RGB')
+            rgb_im.save(f'images/{name}.jpg')
+            return True
+        reloader += 1
 
 
 def append_to_excel(filename, data):
@@ -115,38 +122,43 @@ def scrapper():
     create_excel_with_header(filename)
     azuki = get_last_row(filename) - 1
     print('Starting data extraction ... ')
+    reloader = 1
     while True:
         if azuki >= 10000:
             break
         driver = config_driver()
         driver.get(f'https://opensea.io/assets/ethereum/0xed5af388653567af2f388e6224dc7c4b3241c544/{azuki}')
 
+        if reloader >= 10:
+            azuki += 1
+
         try:
             WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.XPATH, '//img[@class="Image--image"]')))
         except Exception as e:
-            # print(e.__str__())
-            print('Retrying without fake user-agent chrome driver')
+            # print('Retrying without fake user-agent chrome driver')
             driver = config_driver_without_ua()
             driver.get(f'https://opensea.io/assets/ethereum/0xed5af388653567af2f388e6224dc7c4b3241c544/{azuki}')
             try:
                 WebDriverWait(driver, 10).until(
                     EC.visibility_of_element_located((By.XPATH, '//img[@class="Image--image"]')))
             except Exception as ex:
-                # print(ex.__str__())
-                print('Retrying with fake user-agent chrome driver')
+                # print('Retrying with fake user-agent chrome driver')
+                reloader += 1
                 continue
 
         name = f'Azuki #{azuki}'
         link = driver.current_url
         src = driver.find_element(By.XPATH, '//img[@class="Image--image"]').get_attribute('src')
         if check_data_exists(filename, name) is False:
-            save_as_jpg(src, name)
-            append_to_excel(filename, [[azuki, link, name, f'{name}.jpg']])
-            print(f'--> {azuki}. {name} inserted')
-            azuki += 1
+            if save_as_jpg(src, name) is True:
+                append_to_excel(filename, [[azuki, link, name, f'{name}.jpg']])
+                print(f'--> {azuki}. {name} inserted')
         else:
             print(f'--> {name} is already available.')
+
+        azuki += 1
+        reloader = 1
 
     print('Execution done!')
 
