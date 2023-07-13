@@ -11,8 +11,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
-subprocess.check_call(['pip', 'install', 'selenium'])
-subprocess.check_call(['pip', 'install', 'openpyxl'])
+# subprocess.check_call(['pip', 'install', 'selenium'])
+# subprocess.check_call(['pip', 'install', 'openpyxl'])
 
 # excel db path
 GAMEDB = 'gamedb.xlsx'
@@ -26,7 +26,7 @@ logging.basicConfig(
 
 def config_driver(maximize_window: bool) -> webdriver.Chrome:
     chrome_options = Options()
-    # chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument("--start-maximized")
     chrome_options.add_argument("lang=en-GB")
@@ -191,18 +191,14 @@ def scanner():
                         ht_score = 'N/A'
 
                     try:
-                        v = td_elements[20].find_element(By.XPATH, './/a/img[@data-toggle="tooltip"]')
-                        print(v)
-                        time.sleep(10000)
+                        v = td_elements[19].find_element(By.XPATH, './/a/img[@data-toggle="tooltip"]')
                         tooltip = v.get_attribute('data-original-title').replace('\n', '').replace(
                             "<div class='tooltip-prices'>", '').replace('<br>', '').replace('</div>', '').replace(
                             '<div>', '')
                         tooltip = "".join(tooltip.split())
                         ht_home, ht_draw, ht_away = tooltip[2:6], tooltip[8:12], tooltip[14:18]
-                        print(ht_home, ht_draw, ht_away)
+                        # print(ht_home, ht_draw, ht_away)
                     except Exception as e:
-                        print(e)
-                        exit()
                         ht_home, ht_draw, ht_away = 'N/A', 'N/A', 'N/A'
 
                     try:

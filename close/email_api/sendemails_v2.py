@@ -100,12 +100,16 @@ def create_tables(conn):
                                                     reply_to text,
                                                     account_email_id text NOT NULL
                                                 ); """
+    _contacts_pointer_pointer_table = """ CREATE TABLE IF NOT EXISTS contacts_pointer (
+                                                        pointer int DEFAULT 0
+                                                    ); """
     try:
         c = conn.cursor()
         c.execute(_contacts_table)
         c.execute(_leads_table)
         c.execute(_email_table)
         c.execute(_connected_accounts_table)
+        c.execute(_contacts_pointer_pointer_table)
     except sqliteError as ex:
         logging.error('error while creating table', ex)
 
@@ -320,12 +324,26 @@ def get_contact_id_from_lead_api(api, lead_id) -> str:
         return ''
 
 
-def arg_parser() -> int:
-    try:
-        return int(sys.argv[1])
-    except:
-        print('Invalid args.')
-        exit()
+import sqlite3
+
+
+def create_or_update_pointer(conn, last_pointer: int):
+    conn.execute(f"DELETE FROM contacts_pointer")
+    conn.commit()
+
+    sql = f"""INSERT INTO contacts_pointer (pointer) VALUES ('{last_pointer}')"""
+    cur = conn.cursor()
+    cur.execute(sql)
+    conn.commit()
+
+
+def get_last_pointer(conn) -> int:
+    cursor = conn.execute("SELECT * FROM contacts_pointer")
+    pointer = cursor.fetchone()
+    if pointer is None:
+        return 0
+    else:
+        return pointer[0]
 
 
 def add_activity_note(api, lead_id: str, note: str):
@@ -337,13 +355,14 @@ def run():
     logging.info('SendEmails Script has started running ...')
     # send_message_to_slack('SendEmails Script has started running ...')
 
-    contacts_pointer = arg_parser()
-
     # initialize db connection
     conn = create_db_connection(SQLITE_DB_PATH)
 
     # create tables
     create_tables(conn)
+
+    # get the latest pointer
+    contacts_pointer = get_last_pointer(conn)
 
     # create close api instance
     api = Client(CLOSE_API_KEY)
@@ -494,6 +513,11 @@ def run():
             f'For resetting connected accounts timestamp waiting {WAITING_TIME_BETWEEN_TWO_CONSECUTIVE_EMAILS} minutes...')
         time.sleep(WAITING_TIME_BETWEEN_TWO_CONSECUTIVE_EMAILS * 60)
 
+    # update the connected pointer
+    if contacts_pointer < total_contacts:
+        create_or_update_pointer(conn, contacts_pointer)
+    else:
+        create_or_update_pointer(conn, 0)
     logging.info(
         f'total {success_counter} emails have been sent via this script.')
     logging.info('Script execution completed successfully!')
