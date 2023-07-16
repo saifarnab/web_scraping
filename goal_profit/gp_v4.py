@@ -26,7 +26,7 @@ logging.basicConfig(
 
 def config_driver(maximize_window: bool) -> webdriver.Chrome:
     chrome_options = Options()
-    # chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument("--start-maximized")
     chrome_options.add_argument("lang=en-GB")
