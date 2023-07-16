@@ -26,7 +26,7 @@ logging.basicConfig(
 
 def config_driver(maximize_window: bool) -> webdriver.Chrome:
     chrome_options = Options()
-    chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument("--start-maximized")
     chrome_options.add_argument("lang=en-GB")
@@ -185,7 +185,7 @@ def scanner():
                     logging.info(f'team1 --> {team1}')
 
                     try:
-                        ht_score = td_elements[3].text.split('\n')[0]
+                        ht_score = td_elements[2].text.split('\n')[0]
                         logging.info(f'ht_score --> {ht_score}')
                     except Exception as exx:
                         ht_score = 'N/A'
@@ -202,20 +202,20 @@ def scanner():
                         ht_home, ht_draw, ht_away = 'N/A', 'N/A', 'N/A'
 
                     try:
-                        home_on = td_elements[4].text
+                        home_on = td_elements[3].text
                         logging.info(f'home_on --> {home_on}')
                     except Exception as exx:
                         home_on = 'N/A'
 
                     try:
-                        home_off = td_elements[5].text
-                        # logging.info(f'home_off --> {home_off}')
+                        home_off = td_elements[4].text
+                        logging.info(f'home_off --> {home_off}')
                     except Exception as exx:
                         home_off = 'N/A'
 
                     try:
-                        home_da = td_elements[10].text
-                        # logging.info(f'home_da --> {home_da}')
+                        home_da = td_elements[9].text
+                        logging.info(f'home_da --> {home_da}')
                     except Exception as exx:
                         home_da = 'N/A'
 
@@ -230,19 +230,19 @@ def scanner():
 
                     try:
                         away_on = td_elements2[1].text
-                        # logging.info(f'away_on --> {away_on}')
+                        logging.info(f'away_on --> {away_on}')
                     except Exception as exx:
                         away_on = 'N/A'
 
                     try:
                         away_off = td_elements2[2].text
-                        # logging.info(f'away_off --> {away_off}')
+                        logging.info(f'away_off --> {away_off}')
                     except Exception as exx:
                         away_off = 'N/A'
 
                     try:
                         away_da = td_elements2[7].text
-                        # logging.info(f'away_da --> {away_da}')
+                        logging.info(f'away_da --> {away_da}')
                     except Exception as exx:
                         away_da = 'N/A'
 
@@ -251,7 +251,10 @@ def scanner():
                     game = team1 + ' v ' + team2
 
                     # extract data from i button which will open a modal
-                    td_elements[2].find_element(By.XPATH, './/a[2]').click()
+                    # td_elements[2].find_element(By.XPATH, './/a[2]').click()
+                    driver.find_element(By.XPATH,
+                                        "//img[@src='https://live.goalprofits.com/_layouts/images/info.png']").click()
+
                     # logging.info(f'i button 1st click done')
                     time.sleep(1)
                     driver.find_element(By.XPATH, '//a[@id="pregame-tab"]').click()
@@ -261,11 +264,11 @@ def scanner():
                         home = driver.find_elements(By.XPATH,
                                                     '//table[@class="table borderless table-striped score-table"]//span[@class="d-block font13 text-nowrap"]')[
                             0].text.split(':')[1].strip()
-                        # logging.info(f'home --> {home}')
+                        logging.info(f'home --> {home}')
                     except Exception as exx:
                         home = 'N/A'
 
-                        # close the modal opened by i button
+                    # close the modal opened by i button
                     close_buttons = driver.find_elements(By.XPATH, '//button[@class="close"]')
                     for close_button in close_buttons:
                         try:
