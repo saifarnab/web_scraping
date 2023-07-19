@@ -11,12 +11,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
+
 # install dependencies
-subprocess.check_call(['pip', 'install', 'pillow'])
-subprocess.check_call(['pip', 'install', 'requests'])
-subprocess.check_call(['pip', 'install', 'openpyxl'])
-subprocess.check_call(['pip', 'install', 'selenium'])
-subprocess.check_call(['pip', 'install', 'fake_useragent'])
+# subprocess.check_call(['pip', 'install', 'pillow'])
+# subprocess.check_call(['pip', 'install', 'requests'])
+# subprocess.check_call(['pip', 'install', 'openpyxl'])
+# subprocess.check_call(['pip', 'install', 'selenium'])
+# subprocess.check_call(['pip', 'install', 'fake_useragent'])
 
 
 def config_driver() -> webdriver.Chrome:
@@ -113,52 +114,90 @@ def is_access_denied(driver) -> bool:
         return False
 
 
+def _take_input_url() -> str:
+    return input('Enter a sample detail url: ')
+
+
+def _generate_base_url(url: str) -> str:
+    base_url = url.rsplit('/', 1)[0]
+    return base_url
+
+
 def scrapper():
     print('-------------------------------------------------------------')
     print('-------------------------------------------------------------')
     print('Script starts running... ')
-    filename = 'opensea.xlsx'
-    create_directory_if_not_exists('images')
-    create_excel_with_header(filename)
-    azuki = get_last_row(filename) - 1
+    url = _take_input_url()
+    base_url = _generate_base_url(url)
+    init, reloader, nft, name, filename = 0, 1, 0, '', ''
     print('Starting data extraction ... ')
-    reloader = 1
     while True:
-        if azuki >= 10000:
-            break
-        driver = config_driver()
-        driver.get(f'https://opensea.io/assets/ethereum/0xed5af388653567af2f388e6224dc7c4b3241c544/{azuki}')
 
-        if reloader >= 10:
-            azuki += 1
+        if init == 0:
+            try:
+                driver = config_driver()
+                driver.get(url)
+                try:
+                    WebDriverWait(driver, 3).until(
+                        EC.visibility_of_element_located((By.CLASS_NAME, 'item--header')))
+                except Exception as e:
+                    continue
 
-        try:
-            WebDriverWait(driver, 10).until(
-                EC.visibility_of_element_located((By.XPATH, '//img[@class="Image--image"]')))
-        except Exception as e:
-            # print('Retrying without fake user-agent chrome driver')
-            driver = config_driver_without_ua()
-            driver.get(f'https://opensea.io/assets/ethereum/0xed5af388653567af2f388e6224dc7c4b3241c544/{azuki}')
+                name = driver.find_element(By.TAG_NAME, 'h1').text.split('#')[0].strip()
+                create_directory_if_not_exists(f'images/{name}')
+                create_directory_if_not_exists('files')
+                filename = f'files/{name}.xlsx'
+                create_excel_with_header(filename)
+                nft = get_last_row(filename) - 1
+            except:
+                try:
+                    driver = config_driver_without_ua()
+                    driver.get(url)
+                    name = driver.find_element(By.TAG_NAME, 'h1').text.split('#')[0].strip()
+                    create_directory_if_not_exists(f'images/{name}')
+                    create_directory_if_not_exists('files')
+                    filename = f'files/{name}.xlsx'
+                    nft = get_last_row(filename) - 1
+                except:
+                    continue
+            init = 1
+
+        else:
+            if nft >= 10000:
+                break
+            driver = config_driver()
+            driver.get(f'{base_url}/{nft}')
+
+            if reloader >= 10:
+                nft += 1
+
             try:
                 WebDriverWait(driver, 10).until(
                     EC.visibility_of_element_located((By.XPATH, '//img[@class="Image--image"]')))
-            except Exception as ex:
-                # print('Retrying with fake user-agent chrome driver')
-                reloader += 1
-                continue
+            except Exception as e:
+                # print('Retrying without fake user-agent chrome driver')
+                driver = config_driver_without_ua()
+                driver.get(f'{base_url}/{nft}')
+                try:
+                    WebDriverWait(driver, 10).until(
+                        EC.visibility_of_element_located((By.XPATH, '//img[@class="Image--image"]')))
+                except Exception as ex:
+                    # print('Retrying with fake user-agent chrome driver')
+                    reloader += 1
+                    continue
 
-        name = f'Azuki #{azuki}'
-        link = driver.current_url
-        src = driver.find_element(By.XPATH, '//img[@class="Image--image"]').get_attribute('src')
-        if check_data_exists(filename, name) is False:
-            if save_as_jpg(src, name) is True:
-                append_to_excel(filename, [[azuki, link, name, f'{name}.jpg']])
-                print(f'--> {azuki}. {name} inserted')
-        else:
-            print(f'--> {name} is already available.')
+            link = driver.current_url
+            src = driver.find_element(By.XPATH, '//img[@class="Image--image"]').get_attribute('src')
+            temp_name = f'{name} #{nft}'
+            if check_data_exists(filename, temp_name) is False:
+                if save_as_jpg(src, f'{name}/{temp_name}') is True:
+                    append_to_excel(filename, [[nft, link, temp_name, f'{temp_name}.jpg']])
+                    print(f'--> {nft}. {temp_name} inserted')
+            else:
+                print(f'--> {temp_name} is already available.')
 
-        azuki += 1
-        reloader = 1
+            nft += 1
+            reloader = 1
 
     print('Execution done!')
 

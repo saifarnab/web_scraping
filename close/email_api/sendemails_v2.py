@@ -514,10 +514,7 @@ def run():
         time.sleep(WAITING_TIME_BETWEEN_TWO_CONSECUTIVE_EMAILS * 60)
 
     # update the connected pointer
-    if contacts_pointer < total_contacts:
-        create_or_update_pointer(conn, contacts_pointer)
-    else:
-        create_or_update_pointer(conn, 0)
+    create_or_update_pointer(conn, contacts_pointer)
     logging.info(
         f'total {success_counter} emails have been sent via this script.')
     logging.info('Script execution completed successfully!')
