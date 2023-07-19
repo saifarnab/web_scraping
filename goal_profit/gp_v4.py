@@ -26,7 +26,7 @@ logging.basicConfig(
 
 def config_driver(maximize_window: bool) -> webdriver.Chrome:
     chrome_options = Options()
-    chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument("--start-maximized")
     chrome_options.add_argument("lang=en-GB")
@@ -197,7 +197,7 @@ def scanner():
                             '<div>', '')
                         tooltip = "".join(tooltip.split())
                         ht_home, ht_draw, ht_away = tooltip[2:6], tooltip[8:12], tooltip[14:18]
-                        # print(ht_home, ht_draw, ht_away)
+                        print(ht_home, ht_draw, ht_away)
                     except Exception as e:
                         ht_home, ht_draw, ht_away = 'N/A', 'N/A', 'N/A'
 
@@ -209,17 +209,17 @@ def scanner():
 
                     try:
                         home_off = td_elements[5].text
-                        # logging.info(f'home_off --> {home_off}')
+                        logging.info(f'home_off --> {home_off}')
                     except Exception as exx:
                         home_off = 'N/A'
 
                     try:
                         home_da = td_elements[10].text
-                        # logging.info(f'home_da --> {home_da}')
+                        logging.info(f'home_da --> {home_da}')
                     except Exception as exx:
                         home_da = 'N/A'
 
-                    # logging.info('extracted required data from 1st tr')
+                    logging.info('extracted required data from 1st tr')
 
                     # extract required data from 2nd tr
                     td_elements2 = tr_elements[tr_ind + 1].find_elements(By.XPATH, ".//td")
