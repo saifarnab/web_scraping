@@ -47,7 +47,7 @@ def config_driver_without_ua() -> webdriver.Chrome:
     chrome_options.add_argument("--disable-infobars")
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
@@ -61,6 +61,7 @@ def create_directory_if_not_exists(directory):
 
 
 def save_nft(src: str, name: str):
+    print('hit save nft')
     if src.split('.')[-1] == 'avif':
         reloader = 1
         while True:
@@ -76,6 +77,7 @@ def save_nft(src: str, name: str):
 
     else:
         if '.png' in src:
+            print('png file')
             file_name = f'images/{name}.png'
             resp = requests.get(src)
             with open(file_name, "wb") as f:
@@ -157,6 +159,7 @@ def scrapper():
     init, reloader, name, filename = 0, 1, '', ''
     print('Starting data extraction ... ')
     while True:
+        print(init)
         print(oldest)
         if init == 0:
             try:
@@ -195,6 +198,7 @@ def scrapper():
         else:
             driver = config_driver()
             driver.get(f'{base_url}/{oldest}')
+            print(driver.current_url)
 
             if reloader >= 5:
                 break
