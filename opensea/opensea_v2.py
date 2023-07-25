@@ -47,7 +47,7 @@ def config_driver_without_ua() -> webdriver.Chrome:
     chrome_options.add_argument("--disable-infobars")
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--window-size=1920,1080")
-    # chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
@@ -83,11 +83,13 @@ def save_nft(src: str, name: str):
             with open(file_name, "wb") as f:
                 f.write(resp.content)
         elif '.mp4' in src:
+            print('mp4 file')
             file_name = f'images/{name}.mp4'
             resp = requests.get(src)
             with open(file_name, "wb") as f:
                 f.write(resp.content)
         elif '.webp' in src:
+            print('webp file')
             file_name = f'images/{name}.webp'
             resp = requests.get(src)
             with open(file_name, "wb") as f:
@@ -159,8 +161,7 @@ def scrapper():
     init, reloader, name, filename = 0, 1, '', ''
     print('Starting data extraction ... ')
     while True:
-        print(init)
-        print(oldest)
+        print(f'reloader = {reloader} --> oldest = {oldest}')
         if init == 0:
             try:
                 driver = config_driver()
@@ -196,31 +197,49 @@ def scrapper():
             init = 1
 
         else:
-            driver = config_driver()
-            driver.get(f'{base_url}/{oldest}')
-            print(driver.current_url)
-
             if reloader >= 5:
                 break
 
+            driver = config_driver()
+            driver.get(f'{base_url}/{oldest}')
             try:
-                WebDriverWait(driver, 10).until(
+                WebDriverWait(driver, 5).until(
                     EC.visibility_of_element_located((By.XPATH, '//img[@class="Image--image"]')))
+                src = driver.find_element(By.XPATH, '//img[@class="Image--image"]').get_attribute('src')
+
             except Exception as e:
-                # print('Retrying without fake user-agent chrome driver')
                 driver = config_driver_without_ua()
                 driver.get(f'{base_url}/{oldest}')
                 try:
-                    WebDriverWait(driver, 10).until(
+                    WebDriverWait(driver, 5).until(
                         EC.visibility_of_element_located((By.XPATH, '//img[@class="Image--image"]')))
+                    src = driver.find_element(By.XPATH, '//img[@class="Image--image"]').get_attribute('src')
+
                 except Exception as ex:
-                    # print('Retrying with fake user-agent chrome driver')
-                    reloader += 1
-                    continue
+                    driver = config_driver()
+                    driver.get(f'{base_url}/{oldest}')
+                    try:
+                        WebDriverWait(driver, 5).until(
+                            EC.visibility_of_element_located((By.XPATH, '//source[@data-testid="AssetMedia--video"]')))
+                        src = driver.find_element(By.XPATH, '//source[@data-testid="AssetMedia--video"]').get_attribute(
+                            'src')
+
+                    except Exception as e:
+                        driver = config_driver_without_ua()
+                        driver.get(f'{base_url}/{oldest}')
+                        try:
+                            WebDriverWait(driver, 5).until(
+                                EC.visibility_of_element_located(
+                                    (By.XPATH, '//source[@data-testid="AssetMedia--video"]')))
+                            src = driver.find_element(By.XPATH,
+                                                      '//source[@data-testid="AssetMedia--video"]').get_attribute('src')
+                        except Exception as ex:
+                            print(ex)
+                            reloader += 1
+                            continue
 
             link = driver.current_url
             temp_name = driver.find_element(By.XPATH, '//h1[@class="sc-29427738-0 ivioUu item--title"]').text
-            src = driver.find_element(By.XPATH, '//img[@class="Image--image"]').get_attribute('src')
             print(temp_name, src)
             if check_data_exists(filename, temp_name) is False:
                 if save_nft(src, f'{name}/{temp_name}') is True:
