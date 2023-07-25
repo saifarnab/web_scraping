@@ -1,8 +1,11 @@
 import os
 import subprocess
+import time
 from io import BytesIO
+import urllib
 
 import openpyxl
+import pandas as pd
 import requests
 from PIL import Image
 from fake_useragent import UserAgent
@@ -57,18 +60,36 @@ def create_directory_if_not_exists(directory):
         print(f"Directory '{directory}' already exist.")
 
 
-def save_as_jpg(src: str, name: str):
-    reloader = 1
-    while True:
-        if reloader >= 10:
-            return False
-        response = requests.get(src)
-        if response.status_code == 200:
-            im = Image.open(BytesIO(response.content))
-            rgb_im = im.convert('RGB')
-            rgb_im.save(f'images/{name}.jpg')
-            return True
-        reloader += 1
+def save_nft(src: str, name: str):
+    if src.split('.')[-1] == 'avif':
+        reloader = 1
+        while True:
+            if reloader >= 5:
+                return False
+            response = requests.get(src)
+            if response.status_code == 200:
+                im = Image.open(BytesIO(response.content))
+                rgb_im = im.convert('RGB')
+                rgb_im.save(f'images/{name}.jpg')
+                return True
+            reloader += 1
+
+    else:
+        if '.png' in src:
+            file_name = f'images/{name}.png'
+            resp = requests.get(src)
+            with open(file_name, "wb") as f:
+                f.write(resp.content)
+        elif '.mp4' in src:
+            file_name = f'images/{name}.mp4'
+            resp = requests.get(src)
+            with open(file_name, "wb") as f:
+                f.write(resp.content)
+        elif '.webp' in src:
+            file_name = f'images/{name}.webp'
+            resp = requests.get(src)
+            with open(file_name, "wb") as f:
+                f.write(resp.content)
 
 
 def append_to_excel(filename, data):
@@ -85,23 +106,28 @@ def create_excel_with_header(filename):
         return
     workbook = openpyxl.Workbook()
     sheet = workbook.active
-    sheet.append(['No.', 'Link', 'Name', 'Image Name'])
+    sheet.append(['Link', 'Name', 'Image Name'])
     workbook.save(filename)
     print(f'{filename.title()} created')
 
 
-def get_last_row(filename):
-    workbook = openpyxl.load_workbook(filename)
-    sheet = workbook.active
-    last_row = sheet.max_row
-    return last_row
+def get_last_inserted_nft(filename):
+    try:
+        df = pd.read_excel(filename, skiprows=1)
+        df = df.dropna(how='all')
+        last_non_blank_row = df.tail(1)
+        return str(last_non_blank_row.values[0][0]).split('/')[-1]
+    except:
+        return None
 
 
 def check_data_exists(filename: str, name: str) -> bool:
     workbook = openpyxl.load_workbook(filename)
     sheet = workbook.active
     for row in sheet.iter_rows(values_only=True):
-        if name.strip() == row[2].strip():
+        if row[1] is None:
+            return False
+        if name.strip() == row[1].strip():
             return True  # Data exists in the sheet
     return False  # Data does not exist in the sheet
 
@@ -115,24 +141,23 @@ def is_access_denied(driver) -> bool:
 
 
 def _take_input_url() -> str:
-    return input('Enter a sample detail url: ')
+    return input('Enter oldest detail url: ')
 
 
-def _generate_base_url(url: str) -> str:
+def _generate_base_url(url: str) -> (str, int):
     base_url = url.rsplit('/', 1)[0]
-    return base_url
+    oldest = url.split('/')[-1]
+    return base_url, int(oldest)
 
 
 def scrapper():
-    print('-------------------------------------------------------------')
-    print('-------------------------------------------------------------')
-    print('Script starts running... ')
+    print('=============================================================')
     url = _take_input_url()
-    base_url = _generate_base_url(url)
-    init, reloader, nft, name, filename = 0, 1, 0, '', ''
+    base_url, oldest = _generate_base_url(url)
+    init, reloader, name, filename = 0, 1, '', ''
     print('Starting data extraction ... ')
     while True:
-
+        print(oldest)
         if init == 0:
             try:
                 driver = config_driver()
@@ -141,6 +166,7 @@ def scrapper():
                     WebDriverWait(driver, 3).until(
                         EC.visibility_of_element_located((By.CLASS_NAME, 'item--header')))
                 except Exception as e:
+                    reloader += 1
                     continue
 
                 name = driver.find_element(By.TAG_NAME, 'h1').text.split('#')[0].strip()
@@ -148,7 +174,9 @@ def scrapper():
                 create_directory_if_not_exists('files')
                 filename = f'files/{name}.xlsx'
                 create_excel_with_header(filename)
-                nft = get_last_row(filename) - 1
+                if get_last_inserted_nft(filename) is not None:
+                    oldest = int(get_last_inserted_nft(filename)) + 1
+
             except:
                 try:
                     driver = config_driver_without_ua()
@@ -157,19 +185,19 @@ def scrapper():
                     create_directory_if_not_exists(f'images/{name}')
                     create_directory_if_not_exists('files')
                     filename = f'files/{name}.xlsx'
-                    nft = get_last_row(filename) - 1
+                    if get_last_inserted_nft(filename) is not None:
+                        oldest = int(get_last_inserted_nft(filename)) + 1
                 except:
+                    reloader += 1
                     continue
             init = 1
 
         else:
-            if nft >= 10000:
-                break
             driver = config_driver()
-            driver.get(f'{base_url}/{nft}')
+            driver.get(f'{base_url}/{oldest}')
 
-            if reloader >= 10:
-                nft += 1
+            if reloader >= 5:
+                break
 
             try:
                 WebDriverWait(driver, 10).until(
@@ -177,7 +205,7 @@ def scrapper():
             except Exception as e:
                 # print('Retrying without fake user-agent chrome driver')
                 driver = config_driver_without_ua()
-                driver.get(f'{base_url}/{nft}')
+                driver.get(f'{base_url}/{oldest}')
                 try:
                     WebDriverWait(driver, 10).until(
                         EC.visibility_of_element_located((By.XPATH, '//img[@class="Image--image"]')))
@@ -187,16 +215,17 @@ def scrapper():
                     continue
 
             link = driver.current_url
+            temp_name = driver.find_element(By.XPATH, '//h1[@class="sc-29427738-0 ivioUu item--title"]').text
             src = driver.find_element(By.XPATH, '//img[@class="Image--image"]').get_attribute('src')
-            temp_name = f'{name} #{nft}'
+            print(temp_name, src)
             if check_data_exists(filename, temp_name) is False:
-                if save_as_jpg(src, f'{name}/{temp_name}') is True:
-                    append_to_excel(filename, [[nft, link, temp_name, f'{temp_name}.jpg']])
-                    print(f'--> {nft}. {temp_name} inserted')
+                if save_nft(src, f'{name}/{temp_name}') is True:
+                    append_to_excel(filename, [[link, temp_name, f'{temp_name}.jpg']])
+                    print(f'--> {temp_name} inserted')
             else:
                 print(f'--> {temp_name} is already available.')
 
-            nft += 1
+            oldest += 1
             reloader = 1
 
     print('Execution done!')
