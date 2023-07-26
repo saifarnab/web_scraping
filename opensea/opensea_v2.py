@@ -13,13 +13,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
-
 # install dependencies
-# subprocess.check_call(['pip', 'install', 'pillow'])
-# subprocess.check_call(['pip', 'install', 'requests'])
-# subprocess.check_call(['pip', 'install', 'openpyxl'])
-# subprocess.check_call(['pip', 'install', 'selenium'])
-# subprocess.check_call(['pip', 'install', 'fake_useragent'])
+subprocess.check_call(['pip', 'install', 'pillow'])
+subprocess.check_call(['pip', 'install', 'requests'])
+subprocess.check_call(['pip', 'install', 'openpyxl'])
+subprocess.check_call(['pip', 'install', 'selenium'])
+subprocess.check_call(['pip', 'install', 'fake_useragent'])
 
 
 def config_driver() -> webdriver.Chrome:
@@ -32,7 +31,7 @@ def config_driver() -> webdriver.Chrome:
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument(f'user-agent={UserAgent().random}')
-    # chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
@@ -46,7 +45,8 @@ def config_driver_without_ua() -> webdriver.Chrome:
     chrome_options.add_argument("--disable-infobars")
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--window-size=1920,1080")
-    # chrome_options.add_argument('--headless')
+    chrome_options.add_argument(f'user-agent={UserAgent().random}')
+    chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
@@ -159,7 +159,7 @@ def is_access_denied(driver) -> bool:
 
 
 def _take_input_url() -> str:
-    return input('Enter oldest detail url: ')
+    return input('Enter oldest detail url: ').strip()
 
 
 def _generate_base_url(url: str) -> (str, int):
@@ -185,44 +185,31 @@ def scrapper():
             try:
                 driver = config_driver()
                 driver.get(url)
-                time.sleep(15555555)
-                try:
-                    WebDriverWait(driver, 3).until(
-                        EC.visibility_of_element_located((By.CLASS_NAME, 'item--header')))
-                except Exception as e:
-                    reloader += 1
-                    continue
-
-                collection_name = driver.find_element(By.XPATH, '//a[@class="sc-1f719d57-0 eiItIQ '
-                                                                'CollectionLink--link"]//span//div').text
-                create_directory_if_not_exists(f'assets/{collection_name}')
-                create_directory_if_not_exists('files')
-                filename = f'files/{collection_name}.xlsx'
-                create_excel_with_header(filename)
-                if get_last_inserted_nft(filename) is not None:
-                    oldest = int(get_last_inserted_nft(filename)) + 1
-
-            except:
+                WebDriverWait(driver, 5).until(
+                    EC.visibility_of_element_located((By.CLASS_NAME, 'item--header')))
+            except Exception as e:
                 try:
                     driver = config_driver_without_ua()
                     driver.get(url)
-                    collection_name = driver.find_element(By.XPATH, '//a[@class="sc-1f719d57-0 '
-                                                                    'eiItIQ CollectionLink--link"]//span//div').text
-                    create_directory_if_not_exists(f'assets/{collection_name}')
-                    create_directory_if_not_exists('files')
-                    filename = f'files/{collection_name}.xlsx'
-                    if get_last_inserted_nft(filename) is not None:
-                        oldest = int(get_last_inserted_nft(filename)) + 1
-                except:
+                    WebDriverWait(driver, 5).until(
+                        EC.visibility_of_element_located((By.CLASS_NAME, 'item--header')))
+                except Exception as ex:
                     reloader += 1
                     continue
+            collection_name = driver.find_element(By.XPATH, '//a[@class="sc-1f719d57-0 eiItIQ '
+                                                            'CollectionLink--link"]//span//div').text
+            create_directory_if_not_exists(f'assets/{collection_name}')
+            create_directory_if_not_exists('files')
+            filename = f'files/{collection_name}.xlsx'
+            create_excel_with_header(filename)
+            if get_last_inserted_nft(filename) is not None:
+                oldest = int(get_last_inserted_nft(filename)) + 1
             init = 1
 
         else:
-
-            driver = config_driver()
-            driver.get(f'{base_url}/{oldest}')
             try:
+                driver = config_driver()
+                driver.get(f'{base_url}/{oldest}')
                 WebDriverWait(driver, 5).until(
                     EC.visibility_of_element_located((By.XPATH, '//img[@class="Image--image"]')))
                 src = driver.find_element(By.XPATH, '//img[@class="Image--image"]').get_attribute('src')
