@@ -55,45 +55,62 @@ def config_driver_without_ua() -> webdriver.Chrome:
 def create_directory_if_not_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
-        print(f"Directory '{directory}' created.")
-    else:
-        print(f"Directory '{directory}' already exist.")
 
 
 def save_nft(src: str, name: str):
-    print('hit save nft')
     if src.split('.')[-1] == 'avif':
         reloader = 1
         while True:
             if reloader >= 5:
-                return False
+                return None
             response = requests.get(src)
             if response.status_code == 200:
                 im = Image.open(BytesIO(response.content))
                 rgb_im = im.convert('RGB')
-                rgb_im.save(f'images/{name}.jpg')
-                return True
+                filename = f'assets/{name}.jpg'
+                rgb_im.save(filename)
+                return filename
             reloader += 1
 
     else:
         if '.png' in src:
-            print('png file')
-            file_name = f'images/{name}.png'
+            file_name = f'assets/{name}.png'
             resp = requests.get(src)
             with open(file_name, "wb") as f:
                 f.write(resp.content)
+            return file_name
         elif '.mp4' in src:
-            print('mp4 file')
-            file_name = f'images/{name}.mp4'
+            file_name = f'assets/{name}.mp4'
             resp = requests.get(src)
             with open(file_name, "wb") as f:
                 f.write(resp.content)
+
+            return file_name
         elif '.webp' in src:
-            print('webp file')
-            file_name = f'images/{name}.webp'
+            file_name = f'assets/{name}.webp'
             resp = requests.get(src)
             with open(file_name, "wb") as f:
                 f.write(resp.content)
+            return file_name
+        elif '.jpg' in src:
+            file_name = f'assets/{name}.jpg'
+            resp = requests.get(src)
+            with open(file_name, "wb") as f:
+                f.write(resp.content)
+            return file_name
+        elif '.gif' in src:
+            file_name = f'assets/{name}.gif'
+            resp = requests.get(src)
+            with open(file_name, "wb") as f:
+                f.write(resp.content)
+            return file_name
+        elif '.jpg' in src:
+            file_name = f'assets/{name}.jpg'
+            resp = requests.get(src)
+            with open(file_name, "wb") as f:
+                f.write(resp.content)
+            return file_name
+    return None
 
 
 def append_to_excel(filename, data):
@@ -106,13 +123,11 @@ def append_to_excel(filename, data):
 
 def create_excel_with_header(filename):
     if os.path.exists(filename) is True:
-        print(f'{filename} already exist')
         return
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.append(['Link', 'Name', 'Image Name'])
     workbook.save(filename)
-    print(f'{filename.title()} created')
 
 
 def get_last_inserted_nft(filename):
@@ -159,9 +174,9 @@ def scrapper():
     url = _take_input_url()
     base_url, oldest = _generate_base_url(url)
     init, reloader, name, filename = 0, 1, '', ''
-    print('Starting data extraction ... ')
+    print('Starting script ... ')
     while True:
-        print(f'reloader = {reloader} --> oldest = {oldest}')
+
         if init == 0:
             try:
                 driver = config_driver()
@@ -173,10 +188,11 @@ def scrapper():
                     reloader += 1
                     continue
 
-                name = driver.find_element(By.TAG_NAME, 'h1').text.split('#')[0].strip()
-                create_directory_if_not_exists(f'images/{name}')
+                collection_name = driver.find_element(By.XPATH, '//a[@class="sc-1f719d57-0 eiItIQ '
+                                                                'CollectionLink--link"]//span//div').text
+                create_directory_if_not_exists(f'assets/{collection_name}')
                 create_directory_if_not_exists('files')
-                filename = f'files/{name}.xlsx'
+                filename = f'files/{collection_name}.xlsx'
                 create_excel_with_header(filename)
                 if get_last_inserted_nft(filename) is not None:
                     oldest = int(get_last_inserted_nft(filename)) + 1
@@ -185,10 +201,11 @@ def scrapper():
                 try:
                     driver = config_driver_without_ua()
                     driver.get(url)
-                    name = driver.find_element(By.TAG_NAME, 'h1').text.split('#')[0].strip()
-                    create_directory_if_not_exists(f'images/{name}')
+                    collection_name = driver.find_element(By.XPATH, '//a[@class="sc-1f719d57-0 '
+                                                                    'eiItIQ CollectionLink--link"]//span//div').text
+                    create_directory_if_not_exists(f'assets/{collection_name}')
                     create_directory_if_not_exists('files')
-                    filename = f'files/{name}.xlsx'
+                    filename = f'files/{collection_name}.xlsx'
                     if get_last_inserted_nft(filename) is not None:
                         oldest = int(get_last_inserted_nft(filename)) + 1
                 except:
@@ -219,31 +236,28 @@ def scrapper():
                     driver = config_driver()
                     driver.get(f'{base_url}/{oldest}')
                     try:
-                        WebDriverWait(driver, 5).until(
-                            EC.visibility_of_element_located((By.XPATH, '//source[@data-testid="AssetMedia--video"]')))
-                        src = driver.find_element(By.XPATH, '//source[@data-testid="AssetMedia--video"]').get_attribute(
-                            'src')
-
+                        time.sleep(1)
+                        src = driver.find_element(By.TAG_NAME, "source").get_attribute('src')
                     except Exception as e:
                         driver = config_driver_without_ua()
                         driver.get(f'{base_url}/{oldest}')
                         try:
-                            WebDriverWait(driver, 5).until(
-                                EC.visibility_of_element_located(
-                                    (By.XPATH, '//source[@data-testid="AssetMedia--video"]')))
-                            src = driver.find_element(By.XPATH,
-                                                      '//source[@data-testid="AssetMedia--video"]').get_attribute('src')
+                            time.sleep(1)
+                            src = driver.find_element(By.TAG_NAME, "source").get_attribute('src')
                         except Exception as ex:
-                            print(ex)
                             reloader += 1
                             continue
 
             link = driver.current_url
-            temp_name = driver.find_element(By.XPATH, '//h1[@class="sc-29427738-0 ivioUu item--title"]').text
-            print(temp_name, src)
+            collection_name = driver.find_element(By.XPATH, '//a[@class="sc-1f719d57-0 eiItIQ '
+                                                            'CollectionLink--link"]//span//div').text
+            temp_name = driver.find_element(By.XPATH, '//h1[@class="sc-29427738-0 ivioUu'
+                                                      ' item--title"]').text
+
             if check_data_exists(filename, temp_name) is False:
-                if save_nft(src, f'{name}/{temp_name}') is True:
-                    append_to_excel(filename, [[link, temp_name, f'{temp_name}.jpg']])
+                asset_name = save_nft(src, f'{collection_name}/{temp_name}')
+                if asset_name is not None:
+                    append_to_excel(filename, [[link, temp_name, asset_name.split('/')[-1]]])
                     print(f'--> {temp_name} inserted')
             else:
                 print(f'--> {temp_name} is already available.')
