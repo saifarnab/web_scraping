@@ -2,7 +2,6 @@ import os
 import subprocess
 import time
 from io import BytesIO
-import urllib
 
 import openpyxl
 import pandas as pd
@@ -33,7 +32,7 @@ def config_driver() -> webdriver.Chrome:
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument(f'user-agent={UserAgent().random}')
-    chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
@@ -47,7 +46,7 @@ def config_driver_without_ua() -> webdriver.Chrome:
     chrome_options.add_argument("--disable-infobars")
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
@@ -177,10 +176,16 @@ def scrapper():
     print('Starting script ... ')
     while True:
 
+        if reloader > 1:
+            print('Reloading ... ')
+        if reloader >= 5:
+            break
+
         if init == 0:
             try:
                 driver = config_driver()
                 driver.get(url)
+                time.sleep(15555555)
                 try:
                     WebDriverWait(driver, 3).until(
                         EC.visibility_of_element_located((By.CLASS_NAME, 'item--header')))
@@ -214,8 +219,6 @@ def scrapper():
             init = 1
 
         else:
-            if reloader >= 5:
-                break
 
             driver = config_driver()
             driver.get(f'{base_url}/{oldest}')

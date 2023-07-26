@@ -12,7 +12,7 @@ def split_address_and_create_excel(input_file_path, output_file_path):
         df = pd.read_excel(input_file_path)
 
         # Split the 'Licensee Address - Company name (NEEDS SPLITTING)' column into separate columns
-        split_data = df['Address'].str.split(',', expand=True)
+        split_data = df['Licensee Address - Company name (NEEDS SPLITTING)'].str.split(',', expand=True)
 
         # Remove any empty strings or None values from the split data
         split_data = split_data.applymap(lambda x: strip_and_handle_none(x) if isinstance(x, str) else x)
@@ -47,7 +47,7 @@ def split_address_and_create_excel(input_file_path, output_file_path):
 
 def run():
     input_file_path = "CoventryHMO.xlsx"
-    output_file_path = "CoventryHMO_v2.xlsx"
+    output_file_path = "data/CoventryHMO_v3.xlsx"
     split_address_and_create_excel(input_file_path, output_file_path)
 
 
