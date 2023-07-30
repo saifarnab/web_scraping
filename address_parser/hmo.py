@@ -51,5 +51,36 @@ def run():
     split_address_and_create_excel(input_file_path, output_file_path)
 
 
+def check_duplicate():
+    input_file_path = "data/CoventryHMO_v3.xlsx"
+    output_file_path = "data/CoventryHMO_v4.xlsx"
+    import pandas as pd
+
+    # Load the Excel data into a pandas DataFrame
+    df = pd.read_excel(input_file_path)
+    # Create an empty 'duplicate address' column
+    df['duplicate address'] = ''
+
+    # Check for duplicates in the 'Licensee Address - Company name' column, marking all duplicates as True except the first occurrence
+    duplicates_mask = df.duplicated(subset=['Licensee Address - Company name'], keep='first')
+
+    # Fill the 'duplicate address' column with the duplicate values
+    df.loc[duplicates_mask, 'duplicate address'] = df.loc[duplicates_mask, 'Licensee Address - Company name']
+
+    # Remove the duplicate values from the 'Licensee Address - Company name' column
+    df['Licensee Address - Company name'] = df['Licensee Address - Company name'].mask(duplicates_mask, '')
+    df['Licensee Address_line_1'] = df['Licensee Address_line_1'].mask(duplicates_mask, '')
+    df['Licensee Address_line_2'] = df['Licensee Address_line_2'].mask(duplicates_mask, '')
+    df['Licensee Address_line_3'] = df['Licensee Address_line_3'].mask(duplicates_mask, '')
+    df['Licensee_postal_code'] = df['Licensee_postal_code'].mask(duplicates_mask, '')
+
+
+    # Save the updated DataFrame back to the Excel file
+    df.to_excel(output_file_path, index=False)
+
+
+
+
 if __name__ == '__main__':
-    run()
+    # run()
+    check_duplicate()

@@ -50,6 +50,39 @@ def run():
     output_file_path = "L-public_v2.xlsx"
     split_address_and_create_excel(input_file_path, output_file_path)
 
+def check_duplicate():
+    input_file_path = "data/L-public _v3.xlsx"
+    output_file_path = "data/L-public_v4.xlsx"
+    import pandas as pd
+
+    # Load the Excel data into a pandas DataFrame
+    df = pd.read_excel(input_file_path)
+    # Create an empty 'duplicate address' column
+    df['duplicate address'] = ''
+
+    # Check for duplicates in the 'Licensee Address - Company name' column, marking all duplicates as True except the first occurrence
+    duplicates_mask = df.duplicated(subset=['Landlord Postal Address'], keep='first')
+
+    # Fill the 'duplicate address' column with the duplicate values
+    df.loc[duplicates_mask, 'duplicate address'] = df.loc[duplicates_mask, 'Landlord Postal Address']
+
+    # Remove the duplicate values from the 'Licensee Address - Company name' column
+    df['Landlord Postal Address'] = df['Landlord Postal Address'].mask(duplicates_mask, '')
+    df['Licensee Address_line_1'] = df['Licensee Address_line_1'].mask(duplicates_mask, '')
+    df['Licensee Address_line_2'] = df['Licensee Address_line_2'].mask(duplicates_mask, '')
+    df['Licensee Address_line_3'] = df['Licensee Address_line_3'].mask(duplicates_mask, '')
+    df['Licensee Address_line_4'] = df['Licensee Address_line_4'].mask(duplicates_mask, '')
+    df['Licensee Address_line_5'] = df['Licensee Address_line_5'].mask(duplicates_mask, '')
+    df['Licensee Address_line_6'] = df['Licensee Address_line_6'].mask(duplicates_mask, '')
+    df['Licensee Address_line_7'] = df['Licensee Address_line_7'].mask(duplicates_mask, '')
+    df['Licensee Address_line_8'] = df['Licensee Address_line_8'].mask(duplicates_mask, '')
+    df['Licensee_postal_code'] = df['Licensee_postal_code'].mask(duplicates_mask, '')
+
+
+    # Save the updated DataFrame back to the Excel file
+    df.to_excel(output_file_path, index=False)
+
 
 if __name__ == '__main__':
-    run()
+    # run()
+    check_duplicate()

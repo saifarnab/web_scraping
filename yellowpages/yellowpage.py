@@ -66,30 +66,7 @@ def scrapper():
     create_excel_with_header(filename)
     driver = config_driver()
 
-    industries = [
-        # 'https://www.yellowpages.ca/search/si/page_var/energy/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/Freight+Forwarding/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/Construction/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/Transportation/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/Retail/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/Restaurant/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/Training/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/car+repair/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/legal/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/registry/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/agriculture/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/entertainment/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/education/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/finance/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/insurance/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/information/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/manufacturing/Calgary+AB',
-        # 'https://www.yellowpages.ca/search/si/page_var/mining/Calgary+AB',
-        #'https://www.yellowpages.ca/search/si/page_var/oil/Calgary+AB',
-        'https://www.yellowpages.ca/search/si/page_var/real+estate/Calgary+AB',
-        'https://www.yellowpages.ca/search/si/page_var/utilities/Calgary+AB',
-        'https://www.yellowpages.ca/search/si/page_var/wholesale/Calgary+AB'
-    ]
+    industries = []
 
     for url in industries:
         driver.get(url.replace('page_var', '1'))
@@ -99,9 +76,9 @@ def scrapper():
             items = driver.find_elements(By.XPATH, '//div[@class="listing_right_section"]')
             for item in items:
                 industry_name_xpath = "//h1[contains(@class,'page__container-title')]//strong[1]"
-                company_name_xpath = './/a[@class="listing__name--link listing__link jsListingName"]'
+                company_name_xpath = './/a[@class="listing__name--link listing__link js ListingName"]'
                 phone_number_xpath = ".//a[@title='Get the Phone Number']"
-                website_xpath = ".//li[@class='mlr__item mlr__item--website ']//a"
+                website_xpath = ".//li[@class='mlr__item mlr__item- -website ']//a"
 
                 try:
                     industry_name = driver.find_element(By.XPATH, industry_name_xpath).text.strip()
@@ -117,9 +94,7 @@ def scrapper():
                 except:
                     phone_number = ''
                 try:
-                    website = item.find_element(By.XPATH, website_xpath).get_attribute('href').split('?redirect=')[
-                        1].strip()
-                    website = unquote(website)
+                    website = item.find_element(By.XPATH, website_xpath)
                 except:
                     website = ''
 
