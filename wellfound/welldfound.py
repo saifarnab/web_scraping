@@ -13,8 +13,27 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
+import undetected_chromedriver as uc
 
-def config_driver_without_ua() -> webdriver.Chrome:
+
+
+def config_uc_driver() -> webdriver.Chrome:
+    driver = uc.Chrome()
+    chrome_options = uc.ChromeOptions()
+    chrome_options.add_argument("log-level=3")
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    chrome_options.add_argument('--ignore-certificate-errors')
+    chrome_options.add_argument('--allow-running-insecure-content')
+    chrome_options.add_argument("--disable-infobars")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument(f'user-agent={UserAgent().chrome}')
+    chrome_options.add_argument("--window-size=1920,1080")
+    # chrome_options.add_argument('--headless')
+    return driver
+
+
+
+def config_driver() -> webdriver.Chrome:
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("log-level=3")
     chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
@@ -23,13 +42,13 @@ def config_driver_without_ua() -> webdriver.Chrome:
     chrome_options.add_argument("--disable-infobars")
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument(f'user-agent={UserAgent().random}')
+    # chrome_options.add_argument(f'user-agent={UserAgent().random}')
     # chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
 
-def login(driver: webdriver.Chrome) -> bool:
+def login(driver) -> bool:
     try:
         driver.get('https://wellfound.com/login')
         WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, 'user_email')))
@@ -52,9 +71,8 @@ def login(driver: webdriver.Chrome) -> bool:
 def scrapper():
     driver = None
     while True:
-        driver = config_driver_without_ua()
-        if login(driver) is True:
-            break
+        driver = config_uc_driver()
+        login(driver)
 
     
     
