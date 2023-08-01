@@ -321,7 +321,7 @@ def scanner():
                     except Exception as exx:
                         home = 'N/A'
 
-                    # close the modal opened by i button
+                    # close the modal opened by I button
                     close_buttons = driver.find_elements(By.XPATH, '//button[@class="close"]')
                     for close_button in close_buttons:
                         try:
