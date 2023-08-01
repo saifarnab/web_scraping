@@ -1,22 +1,19 @@
-import subprocess
-import pandas as pd
+import csv
 import logging
 import os
-import openpyxl
-
-from openpyxl import Workbook
-from openpyxl.utils import get_column_letter
-from openpyxl.styles import Font
-import pandas as pd
-from openpyxl import load_workbook
+import subprocess
 import time
 from datetime import date
+
+import openpyxl
+import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
-# subprocess.check_call(['pip', 'install', 'selenium'])
-# subprocess.check_call(['pip', 'install', 'openpyxl'])
+subprocess.check_call(['pip', 'install', 'selenium'])
+subprocess.check_call(['pip', 'install', 'openpyxl'])
+subprocess.check_call(['pip', 'install', 'pandas'])
 
 # excel db path
 GAMEDB = 'scrap.xlsx'
@@ -56,6 +53,30 @@ def check_excel_file() -> bool:
     return False
 
 
+def create_csv(filename: str):
+    file_exists = os.path.isfile(filename)
+    headers = ['Provider', 'SelectionName', 'MarketName', 'EventName', 'MarketType', 'BetType']
+    if not file_exists:
+        with open(filename, 'w', newline='') as csvfile:
+            csv_writer = csv.writer(csvfile)
+            csv_writer.writerow(headers)
+
+
+def get_last_data_from_csv(filename: str) -> list:
+    try:
+        df = pd.read_csv(filename)
+        return df.iloc[-1].tolist()
+    except:
+        return []
+
+
+def save_csv_data(filename: str, row: list):
+    df = pd.read_csv(filename)
+    new_row_df = pd.DataFrame([row], columns=df.columns)
+    df = pd.concat([df, new_row_df], ignore_index=True)
+    df.to_csv(filename, index=False)
+
+
 def get_first_blank_row():
     workbook = openpyxl.load_workbook(GAMEDB)
     sheet = workbook['Scrape']
@@ -68,73 +89,79 @@ def get_first_blank_row():
     return first_blank_row
 
 
-def insert_or_update_row2(first_blank_row: int, new_data: list):
+def insert_or_update_row(first_blank_row: int, new_data: list) -> bool:
+    df = pd.read_excel(GAMEDB, sheet_name='Scrape', skiprows=1)
+    is_row_available = ((df['GameDate'] == new_data[0]) & (df['Game'] == new_data[1])).any()
+    if is_row_available:
+        return False
     workbook = openpyxl.load_workbook(GAMEDB)
-
-    # Step 3: Select the sheet you want to add data to (assuming the sheet name is 'Sheet1')
     sheet = workbook['Scrape']
-
     start_row = first_blank_row  # Append after the last row in the sheet
     start_col = 1  # Start from the first column (A)
     for col_idx, value in enumerate(new_data, start=start_col):
         sheet.cell(row=start_row, column=col_idx, value=value)
-
-    # Step 6: Add the new data to the sheet
     sheet.append(new_data)
-
-    # Step 7: Save the updated Excel file (Overwrite the existing file)
     workbook.save(GAMEDB)
-
-    # Step 8: Close the workbook
     workbook.close()
-
-    print('done')
-
-
-def insert_or_update_row(new_data: list):
-    df = pd.read_excel(GAMEDB, skiprows=1, sheet_name=0)
-    condition1 = df['GameDate'] == new_data[0]
-    condition2 = df['Game'] == new_data[1]
-    matching_rows = df.loc[condition1 & condition2]
-    row_indexes = matching_rows.index
-
-    if len(row_indexes) > 0:
-        update_index = row_indexes[0]
-        df.loc[update_index, 'GameDate'] = new_data[0]
-        df.loc[update_index, 'Game'] = new_data[1]
-        df.loc[update_index, 'Home'] = new_data[2]
-        df.loc[update_index, 'HTHome'] = new_data[3]
-        df.loc[update_index, 'HTAway'] = new_data[4]
-        df.loc[update_index, 'HTDraw'] = new_data[5]
-        df.loc[update_index, 'HomeOn'] = new_data[6]
-        df.loc[update_index, 'HomeOff'] = new_data[7]
-        df.loc[update_index, 'HomeDA'] = new_data[8]
-        df.loc[update_index, 'AwayOn'] = new_data[9]
-        df.loc[update_index, 'AwayOff'] = new_data[10]
-        df.loc[update_index, 'AwayDA'] = new_data[11]
-        df.loc[update_index, 'HTScore'] = new_data[12]
-        df.to_excel(GAMEDB, index=False)
+    return True
 
 
-    else:
-        new_row = {
-            'GameDate': new_data[0],
-            'Game': new_data[1],
-            'Home': new_data[2],
-            'HTHome': new_data[3],
-            'HTAway': new_data[4],
-            'HTDraw': new_data[5],
-            'HomeOn': new_data[6],
-            'HomeOff': new_data[7],
-            'HomeDA': new_data[8],
-            'AwayOn': new_data[9],
-            'AwayOff': new_data[10],
-            'AwayDA': new_data[11],
-            'HTScore': new_data[12]
-        }
-        new_row_df = pd.DataFrame([new_row])
-        df = pd.concat([df, new_row_df], ignore_index=True)
-        df.to_excel(GAMEDB, index=False)
+def save_to_csv():
+    # for HT 0-0
+    try:
+        df = pd.read_excel(GAMEDB, sheet_name='HT 0-0', skiprows=1)
+        df = df[['Provider', 'SelectionName', 'MarketName', 'EventName', 'MarketType', 'BetType']]
+        last_non_blank_row_index = df.last_valid_index()
+        last_non_blank_row_data = df.iloc[last_non_blank_row_index]
+        last_excel_row = last_non_blank_row_data.tolist()
+        create_csv('HT 0-0.csv')
+        last_csv_row = get_last_data_from_csv('HT 0-0.csv')
+        if last_excel_row != last_csv_row:
+            save_csv_data('HT 0-0.csv', last_excel_row)
+    except:
+        pass
+
+    # for HT 0-1
+    try:
+        df = pd.read_excel(GAMEDB, sheet_name='HT 0-1', skiprows=1)
+        df = df[['Provider', 'SelectionName', 'MarketName', 'EventName', 'MarketType', 'BetType']]
+        last_non_blank_row_index = df.last_valid_index()
+        last_non_blank_row_data = df.iloc[last_non_blank_row_index]
+        last_excel_row = last_non_blank_row_data.tolist()
+        create_csv('HT 0-1.csv')
+        last_csv_row = get_last_data_from_csv('HT 0-1.csv')
+        if last_excel_row != last_csv_row:
+            save_csv_data('HT 0-1.csv', last_excel_row)
+    except:
+        pass
+
+    # for HT 1-0
+    try:
+        df = pd.read_excel(GAMEDB, sheet_name='HT 1-0', skiprows=1)
+        df = df[['Provider', 'SelectionName', 'MarketName', 'EventName', 'MarketType', 'BetType']]
+        last_non_blank_row_index = df.last_valid_index()
+        last_non_blank_row_data = df.iloc[last_non_blank_row_index]
+        last_excel_row = last_non_blank_row_data.tolist()
+        create_csv('HT 1-0.csv')
+        last_csv_row = get_last_data_from_csv('HT 1-0.csv')
+        if last_excel_row != last_csv_row:
+            save_csv_data('HT 1-0.csv', last_excel_row)
+    except:
+        pass
+
+    # for HT 1-1
+    try:
+        df = pd.read_excel(GAMEDB, sheet_name='HT 1-1', skiprows=1)
+        df = df[['Provider', 'SelectionName', 'MarketName', 'EventName', 'MarketType', 'BetType']]
+        last_non_blank_row_index = df.last_valid_index()
+        last_non_blank_row_data = df.iloc[last_non_blank_row_index]
+        last_excel_row = last_non_blank_row_data.tolist()
+        create_csv('HT 1-1.csv')
+        last_csv_row = get_last_data_from_csv('HT 1-1.csv')
+        if last_excel_row != last_csv_row:
+            save_csv_data('HT 1-1.csv', last_excel_row)
+    except:
+        pass
 
 
 def scanner():
@@ -176,11 +203,8 @@ def scanner():
             driver.execute_script("arguments[0].click();", live_games_button)
             time.sleep(1)
 
-            print('ok 1')
-
             # find available live games
             table_elements = driver.find_elements(By.XPATH, '//div[@id="html2"]//table')
-            print('total_table_elements: ', len(table_elements))
 
             # wait till 60s if no live games are available
             if len(table_elements) == 0:
@@ -196,7 +220,6 @@ def scanner():
                 # iterate each td
                 for ind in range(int(len(tr_elements) / 2)):
                     td_elements = tr_elements[tr_ind].find_elements(By.XPATH, ".//td")
-                    print('total_td_elements: ', len(td_elements))
                     current_date = date.today().strftime('%d/%m/%y')
                     try:
                         game_time = td_elements[0].text.strip()
@@ -228,7 +251,6 @@ def scanner():
                             '<div>', '')
                         tooltip = "".join(tooltip.split())
                         ht_home, ht_draw, ht_away = tooltip[2:6], tooltip[8:12], tooltip[14:18]
-                        print(ht_home, ht_draw, ht_away)
                     except Exception as e:
                         ht_home, ht_draw, ht_away = 'N/A', 'N/A', 'N/A'
 
@@ -311,12 +333,19 @@ def scanner():
                     time.sleep(1)
 
                     # insert data to gamedb
-                    insert_or_update_row2(first_blank_row,
-                                          [current_date, game, home, ht_home, ht_away, ht_draw, home_on,
-                                           home_off, home_da, away_on, away_off, away_da, ht_score])
+                    insert = insert_or_update_row(first_blank_row,
+                                                  [current_date, game, home, '', '', ht_home, ht_away, ht_draw,
+                                                   home_on, home_off, home_da, away_on, away_off, away_da, ht_score])
                     tr_ind += 2
                     first_blank_row += 1
-                    logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
+
+                    if insert is True:
+                        logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
+                        time.sleep(5)
+                        save_to_csv()
+                    else:
+                        logging.info(f'--> <{game}> data is already exist in gamedb!')
+                        save_to_csv()
 
         except Exception as ex:
             # print(ex)
