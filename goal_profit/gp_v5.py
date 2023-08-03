@@ -208,8 +208,8 @@ def scanner():
 
             # wait till 60s if no live games are available
             if len(table_elements) == 0:
-                time.sleep(0)
                 logging.info('--> no live games are playing, waiting 60s for next try.')
+                time.sleep(60)
                 continue
 
             # iterate each tr
