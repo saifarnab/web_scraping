@@ -20,7 +20,7 @@ def config_driver() -> webdriver.Chrome:
 
 
 def append_to_excel(data):
-    filename = 'asx.xlsx'
+    filename = 'asx_v2.xlsx'
     workbook = openpyxl.load_workbook(filename)
     sheet = workbook.active
     for row in data:
@@ -44,28 +44,32 @@ def scrapper():
                 divs = li.find_elements(By.XPATH, './/div')
                 name = divs[0].text.strip().split(' ')
                 position = divs[1].text
+                try:
+                    address = driver.find_element(By.XPATH, '//tr[@class="m-b-2"][1]//td[1]').text
+                except:
+                    address = ''
                 if len(name) == 3:
                     title = name[0]
                     firstname = name[1]
                     middle_name = ''
                     lastname = name[2]
-                    append_to_excel([[company_name, code, title, firstname, middle_name, lastname, position]])
+                    append_to_excel([[company_name, code, address, title, firstname, middle_name, lastname, position]])
                 elif len(name) == 4:
                     title = name[0]
                     firstname = name[1]
                     middle_name = name[2]
                     lastname = name[3]
-                    append_to_excel([[company_name, code, title, firstname, middle_name, lastname, position]])
+                    append_to_excel([[company_name, code, address, title, firstname, middle_name, lastname, position]])
                 elif len(name) > 4:
                     title = name[0]
                     firstname = name[1]
                     middle_name = name[2]
                     lastname = name[3:]
                     lastname = " ".join(str(item) for item in lastname)
-                    append_to_excel([[company_name, code, title, firstname, middle_name, lastname, position]])
+                    append_to_excel([[company_name, code,address, title, firstname, middle_name, lastname, position]])
         except Exception as e:
             print(e)
-            append_to_excel([[company_name, code, '', '', '', '', '']])
+            append_to_excel([[company_name, code, address, '', '', '', '', '']])
 
         print(f'{counter}. {company_name} inserted. ')
         counter += 1
