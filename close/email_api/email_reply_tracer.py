@@ -4,7 +4,7 @@ import logging
 import sqlite3
 from datetime import datetime
 from sqlite3 import Error as sqliteError
-from zoneinfo import ZoneInfo
+from backports.zoneinfo import ZoneInfo
 
 from dateutil import parser
 

@@ -1,31 +1,18 @@
 import os
 import logging
+from dateutil import parser
 
 import mysql.connector
 from dotenv import load_dotenv
 import pandas as pd
 
+import db_connectivity
+
 load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
 
 # read environ
-FILE_PATH = os.getenv('FILE_PATH')
-DATABASE_HOST = os.getenv('DATABASE_HOST')
-DATABASE_PORT = os.getenv('DATABASE_PORT')
-DATABASE_USER = os.getenv('DATABASE_USER')
-DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD')
-DATABASE_NAME = os.getenv('DATABASE_NAME')
-
-
-# setup MySQL connection
-def db_connection():
-    try:
-        conn = mysql.connector.connect(host=DATABASE_HOST, port=int(DATABASE_PORT), user=DATABASE_USER,
-                                       password=DATABASE_PASSWORD, database=DATABASE_NAME)
-        cur = conn.cursor()
-        return conn, cur
-    except Exception as e:
-        logging.exception(e)
+CONTACTS_FILE_PATH = os.getenv('CONTACTS_FILE_PATH')
 
 
 def create_tables(connection, cursor):
@@ -42,7 +29,7 @@ def create_tables(connection, cursor):
             other_emails VARCHAR(255),
             linkedin_profile VARCHAR(255),
             custom_first_phone VARCHAR(255),
-            date_created DATETIME,
+            date_created VARCHAR(100),
             lead_id VARCHAR(255),
             lead_display_name VARCHAR(255),
             lead_url VARCHAR(255),
@@ -76,7 +63,7 @@ def create_tables(connection, cursor):
 
 # read data from the csv file path
 def read_data():
-    df = pd.read_csv(FILE_PATH, dtype=str)
+    df = pd.read_csv(CONTACTS_FILE_PATH, dtype=str)
     df = df.fillna('')
 
     df = df[['name', 'first_name', 'last_name', 'title', 'primary_phone', 'other_phones', 'primary_email',
@@ -93,7 +80,7 @@ def read_data():
     new_data = []
     for index, row in df.iterrows():
         new_data.append(
-            (row['name'], row['first_name'], row['last_name'], row['title'], row['primary_phone'], row['other_phones'],
+            [row['name'], row['first_name'], row['last_name'], row['title'], row['primary_phone'], row['other_phones'],
              row['primary_email'], row['other_emails'], row['custom.Contact LinkedIn Profile'],
              row['custom.First Phone'],
              row['date_created'], row['lead_id'], row['lead_display_name'], row['lead_url'], row['lead_status_label'],
@@ -106,7 +93,7 @@ def read_data():
              row['lead_custom.Contact LinkedIn Profile'], row['lead_custom.Contact Location'],
              row['lead_custom.Contact Phone Number'],
              row['lead_custom.Contact State'], row['lead_custom.Corporate Phone'], row['lead_custom.Person Assigned'],
-             row['lead_custom.Person Linkedin Url'], row['lead_html_url']))
+             row['lead_custom.Person Linkedin Url'], row['lead_html_url']])
 
     return new_data
 
@@ -128,6 +115,10 @@ def check_duplicate_email(cur, email):
         return False
 
 
+def parse_datetime(datetime_str: str):
+    return parser.parse(datetime_str).strftime('%Y-%m-%d %H:%M:%S').__str__()
+
+
 def insert_db(conn, cur, data):
     for item in data:
         if check_duplicate_email(cur, item[6]) is False:
@@ -142,6 +133,8 @@ def insert_db(conn, cur, data):
                   f"lead_custom_person_assigned, lead_custom_person_linkedin_url, lead_html_url) " \
                   f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, " \
                   f"%s, %s %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+
+            item[10] = parse_datetime(item[10])
             cur.execute(sql, item)
             conn.commit()
     conn.close()
@@ -150,7 +143,7 @@ def insert_db(conn, cur, data):
 
 def run():
     data = read_data()
-    conn, cur = db_connection()
+    conn, cur = db_connectivity.db_connection()
     create_tables(conn, cur)
     insert_db(conn, cur, data)
 
