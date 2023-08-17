@@ -3,6 +3,7 @@ import logging
 import os
 import time
 
+import requests
 import resend
 from dotenv import load_dotenv
 import db_connectivity
@@ -102,20 +103,32 @@ def get_resend_email_params(contact_first_name: str, contact_email: str, connect
         "to": [f"{contact_email}"],
         "subject": EMAIL_SUBJECT,
         "html": get_email_template(contact_first_name),
+        "reply_to": ""
     }
 
 
 def send_email_via_resend(contact_first_name: str, contact_email: str, connected_account_name: str,
                           connected_account_email: str) -> (str, str):
+    # try:
+    #     resend.api_key = RESEND_API_KEY
+    #     params = get_resend_email_params(contact_first_name, contact_email, connected_account_name,
+    #                                      connected_account_email)
+    #     email = resend.Emails.send(params)
+    #     return email.get('id'), params.get('html')
+    # except Exception as e:
+    #     logging.exception(e)
+    #     return "", ""
+
     try:
-        resend.api_key = RESEND_API_KEY
-        params = get_resend_email_params(contact_first_name, contact_email, connected_account_name,
-                                         connected_account_email)
-        email = resend.Emails.send(params)
-        return email.get('id'), params.get('html')
+        url = "https://api.resend.com/emails"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {RESEND_API_KEY}"
+        }
+        body = get_resend_email_params(contact_first_name, contact_email, connected_account_name, connected_account_email)
+        requests.post(url, json=body, headers=headers)
     except Exception as e:
         logging.exception(e)
-        return "", ""
 
 
 def insert_email(conn, cur, data: tuple):
