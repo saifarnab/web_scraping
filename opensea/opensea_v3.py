@@ -188,14 +188,12 @@ def scrapper():
                 WebDriverWait(driver, 5).until(
                     EC.visibility_of_element_located((By.CLASS_NAME, 'item--header')))
             except Exception as e:
-                print(e)
                 try:
                     driver = config_driver_without_ua()
                     driver.get(url)
                     WebDriverWait(driver, 5).until(
                         EC.visibility_of_element_located((By.CLASS_NAME, 'item--header')))
                 except Exception as ex:
-                    print(ex)
                     reloader += 1
                     continue
             collection_name = driver.find_element(By.XPATH, '//a[@class="sc-1f719d57-0 eiItIQ '
@@ -217,7 +215,6 @@ def scrapper():
                 src = driver.find_element(By.XPATH, '//img[@class="Image--image"]').get_attribute('src')
 
             except Exception as e:
-                print(e)
                 driver = config_driver_without_ua()
                 driver.get(f'{base_url}/{oldest}')
                 try:
@@ -232,14 +229,12 @@ def scrapper():
                         time.sleep(1)
                         src = driver.find_element(By.TAG_NAME, "source").get_attribute('src')
                     except Exception as e:
-                        print(e)
                         driver = config_driver_without_ua()
                         driver.get(f'{base_url}/{oldest}')
                         try:
                             time.sleep(1)
                             src = driver.find_element(By.TAG_NAME, "source").get_attribute('src')
                         except Exception as ex:
-                            print(ex)
                             reloader += 1
                             continue
 
