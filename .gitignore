@@ -281,6 +281,8 @@ tags
 /thuisbezorgd/data
 /opensea/images
 /goal_profit/ignore.xlsx
+/goal_profit/~$scrap.xlsx
+/goal_profit/chromedriver.exe
 
 
 #**/migrations/**
