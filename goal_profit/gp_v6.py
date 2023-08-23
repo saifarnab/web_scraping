@@ -247,7 +247,7 @@ def scanner():
     if check_excel_file() is False:
         return
 
-    first_blank_row = get_first_blank_row()
+    first_blank_row = get_first_blank_row3()
     driver = config_driver(True)
 
     # iterate to extract game data
@@ -287,7 +287,7 @@ def scanner():
             # wait till 60s if no live games are available
             if len(table_elements) == 0:
                 logging.info('--> no live games are playing, waiting 60s for next try.')
-                time.sleep(60)
+                time.sleep(5)
                 continue
 
             # iterate each tr
@@ -301,7 +301,7 @@ def scanner():
                     current_date = date.today().strftime('%d/%m/%y')
                     try:
                         game_time = td_elements[0].text.strip()
-                        logging.info(f'game_time --> {game_time}')
+                        # logging.info(f'game_time --> {game_time}')
                     except Exception as exx:
                         game_time = 'N/A'
 
@@ -314,11 +314,11 @@ def scanner():
                     # extract required data from 1st tr
                     team1 = td_elements[1].text.index('(')
                     team1 = td_elements[1].text[:team1].strip()
-                    logging.info(f'team1 --> {team1}')
+                    # logging.info(f'team1 --> {team1}')
 
                     try:
                         ht_score = td_elements[2].text.split('\n')[0]
-                        logging.info(f'ht_score --> {ht_score}')
+                        # logging.info(f'ht_score --> {ht_score}')
                     except Exception as exx:
                         ht_score = 'N/A'
 
@@ -334,19 +334,19 @@ def scanner():
 
                     try:
                         home_on = td_elements[3].text
-                        logging.info(f'home_on --> {home_on}')
+                        # logging.info(f'home_on --> {home_on}')
                     except Exception as exx:
                         home_on = 'N/A'
 
                     try:
                         home_off = td_elements[4].text
-                        logging.info(f'home_off --> {home_off}')
+                        # logging.info(f'home_off --> {home_off}')
                     except Exception as exx:
                         home_off = 'N/A'
 
                     try:
                         home_da = td_elements[9].text
-                        logging.info(f'home_da --> {home_da}')
+                        # logging.info(f'home_da --> {home_da}')
                     except Exception as exx:
                         home_da = 'N/A'
 
@@ -361,19 +361,19 @@ def scanner():
 
                     try:
                         away_on = td_elements2[1].text
-                        logging.info(f'away_on --> {away_on}')
+                        # logging.info(f'away_on --> {away_on}')
                     except Exception as exx:
                         away_on = 'N/A'
 
                     try:
                         away_off = td_elements2[2].text
-                        logging.info(f'away_off --> {away_off}')
+                        # logging.info(f'away_off --> {away_off}')
                     except Exception as exx:
                         away_off = 'N/A'
 
                     try:
                         away_da = td_elements2[7].text
-                        logging.info(f'away_da --> {away_da}')
+                        # logging.info(f'away_da --> {away_da}')
                     except Exception as exx:
                         away_da = 'N/A'
 
@@ -395,9 +395,25 @@ def scanner():
                         home = driver.find_elements(By.XPATH,
                                                     '//table[@class="table borderless table-striped score-table"]//span[@class="d-block font13 text-nowrap"]')[
                             0].text.split(':')[1].strip()
-                        logging.info(f'home --> {home}')
+                        # logging.info(f'home --> {home}')
                     except Exception as exx:
                         home = 'N/A'
+
+                    try:
+                        draw = driver.find_elements(By.XPATH,
+                                                    '//table[@class="table borderless table-striped score-table"]//span[@class="d-block font13 text-nowrap"]')[
+                            1].text.split(':')[1].strip()
+                        # logging.info(f'draw --> {draw}')
+                    except Exception as exx:
+                        draw = 'N/A'
+
+                    try:
+                        away = driver.find_elements(By.XPATH,
+                                                    '//table[@class="table borderless table-striped score-table"]//span[@class="d-block font13 text-nowrap"]')[
+                            2].text.split(':')[1].strip()
+                        # logging.info(f'away --> {away}')
+                    except Exception as exx:
+                        away = 'N/A'
 
                     # close the modal opened by I button
                     close_buttons = driver.find_elements(By.XPATH, '//button[@class="close"]')
@@ -411,8 +427,8 @@ def scanner():
                     time.sleep(1)
 
                     # insert data to gamedb
-                    insert = insert_or_update_row(first_blank_row,
-                                                  [current_date, game, home, '', '', ht_home, ht_away, ht_draw,
+                    insert = insert_or_update_row3(first_blank_row,
+                                                  [current_date, game, home, away, draw, ht_home, ht_away, ht_draw,
                                                    home_on, home_off, home_da, away_on, away_off, away_da, ht_score])
                     tr_ind += 2
                     first_blank_row += 1
@@ -426,7 +442,7 @@ def scanner():
                         save_to_csv()
 
         except Exception as ex:
-            # print(ex)
+            print(ex)
             continue
 
 
@@ -435,7 +451,7 @@ def scanner2():
     if check_excel_file() is False:
         return
 
-    first_blank_row = get_first_blank_row()
+    first_blank_row = get_first_blank_row3()
     game = "hello world"
     current_date = date.today().strftime('%d/%m/%y')
 
@@ -461,6 +477,6 @@ def scanner2():
 
 if __name__ == '__main__':
     logging.info('----------------- Script start running ... -----------------')
-    scanner2()
+    scanner()
     # v = get_first_blank_row3()
     # print(v)
