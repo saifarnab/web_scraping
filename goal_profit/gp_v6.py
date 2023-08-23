@@ -19,7 +19,7 @@ import xlwings as xw
 # subprocess.check_call(['pip', 'install', 'pandas'])
 
 # excel db path
-GAMEDB = 'scrap.xlsx'
+GAMEDB = 'scrap2.xlsx'
 
 # log format
 logging.basicConfig(
@@ -159,22 +159,29 @@ def insert_or_update_row2(first_blank_row: int, new_data: list) -> bool:
 
 
 def insert_or_update_row3(first_blank_row: int, new_data: list) -> bool:
-    wb = xw.Book(GAMEDB)
-    sheet = wb.sheets["Scrape"]
+    app = xw.App(visible=False)  # Create an xlwings application object (hidden)
 
-    data_exists = any(all(cell.value == value for cell, value in zip(row, new_data)) for row in
-                      sheet.range(f"A1:A{first_blank_row}").rows)
+    try:
+        wb = xw.Book(GAMEDB)  # Open the workbook
+        sheet = wb.sheets["Scrape"]
 
-    if not data_exists:
-        row_range = sheet.range(f"A{first_blank_row}:O{first_blank_row}")
-        for cell, value in zip(row_range, new_data):
-            cell.value = value
-        wb.save()
-        wb.close()
-        return True
-    else:
-        wb.close()
-        return False
+        # Convert new_data values to strings
+        new_data_strings = [str(value) for value in new_data]
+
+        # Check for existing data based on first and second column values as strings
+        data_exists = any(all(str(cell.value) == value for cell, value in zip(row, new_data_strings[:2])) for row in
+                          sheet.range(f"A1:B{first_blank_row}").rows)
+
+        if not data_exists:
+            row_range = sheet.range(f"A{first_blank_row}:O{first_blank_row}")
+            for cell, value in zip(row_range, new_data):
+                cell.value = value
+            wb.save()
+            return True
+        else:
+            return False
+    finally:
+        app.quit()  # Close the hidden Excel application
 
 
 def save_to_csv():
@@ -429,24 +436,24 @@ def scanner2():
         return
 
     first_blank_row = get_first_blank_row()
-    game = str(random.randint(1, 10))
+    game = "hello world"
+    current_date = date.today().strftime('%d/%m/%y')
 
     # iterate to extract game data
     while True:
 
         # insert data to gamedb
         insert = insert_or_update_row3(first_blank_row,
-                                      ['current_date', game, 'home', '', '', 'ht_home', 'ht_away', 'ht_draw',
+                                      [current_date, game, 'home', '', '', 'ht_home', 'ht_away', 'ht_draw',
                                        'home_on', 'home_off', 'home_da', 'away_on', 'away_off', 'away_da', 'ht_score'])
         first_blank_row += 1
-        print(insert)
 
         if insert is True:
-            logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
+            logging.info(f'--> <{game, insert}> data is fetched and stored to gamedb!')
             time.sleep(5)
             save_to_csv()
         else:
-            logging.info(f'--> <{game}> data is already exist in gamedb!')
+            logging.info(f'--> <{game, insert}> data is already exist in gamedb!')
             save_to_csv()
 
         time.sleep(5)
