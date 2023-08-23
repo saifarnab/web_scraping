@@ -441,13 +441,13 @@ def scanner2():
         first_blank_row += 1
         print(insert)
 
-        # if insert is True:
-        #     logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
-        #     time.sleep(5)
-        #     save_to_csv()
-        # else:
-        #     logging.info(f'--> <{game}> data is already exist in gamedb!')
-        #     save_to_csv()
+        if insert is True:
+            logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
+            time.sleep(5)
+            save_to_csv()
+        else:
+            logging.info(f'--> <{game}> data is already exist in gamedb!')
+            save_to_csv()
 
         time.sleep(5)
 
