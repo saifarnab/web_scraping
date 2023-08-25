@@ -90,7 +90,7 @@ def search(driver):
 
 def reservation(driver):
     try:
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//li[1]//div[3]//button[1]')))
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//li[1]//div[3]//button[1]')))
     except Exception as e:
         print('Not tee available at given time')
         exit()
