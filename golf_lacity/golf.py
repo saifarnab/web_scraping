@@ -1,84 +1,53 @@
-# import csv
-# import logging
-# import os
-# import subprocess
-# import time
-# from datetime import date
-#
-# import pandas as pd
-# import xlwings as xw
-# from selenium.webdriver.chrome.options import Options
-# from selenium.webdriver.common.by import By
-#
-# import undetected_chromedriver as uc
 import time
-
-from selenium.webdriver import ActionChains
-from selenium.webdriver.support.wait import WebDriverWait
-
-#
-LOGIN_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/login"
-USERNMAE = "la-165095"
-PASSWORD = "Snowing23#"
-SEARCH_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/search"
-#
-#
-#
-# def config_driver():
-#     chrome_options = Options()
-#     chrome_options.add_argument('--headless')
-#     chrome_options.add_argument('--disable-gpu')
-#     chrome_options.add_argument("--start-maximized")
-#     chrome_options.add_argument("lang=en-GB")
-#     chrome_options.add_argument('--ignore-certificate-errors')
-#     chrome_options.add_argument('--allow-running-insecure-content')
-#     chrome_options.add_argument("--disable-extensions")
-#     chrome_options.add_argument("--proxy-server='direct://'")
-#     chrome_options.add_argument("--proxy-bypass-list=*")
-#     chrome_options.add_argument("--start-maximized")
-#     chrome_options.add_argument('--disable-gpu')
-#     chrome_options.add_argument('--disable-dev-shm-usage')
-#     chrome_options.add_argument('--no-sandbox')
-#     chrome_options.add_argument("--log-level=3")
-#     # driver = webdriver.Chrome(options=chrome_options)
-#     driver = uc.Chrome(executable_path='chromedriver', options=chrome_options)
-#     return driver
-#
-#
-# def login(driver):
-#     driver.get(INIT_URL)
-#     time.sleep(10000)
-#     # driver.find_element(By.ID, 'dateInput').clear()
-#     # time.sleep(1)
-#     # driver.find_element(By.ID, 'dateInput').send_keys('08/31/23')
-#     # driver.find_element(By.XPATH, "//label[normalize-space()='Rancho Park']").click()
-#     # time.sleep(10)
-#     # driver.find_element(By.XPATH, "//button[normalize-space()='Search All']").click()
-#     # time.sleep(10)
-#
-#     driver.find_element(By.XPATH, "//input[@title='Enter User Name']").send_keys(USERNMAE)
-#     driver.find_element(By.XPATH, "//input[@title='Enter Password']").send_keys(PASSWORD)
-#     time.sleep(5)
-#     driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
-#     time.sleep(10)
-#
-#
-# def run():
-#     driver = config_driver()
-#     # login(driver)
-#     driver.get('https://cityoflapcp.ezlinksgolf.com/index.html#/login')
-#     time.sleep(100)
-#
-#
-# if __name__ == '__main__':
-#     run()
+from datetime import datetime, timedelta
 
 import undetected_chromedriver as uc
+from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
+
+# urls (Do not touch)
+LOGIN_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/login"
+SEARCH_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/search"
+
+# Credentials & Configurations
+DRIVER_PATH = "/home/dfs/Documents/web_scraping/golf_lacity/chromedriver"
+USERNMAE = "la-165095"
+PASSWORD = "Snowing23#"
+TIMER = "9:00 AM–7:00 PM"
+DAYS_IN_ADVANCE = 9
 
 
 def config_uc_driver():
-    return uc.Chrome(headless=False, use_subprocess=False, driver_executable_path='chromedriver.exe')
+    return uc.Chrome(headless=True, use_subprocess=False, driver_executable_path=DRIVER_PATH)
+
+
+def convert_to_24hrs(time_str: str) -> str:
+    try:
+        # Parse the input time using the 12-hour format
+        input_format = "%I:%M%p"
+        output_format = "%H:%M"
+
+        # Convert the time to 24-hour format
+        converted_time = datetime.strptime(time_str, input_format).strftime(output_format)
+
+        return converted_time
+    except ValueError:
+        return "Invalid input format"
+
+
+def parse_timer(value: str) -> (int, int):
+    timer = value.replace(" ", "").strip().upper().split("–")
+    first_timer = int(float(convert_to_24hrs(timer[0]).replace(':', '.')))
+    second_timer = int(float(convert_to_24hrs(timer[1]).replace(':', '.')))
+    return abs(first_timer - 5) * 2 - 1, abs(second_timer - 19) * 2 - 2
+
+
+def add_days(date_str: str) -> str:
+    start_date = datetime.strptime(date_str, "%m/%d/%Y")
+    new_date = start_date + timedelta(days=DAYS_IN_ADVANCE)
+    return new_date.date().strftime("%m/%d/%Y")
 
 
 def login(driver):
@@ -92,8 +61,14 @@ def login(driver):
 
 def search(driver):
     driver.get(SEARCH_URL)
-    # driver.find_element(By.ID, 'dateInput').send_keys('08/31/23')
-    time.sleep(5)
+    time.sleep(2)
+    time_date = driver.find_element(By.ID, 'pickerDate').get_attribute("value")
+    driver.execute_script(f"document.getElementById('pickerDate').value = '{add_days(time_date)}'")
+    time.sleep(1)
+    driver.find_element(By.ID, 'pickerDate').send_keys(Keys.ENTER)
+    time.sleep(2)
+    driver.find_element(By.ID, 'pickerDate').send_keys(Keys.ESCAPE)
+    time.sleep(1)
     element = driver.find_element(By.CSS_SELECTOR, '.search-clear-all')
     driver.execute_script("arguments[0].click()", element)
     time.sleep(1)
@@ -101,25 +76,63 @@ def search(driver):
     driver.execute_script("arguments[0].click()", element)
     time.sleep(1)
 
-    v = "//div[@on-handle-up='ec.onTeeTimeFilterHandleUp()']//div[@class='ngrs-handle ngrs-handle-min']//i"
-    r = driver.find_element(By.XPATH, v)
-    print(r)
+    first_timer, second_timer = parse_timer(TIMER)
+    first_slider = driver.find_element(By.XPATH,
+                                       "//div[@on-handle-up='ec.onTeeTimeFilterHandleUp()']//div[@class='ngrs-handle ngrs-handle-min']//i")
+    second_slider = driver.find_element(By.XPATH,
+                                        "//div[@on-handle-up='ec.onTeeTimeFilterHandleUp()']//div[@class='ngrs-handle ngrs-handle-max']//i")
 
-    while True:
-        ActionChains(driver).drag_and_drop_by_offset(r, 100, 200).perform()
-        time.sleep(5)
+    ActionChains(driver).drag_and_drop_by_offset(first_slider, 10 * first_timer, 200).perform()
+    time.sleep(5)
+    ActionChains(driver).drag_and_drop_by_offset(second_slider, -10 * second_timer, 200).perform()
+    time.sleep(5)
 
 
+def reservation(driver):
+    try:
+        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//li[1]//div[3]//button[1]')))
+    except Exception as e:
+        print('Not tee available at given time')
+        exit()
 
-
+    driver.find_element(By.XPATH, "//li[1]//div[3]//button[1]").click()
+    time.sleep(2)
+    driver.find_element(By.ID, "addToCartBtn").click()
+    time.sleep(5)
+    driver.save_screenshot("s1.png")
+    driver.find_element(By.CSS_SELECTOR, ".btn.btn-10.btn-default").click()
+    time.sleep(5)
+    if 'payment' not in driver.current_url:
+        print('You Have An Existing Reservation at the given time')
+        quit()
+    driver.find_element(By.CSS_SELECTOR, "#buyTeeTime").click()
+    time.sleep(5)
+    driver.save_screenshot("s3.png")
+    driver.find_element(By.CSS_SELECTOR, "#topFinishBtn").click()
+    time.sleep(2)
 
 
 def run():
-    driver = config_uc_driver()
-    login(driver)
-    search(driver)
-    # login(driver)
-    # driver.get('https://cityoflapcp.ezlinksgolf.com/index.html#/login')
+    print('Reservation process is starting ...')
+    try:
+        driver = config_uc_driver()
+    except Exception as ex:
+        print('Chrome is not responding, please run again.')
+        exit()
+
+    for i in range(5):
+        try:
+            login(driver)
+            print('Login completed!')
+            search(driver)
+            print('Searching completed!')
+            reservation(driver)
+            print('Reservation completed!')
+            break
+        except Exception as ex:
+            # print(ex)
+            print("Failed to book the reservation process, rollback the program again.")
+            continue
 
 
 if __name__ == '__main__':
