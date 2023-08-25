@@ -13,10 +13,14 @@
 # import undetected_chromedriver as uc
 import time
 
+from selenium.webdriver import ActionChains
+from selenium.webdriver.support.wait import WebDriverWait
+
 #
-# INIT_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/login"
-# USERNMAE = "la-165095"
-# PASSWORD = "Snowing23#"
+LOGIN_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/login"
+USERNMAE = "la-165095"
+PASSWORD = "Snowing23#"
+SEARCH_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/search"
 #
 #
 #
@@ -70,19 +74,50 @@ import time
 #     run()
 
 import undetected_chromedriver as uc
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
 
 
 def config_uc_driver():
-    import undetected_chromedriver as uc
-    driver = uc.Chrome(headless=False, use_subprocess=False, driver_executable_path='chrome')
-    driver.get('https://golf.lacity.org/request_tt/')
-    time.sleep(1000)
-    return driver
+    return uc.Chrome(headless=False, use_subprocess=False, driver_executable_path='chromedriver.exe')
+
+
+def login(driver):
+    driver.get(LOGIN_URL)
+    time.sleep(2)
+    driver.find_element(By.CSS_SELECTOR, "input[title='Enter User Name']").send_keys(USERNMAE)
+    driver.find_element(By.CSS_SELECTOR, "input[title='Enter Password']").send_keys(PASSWORD)
+    driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+    time.sleep(5)
+
+
+def search(driver):
+    driver.get(SEARCH_URL)
+    # driver.find_element(By.ID, 'dateInput').send_keys('08/31/23')
+    time.sleep(5)
+    element = driver.find_element(By.CSS_SELECTOR, '.search-clear-all')
+    driver.execute_script("arguments[0].click()", element)
+    time.sleep(1)
+    element = driver.find_element(By.XPATH, "//label[@id='courseLabel_Rancho Park']")
+    driver.execute_script("arguments[0].click()", element)
+    time.sleep(1)
+
+    v = "//div[@on-handle-up='ec.onTeeTimeFilterHandleUp()']//div[@class='ngrs-handle ngrs-handle-min']//i"
+    r = driver.find_element(By.XPATH, v)
+    print(r)
+
+    while True:
+        ActionChains(driver).drag_and_drop_by_offset(r, 100, 200).perform()
+        time.sleep(5)
+
+
+
+
 
 
 def run():
-    driver = uc.Chrome()
+    driver = config_uc_driver()
+    login(driver)
+    search(driver)
     # login(driver)
     # driver.get('https://cityoflapcp.ezlinksgolf.com/index.html#/login')
 
