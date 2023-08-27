@@ -12,15 +12,17 @@ LOGIN_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/login"
 SEARCH_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/search"
 
 # Credentials & Configurations
-DRIVER_PATH = "/home/dfs/Documents/web_scraping/golf_lacity/chromedriver"
+DRIVER_PATH = "chromedriver.exe"
 USERNMAE = "la-165095"
 PASSWORD = "Snowing23#"
-TIMER = "9:00 AM–11:00 AM"
-DAYS_IN_ADVANCE = 7
+TIMER = "9:00 AM–7:00 PM"
+DAYS_IN_ADVANCE = 2
 
 
 def config_uc_driver():
-    return uc.Chrome(headless=True, use_subprocess=False, driver_executable_path=DRIVER_PATH)
+    driver = uc.Chrome(headless=True, use_subprocess=False, driver_executable_path=DRIVER_PATH)
+    driver.maximize_window()
+    return driver
 
 
 def convert_to_24hrs(time_str: str) -> str:
@@ -48,6 +50,22 @@ def add_days(date_str: str) -> str:
     start_date = datetime.strptime(date_str, "%m/%d/%Y")
     new_date = start_date + timedelta(days=DAYS_IN_ADVANCE)
     return new_date.date().strftime("%m/%d/%Y")
+
+
+def is_valid_time(input_time: str) -> bool:
+    try:
+        timer = TIMER.upper().replace(" ", "").split('–')
+        parsed_time = datetime.strptime(input_time.replace(" ", "").strip(), '%I:%M%p')
+
+        start_time = datetime.strptime(timer[0].strip(), '%I:%M%p')
+        end_time = datetime.strptime(timer[1].strip(), '%I:%M%p')
+        if start_time <= parsed_time <= end_time:
+            return True
+        else:
+            return False
+
+    except ValueError as ve:
+        return False
 
 
 def login(driver):
@@ -95,8 +113,12 @@ def reservation(driver):
         print('Not tee available at given time')
         exit()
 
+    time.sleep(5)
     driver.find_element(By.XPATH, "//li[1]//div[3]//button[1]").click()
-    time.sleep(2)
+    time.sleep(5)
+    cart_time = driver.find_element(By.XPATH, "//strong[@data-ng-bind='ec.teeTimeDisplay']").text
+    if is_valid_time(cart_time) is False:
+        raise Exception('Invalid cart time')
     driver.find_element(By.ID, "addToCartBtn").click()
     time.sleep(5)
     driver.find_element(By.CSS_SELECTOR, ".btn.btn-10.btn-default").click()
@@ -106,20 +128,15 @@ def reservation(driver):
         quit()
     driver.find_element(By.CSS_SELECTOR, "#buyTeeTime").click()
     time.sleep(5)
-    driver.find_element(By.CSS_SELECTOR, "#topFinishBtn").click()
-    time.sleep(2)
+    # driver.find_element(By.CSS_SELECTOR, "#topFinishBtn").click()
+    # time.sleep(2)
 
 
 def run():
     print('Reservation process is starting ...')
-    try:
-        driver = config_uc_driver()
-    except Exception as ex:
-        print('Chrome is not responding, please run again.')
-        exit()
-
     for i in range(5):
         try:
+            driver = config_uc_driver()
             login(driver)
             print('Login completed!')
             search(driver)
@@ -128,7 +145,7 @@ def run():
             print('Reservation completed!')
             break
         except Exception as ex:
-            # print(ex)
+            print(ex)
             print("Failed to book the reservation process, rollback the program again.")
             continue
 
