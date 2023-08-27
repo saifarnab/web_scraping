@@ -12,14 +12,6 @@ import email_template as et
 load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
 
-# read environ
-RESEND_API_KEY = os.getenv('RESEND_API_KEY')
-EMAIL_SUBJECT = os.getenv('EMAIL_SUBJECT')
-WAITING_TIME = int(os.getenv('WAITING_TIME'))
-MAX_EMAIL_SEND_LIMIT_PER_DAY = int(os.getenv('MAX_EMAIL_SEND_LIMIT_PER_DAY'))
-TIME_ZONE = os.getenv('TIME_ZONE')
-PRIMARY_REPLY_TO = os.getenv('PRIMARY_REPLY_TO')
-
 
 class Resend:
 
@@ -56,7 +48,6 @@ class Resend:
                                                             ); """
 
         try:
-            # c = self.conn.cursor()
             self.cursor.execute(_email_table)
             self.cursor.execute(_contacts_pointer_pointer_table)
         except Exception as ex:
@@ -89,16 +80,15 @@ class Resend:
         self.cursor.execute(sql)
         self.conn.commit()
 
-    @staticmethod
-    def _get_resend_email_params(contact_first_name: str, contact_email: str, connected_account_name: str,
+    def _get_resend_email_params(self, contact_first_name: str, contact_email: str, connected_account_name: str,
                                  connected_account_email: str) -> dict:
         email_template = et.Template(contact_first_name).get_email_template()
         return {
             "from": f"{connected_account_name} <{connected_account_email}>",
             "to": [f"{contact_email}"],
-            "subject": EMAIL_SUBJECT,
+            "subject": self.email_subject,
             "html": email_template,
-            "reply_to": [PRIMARY_REPLY_TO]
+            "reply_to": [self.primary_reply_to]
         }
 
     def _send_email_via_resend(self, contact_first_name: str, contact_email: str, connected_account_name: str,
@@ -153,8 +143,8 @@ class Resend:
                 logging.info(f'Email send to {contact[4]}')
 
             self._update_pointer(pointer)
-            logging.info(f'Waiting for {WAITING_TIME} seconds to start sending emails')
-            time.sleep(WAITING_TIME)
+            logging.info(f'Waiting for {self.waiting_time} seconds to start sending emails')
+            time.sleep(self.waiting_time)
         logging.info("Successfully send email to all the contacts")
 
     def processor(self):

@@ -17,7 +17,7 @@ subprocess.check_call(['pip', 'install', 'pandas'])
 subprocess.check_call(['pip', 'install', 'xlwings'])
 
 # excel db path
-GAMEDB = 'scrap.xlsx'
+GAMEDB = 'scrap2.xlsx'
 
 # log format
 logging.basicConfig(

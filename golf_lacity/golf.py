@@ -15,8 +15,8 @@ SEARCH_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/search"
 DRIVER_PATH = "/home/dfs/Documents/web_scraping/golf_lacity/chromedriver"
 USERNMAE = "la-165095"
 PASSWORD = "Snowing23#"
-TIMER = "9:00 AM–7:00 PM"
-DAYS_IN_ADVANCE = 9
+TIMER = "9:00 AM–11:00 AM"
+DAYS_IN_ADVANCE = 7
 
 
 def config_uc_driver():
@@ -99,7 +99,6 @@ def reservation(driver):
     time.sleep(2)
     driver.find_element(By.ID, "addToCartBtn").click()
     time.sleep(5)
-    driver.save_screenshot("s1.png")
     driver.find_element(By.CSS_SELECTOR, ".btn.btn-10.btn-default").click()
     time.sleep(5)
     if 'payment' not in driver.current_url:
@@ -107,7 +106,6 @@ def reservation(driver):
         quit()
     driver.find_element(By.CSS_SELECTOR, "#buyTeeTime").click()
     time.sleep(5)
-    driver.save_screenshot("s3.png")
     driver.find_element(By.CSS_SELECTOR, "#topFinishBtn").click()
     time.sleep(2)
 
