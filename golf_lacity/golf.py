@@ -1,4 +1,7 @@
+import csv
+import os
 import time
+
 from datetime import datetime, timedelta
 
 import undetected_chromedriver as uc
@@ -13,10 +16,13 @@ SEARCH_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/search"
 
 # Credentials & Configurations
 DRIVER_PATH = "chromedriver.exe"
+TRACKER = 'tracker.csv'
+BOOKING_DAYS = ['Thursday', 'Friday']
+WAITING_TIME = 3 # seconds
 USERNMAE = "la-165095"
 PASSWORD = "Snowing23#"
-TIMER = "9:00 AM–7:00 PM"
-DAYS_IN_ADVANCE = 2
+TIMER = "9:00 AM–12:00 PM"
+DAYS_IN_ADVANCE = 9
 
 
 def config_uc_driver():
@@ -66,6 +72,43 @@ def is_valid_time(input_time: str) -> bool:
 
     except ValueError as ve:
         return False
+
+
+def create_tracker():
+    columns = ["TeeDate"]
+    if os.path.exists(TRACKER):
+        return
+    with open(TRACKER, mode="w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(columns)
+    print(f'{TRACKER} is created.')
+
+
+def add_data_to_csv(data):
+    with open(TRACKER, mode="a", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow([data])
+
+
+def is_data_in_csv(target_data) -> bool:
+    with open(TRACKER, "r") as file:
+        reader = csv.reader(file)
+        next(reader)
+        for row in reader:
+            if row[0] == target_data:
+                return True
+    return False
+
+
+def is_booking_eligible() -> bool:
+    date_object = datetime.now().date()
+    day_name = date_object.strftime("%A")
+    if day_name not in BOOKING_DAYS:
+        return False
+    key = f"{date_object.strftime('%d|%m|%y')}|{day_name}"
+    if is_data_in_csv(key) is True:
+        return False
+    return True
 
 
 def login(driver):
@@ -128,26 +171,37 @@ def reservation(driver):
         quit()
     driver.find_element(By.CSS_SELECTOR, "#buyTeeTime").click()
     time.sleep(5)
-    # driver.find_element(By.CSS_SELECTOR, "#topFinishBtn").click()
-    # time.sleep(2)
+    driver.find_element(By.CSS_SELECTOR, "#topFinishBtn").click()
+    time.sleep(2)
+    date_object = datetime.now().date()
+    day_name = date_object.strftime("%A")
+    key = f"{date_object.strftime('%d|%m|%y')}|{day_name}"
+    add_data_to_csv(key)
 
 
 def run():
-    print('Reservation process is starting ...')
-    for i in range(5):
-        try:
-            driver = config_uc_driver()
-            login(driver)
-            print('Login completed!')
-            search(driver)
-            print('Searching completed!')
-            reservation(driver)
-            print('Reservation completed!')
-            break
-        except Exception as ex:
-            print(ex)
-            print("Failed to book the reservation process, rollback the program again.")
+    while True:
+        create_tracker()
+        if is_booking_eligible() is False:
+            print(f'Invalid booking time. After {WAITING_TIME} seconds it will retry')
+            time.sleep(WAITING_TIME)
             continue
+        print('Reservation process is starting ...')
+        for i in range(5):
+            try:
+                driver = config_uc_driver()
+                login(driver)
+                print('Login completed!')
+                search(driver)
+                print('Searching completed!')
+                reservation(driver)
+                print('Reservation completed!')
+                driver.close()
+                break
+            except Exception as ex:
+                # print(ex)
+                print("Failed to book the reservation process, rollback the program again.")
+                continue
 
 
 if __name__ == '__main__':
