@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -24,6 +25,7 @@ class Resend:
         self.limit = int(os.getenv('MAX_EMAIL_SEND_LIMIT_PER_DAY'))
         self.time_zone = os.getenv('TIME_ZONE')
         self.primary_reply_to = os.getenv('PRIMARY_REPLY_TO')
+        self.unsubscribe = os.getenv('UNSUBSCRIBE')
 
         # db connections
         self.conn = None
@@ -83,16 +85,22 @@ class Resend:
     def _get_resend_email_params(self, contact_first_name: str, contact_email: str, connected_account_name: str,
                                  connected_account_email: str) -> dict:
         email_template = et.Template(contact_first_name).get_email_template()
-        return {
+        params = {
             "from": f"{connected_account_name} <{connected_account_email}>",
             "to": [f"{contact_email}"],
             "subject": self.email_subject,
             "html": email_template,
-            "reply_to": [self.primary_reply_to]
+            "reply_to": [self.primary_reply_to],
+            "headers": {}
         }
 
+        if self.unsubscribe is not None:
+            params["headers"]["List-Unsubscribe"] = self.unsubscribe
+
+        return params
+
     def _send_email_via_resend(self, contact_first_name: str, contact_email: str, connected_account_name: str,
-                               connected_account_email: str) -> (str, str):
+                               connected_account_email: str):
         try:
             headers = {
                 'Content-Type': 'application/json',
@@ -100,9 +108,11 @@ class Resend:
             }
             body = self._get_resend_email_params(contact_first_name, contact_email, connected_account_name,
                                                  connected_account_email)
-            requests.post(self.resend_api_url, json=body, headers=headers)
+            response = requests.post(self.resend_api_url, json=body, headers=headers)
+            return json.loads(response.content).get('id'), body.get('html')
         except Exception as e:
             logging.exception(e)
+            return None, None
 
     def _insert_email(self, data: tuple):
         sql = "INSERT INTO emails (contact_email, connected_account_email, email_template, resend_id, reply_to, created_date) VALUES (%s, %s, %s, %s, %s, %s)"
@@ -125,12 +135,18 @@ class Resend:
                 if pointer >= len(contacts):
                     break
 
-                if self._get_total_email_send_via_connect_account(connected_account[1]) > MAX_EMAIL_SEND_LIMIT_PER_DAY:
+                if self._get_total_email_send_via_connect_account(connected_account[1]) > self.limit:
                     logging.info(f'This email {connected_account[1]} reach the max limit of sending email in a day')
                     continue
                 contact = contacts[pointer]
                 resend_id, email_template = self._send_email_via_resend(contact[1], contact[4], connected_account[0],
                                                                         connected_account[1])
+
+                if resend_id is None:
+                    logging.error('Failed to send via resend')
+                    pointer += 1
+                    continue
+
                 self._insert_email((
                     contact[4],
                     connected_account[1],
