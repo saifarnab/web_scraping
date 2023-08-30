@@ -4,6 +4,9 @@ import time
 
 from datetime import datetime, timedelta
 
+import chromedriver_autoinstaller
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 import undetected_chromedriver as uc
 from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.common.by import By
@@ -15,19 +18,50 @@ LOGIN_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/login"
 SEARCH_URL = "https://cityoflapcp.ezlinksgolf.com/index.html#/search"
 
 # Credentials & Configurations
-DRIVER_PATH = "chromedriver.exe"
+DRIVER_PATH = "chromedriver"
 TRACKER = 'tracker.csv'
-BOOKING_DAYS = ['Thursday', 'Friday']
-WAITING_TIME = 300  # seconds
+BOOKING_DAYS = ['Thursday', 'Friday', 'Wednesday']
+WAITING_TIME = 5  # seconds
 USERNAME = "la-165095"
 PASSWORD = "Snowing23#"
 TIMER = "9:00 AM–7:00 PM"
 DAYS_IN_ADVANCE = 9
 
 
+def config_driver() -> webdriver.Chrome:
+    user_agent = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 "
+                  "Safari/537.36")
+    chrome_options = Options()
+    # chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument("--start-maximized")
+    chrome_options.add_argument("lang=en-GB")
+    chrome_options.add_argument('--ignore-certificate-errors')
+    chrome_options.add_argument('--allow-running-insecure-content')
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--proxy-server='direct://'")
+    chrome_options.add_argument("--proxy-bypass-list=*")
+    chrome_options.add_argument("--start-maximized")
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument("--log-level=3")
+    chrome_options.add_argument(user_agent)
+    driver = webdriver.Chrome(options=chrome_options)
+    return driver
+
+
 def config_uc_driver():
-    driver = uc.Chrome(headless=True, use_subprocess=False, driver_executable_path=DRIVER_PATH)
-    driver.maximize_window()
+    version_main = int(chromedriver_autoinstaller.get_chrome_version().split(".")[0])
+    user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+    options = uc.ChromeOptions()
+    options.add_argument(user_agent)
+    # options.add_argument("--no-sandbox")
+    # options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--start-maximized")
+    # options.add_argument('--disable-popup-blocking')
+    driver = uc.Chrome(options=options, headless=False, use_subprocess=False, driver_executable_path=DRIVER_PATH,
+                       version_main=version_main)
     return driver
 
 
@@ -101,9 +135,6 @@ def is_data_in_csv(target_data) -> bool:
 
 
 def is_booking_eligible() -> bool:
-    booking_time = datetime.now().replace(hour=6, minute=0, second=0, microsecond=0)
-    if datetime.now() < booking_time:
-        return False
     date_object = datetime.now().date()
     day_name = date_object.strftime("%A")
     if day_name not in BOOKING_DAYS:
@@ -114,10 +145,9 @@ def is_booking_eligible() -> bool:
     return True
 
 
-
 def login(driver):
     driver.get(LOGIN_URL)
-    time.sleep(2)
+    time.sleep(20)
     driver.save_screenshot('s1.png')
     driver.find_element(By.CSS_SELECTOR, "input[title='Enter User Name']").send_keys(USERNAME)
     driver.find_element(By.CSS_SELECTOR, "input[title='Enter Password']").send_keys(PASSWORD)
@@ -186,9 +216,9 @@ def reservation(driver):
     driver.find_element(By.CSS_SELECTOR, "#buyTeeTime").click()
     time.sleep(5)
     driver.save_screenshot('s11.png')
-    driver.find_element(By.CSS_SELECTOR, "#topFinishBtn").click()
-    time.sleep(2)
-    driver.save_screenshot('s12.png')
+    # driver.find_element(By.CSS_SELECTOR, "#topFinishBtn").click()
+    # time.sleep(2)
+    # driver.save_screenshot('s12.png')
     date_object = datetime.now().date()
     day_name = date_object.strftime("%A")
     key = f"{date_object.strftime('%d|%m|%y')}|{day_name}"
@@ -220,6 +250,7 @@ def run():
                     driver.close()
                 print(ex)
                 print("Failed to book the reservation process, rollback the program again.")
+                time.sleep(2)
                 continue
 
 
