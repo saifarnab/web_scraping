@@ -102,3 +102,6 @@ PyMySQL~=1.1.0
 mysql-connector-python~=8.1.0
 protobuf~=4.21.12
 resend~=0.5.2
+pydantic~=2.3.0
+fastapi~=0.103.0
+mangum~=0.17.0
