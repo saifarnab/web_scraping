@@ -78,6 +78,9 @@ def insert_db(conn, cur, data):
 def run():
     data = read_data()
     conn, cur = db_connectivity.db_connection()
+    if conn is None or cur is None:
+        logging.error('Failed to get db connection')
+        return
     create_tables(conn, cur)
     insert_db(conn, cur, data)
 

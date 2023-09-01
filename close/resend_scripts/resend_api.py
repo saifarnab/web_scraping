@@ -42,6 +42,12 @@ class Resend:
                                                     email_template text,
                                                     resend_id VARCHAR(100),
                                                     reply_to VARCHAR(100),
+                                                    email_sent VARCHAR(10),
+                                                    email_delivered VARCHAR(10),
+                                                    email_complained VARCHAR(10),
+                                                    email_bounced VARCHAR(10),
+                                                    email_opened VARCHAR(10),
+                                                    email_clicked VARCHAR(10),
                                                     created_date VARCHAR(100)
                                                 ); """
 
@@ -169,7 +175,10 @@ class Resend:
         self._pointer_init()
         contacts = self._get_contacts()
         connected_accounts = self._get_connected_accounts()
-        self._email_sender(connected_accounts, contacts)
+
+        print(contacts)
+        print(connected_accounts)
+        # self._email_sender(connected_accounts, contacts)
 
 
 if __name__ == '__main__':
