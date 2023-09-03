@@ -100,7 +100,7 @@ def extract_data(driver: webdriver.Chrome):
     # entities = list(set(entities))
     future_time = datetime.datetime.now() + datetime.timedelta(seconds=120)
     extracted_entities = extracted_list()
-    entities = ['Galaxy Digital', 'New Form Capital', 'Geeq', 'Robert Leshner', 'Spark Digital Capital', 'ConsenSys',
+    entities = ['Spark Digital Capital', 'Jump trading', 'Galaxy Digital', 'New Form Capital', 'Geeq', 'Robert Leshner',
                 'Apollo Capital', 'Kirin Fund', 'Free Compony', 'Infinity Ventures Crypto', 'Future Money Group',
                 'hashkey capital', 'Fasanara Capital', 'Bigcoin capital', 'GFS Ventures', 'LD Capital', 'IOSG Ventures',
                 'Voyager', 'Oapital', 'drangonfly capital', 'InsurAce Protocol', 'Pantera Capital', 'Celsius Network',
@@ -118,21 +118,24 @@ def extract_data(driver: webdriver.Chrome):
                 'Fantom Foundation Wallet', 'Blockchain Capital', 'Starry Night Capital', 'Wintermure', 'Cumberland',
                 'CMS', 'Geoffrey Hayes', 'IDEO CoLab Ventures', 'Chain Capital', 'Coin98 Ventures',
                 'Wintermute trading', 'OlympusDAO', 'orthogonal trading', 'CMS Holdings', 'Tiantian Kullander', 'GCR',
-                'Jump trading', 'Polygon Foundation(Investment)', 'OkX Blockdream Ventures', 'DeFi Rate',
+                'Polygon Foundation(Investment)', 'OkX Blockdream Ventures', 'DeFi Rate',
                 'Master Ventures', 'Max Wolff', 'Struck Capital', 'Dragonfly Capital', 'DeFiance Capital', '0xb1',
-                'mStable']
+                'mStable', 'ConsenSys']
     for entity in entities:
         if entity in extracted_entities:
             print(f'{entity} already available.. ')
             continue
         driver.get(f"https://www.scopescan.ai/vcWatch/{entity}?network=eth")
         time.sleep(5)
-        page = 2
-        print(f'==================== {entity}====================')
-        while True:
-            try:
-                for i in range(10):
-                    address = driver.find_element(By.XPATH, f"//tbody/tr[{i + 2}]/td[1]/div[1]/div[1]/div[1]/div[1]")
+        total_data = (driver.find_element(By.XPATH, "//span[@class='ant-select-selection-item']//div[@class='type']")
+                      .text.replace('(', '').replace(')', ''))
+        print(f'==================== {entity} ====================')
+        page = 1
+        for i in range(int(int(total_data) / 10) + 1):
+            for counter in range(11):
+                try:
+                    address = driver.find_element(By.XPATH,
+                                                  f"//tbody/tr[{counter + 2}]/td[1]/div[1]/div[1]/div[1]/div[1]")
                     driver.execute_script("arguments[0].click();", address)
                     time.sleep(5)
                     driver.switch_to.window(driver.window_handles[1])
@@ -145,7 +148,7 @@ def extract_data(driver: webdriver.Chrome):
                                               f'//body[1]/div[1]/div[1]/div[1]/div[2]/div[2]/div[1]/div[2]/div[1]/div['
                                               f'1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[2]/div['
                                               f'1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[3]/div[1]/div[1]/div['
-                                              f'2]/div[1]/div[1]/div[1]/div[1]/div[2]/table[1]/tbody[1]/tr[{i + 2}]/td['
+                                              f'2]/div[1]/div[1]/div[1]/div[1]/div[2]/table[1]/tbody[1]/tr[{counter + 2}]/td['
                                               f'2]/div/div').text
 
                     connection = driver.find_element(By.XPATH,
@@ -153,7 +156,7 @@ def extract_data(driver: webdriver.Chrome):
                                                      f'1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div['
                                                      f'1]/div[2]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div['
                                                      f'3]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div['
-                                                     f'2]/table[1]/tbody[1]/tr[{i + 2}]/td[3]/span[1]').text
+                                                     f'2]/table[1]/tbody[1]/tr[{counter + 2}]/td[3]/span[1]').text
 
                     if datetime.datetime.now() > future_time:
                         print('Put the script in 2 minutes sleep to prevent frequent hits.')
@@ -162,19 +165,18 @@ def extract_data(driver: webdriver.Chrome):
 
                     if is_duplicate(address_text) is False:
                         insert_data_into_excel([[entity, address_text, tag, connection]])
-                    else:
-                        break
-            except Exception as e:
-                # print(e)
-                continue
+                except:
+                    continue
+
             try:
-                driver.find_element(By.XPATH,
-                                    f"//div[@class='sc-jefHZX jshcbj']//li[@title='{page}']//a[@rel='nofollow']").click()
+                driver.find_element(By.XPATH, f"//div[@class='sc-jefHZX jshcbj']//li[@title='{page + 1}']//a["
+                                              f"@rel='nofollow']").click()
+                time.sleep(3)
+                page += 1
             except:
-                break
-            page += 1
-            time.sleep(1)
-        print(f'==================== {entity}====================')
+                continue
+
+        print(f'==================== {entity} ====================')
 
 
 if __name__ == '__main__':
