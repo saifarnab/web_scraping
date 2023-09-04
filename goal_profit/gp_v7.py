@@ -42,7 +42,8 @@ def config_driver(maximize_window: bool) -> webdriver.Chrome:
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument("--log-level=3")
-    driver = webdriver.Chrome(executable_path='chromedriver.exe', options=chrome_options)
+    # driver = webdriver.Chrome(executable_path='chromedriver.exe', options=chrome_options)
+    driver = webdriver.Chrome(options=chrome_options)
     if maximize_window is True:
         driver.maximize_window()
     return driver
