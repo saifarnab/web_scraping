@@ -1,17 +1,10 @@
 import os
-import subprocess
 import time
-from io import BytesIO
 
 import openpyxl
 import pandas as pd
-import requests
-from PIL import Image
-from fake_useragent import UserAgent
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
 
 
 def config_driver() -> webdriver.Chrome:
@@ -23,7 +16,7 @@ def config_driver() -> webdriver.Chrome:
 
 
 def create_excel_with_header():
-    filename= 'eastdist.xlsx'
+    filename = 'eastdist.xlsx'
     if os.path.exists(filename) is True:
         return
     workbook = openpyxl.Workbook()
@@ -77,12 +70,12 @@ def insert_data_into_excel(data):
     new_data = pd.DataFrame(data, columns=df.columns)
     df = pd.concat([df, new_data], ignore_index=True)
     df.to_excel("eastdist.xlsx", index=False)
-    print(f"{data[0]} has been inserted into the output file")
 
 
 def extract_product_data(driver: webdriver.Chrome):
     df = pd.read_csv('eastdist_link.csv')
     products = df['Link'].values
+    counter = 1
     for product_link in products:
         driver.get(product_link)
         try:
@@ -101,8 +94,8 @@ def extract_product_data(driver: webdriver.Chrome):
             price = ''
 
         try:
-            brand_name = driver.find_element(By.XPATH, '//tbody/tr[2]/td[2]"').text
-        except:
+            brand_name = driver.find_element(By.XPATH, '//tbody/tr[2]/td[2]').text
+        except Exception as e:
             brand_name = ''
 
         if title != '' and ends_with_any(title) is True:
@@ -111,7 +104,8 @@ def extract_product_data(driver: webdriver.Chrome):
             weight = ''
 
         insert_data_into_excel([[title, item_code, '', brand_name, weight, price, product_link]])
-        print(f'{title} -> inserted!')
+        print(f'{counter}. {title} -> inserted!')
+        counter += 1
 
 
 def run():
