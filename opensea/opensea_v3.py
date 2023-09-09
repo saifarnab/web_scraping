@@ -14,11 +14,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 # install dependencies
-subprocess.check_call(['pip', 'install', 'pillow'])
-subprocess.check_call(['pip', 'install', 'requests'])
-subprocess.check_call(['pip', 'install', 'openpyxl'])
-subprocess.check_call(['pip', 'install', 'selenium'])
-subprocess.check_call(['pip', 'install', 'fake_useragent'])
+# subprocess.check_call(['pip', 'install', 'pillow'])
+# subprocess.check_call(['pip', 'install', 'requests'])
+# subprocess.check_call(['pip', 'install', 'openpyxl'])
+# subprocess.check_call(['pip', 'install', 'selenium'])
+# subprocess.check_call(['pip', 'install', 'fake_useragent'])
 
 
 def config_driver() -> webdriver.Chrome:
@@ -31,7 +31,7 @@ def config_driver() -> webdriver.Chrome:
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument(f'user-agent={UserAgent().random}')
-    chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
@@ -46,7 +46,7 @@ def config_driver_without_ua() -> webdriver.Chrome:
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument(f'user-agent={UserAgent().random}')
-    chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
@@ -185,19 +185,25 @@ def scrapper():
             try:
                 driver = config_driver()
                 driver.get(url)
+                collection_name = driver.find_element(By.XPATH, '//div[@class="item--collection-detail"]//div//div//a').text
+                collection_name = collection_name.split('/')[-1].replace('-', ' ').upper()
+                print(collection_name)
                 WebDriverWait(driver, 5).until(
                     EC.visibility_of_element_located((By.CLASS_NAME, 'item--header')))
             except Exception as e:
                 try:
                     driver = config_driver_without_ua()
                     driver.get(url)
+                    collection_name = driver.find_element(By.XPATH,
+                                                          '//div[@class="item--collection-detail"]//div//div//a').text
+                    collection_name = collection_name.split('/')[-1].replace('-', ' ').upper()
+                    print(collection_name)
                     WebDriverWait(driver, 5).until(
                         EC.visibility_of_element_located((By.CLASS_NAME, 'item--header')))
                 except Exception as ex:
                     reloader += 1
                     continue
-            collection_name = driver.find_element(By.XPATH, '//a[@class="sc-1f719d57-0 eiItIQ '
-                                                            'CollectionLink--link"]//span//div').text
+            # collection_name = driver.find_element(By.XPATH, '//a[@class="sc-1f719d57-0 eiItIQ CollectionLink--link"]//span//div').text
             create_directory_if_not_exists(f'assets/{collection_name}')
             create_directory_if_not_exists('files')
             filename = f'files/{collection_name}.xlsx'
@@ -209,6 +215,10 @@ def scrapper():
         else:
             try:
                 driver = config_driver()
+                collection_name = driver.find_element(By.XPATH,
+                                                      '//div[@class="item--collection-detail"]//div//div//a').text
+                collection_name = collection_name.split('/')[-1].replace('-', ' ').upper()
+                print(collection_name)
                 driver.get(f'{base_url}/{oldest}')
                 WebDriverWait(driver, 5).until(
                     EC.visibility_of_element_located((By.XPATH, '//img[@class="Image--image"]')))
@@ -239,8 +249,10 @@ def scrapper():
                             continue
 
             link = driver.current_url
-            collection_name = driver.find_element(By.XPATH, '//a[@class="sc-1f719d57-0 eiItIQ '
-                                                            'CollectionLink--link"]//span//div').text
+            collection_name = driver.find_element(By.XPATH,
+                                                  '//div[@class="item--collection-detail"]//div//div//a').text
+            collection_name = collection_name.split('/')[-1].replace('-', ' ').upper()
+            print(collection_name)
             temp_name = driver.find_element(By.XPATH, "//span[@aria-expanded='false']//div").text + f'#{oldest}'
 
             if check_data_exists(filename, temp_name) is False:
