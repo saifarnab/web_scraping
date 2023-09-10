@@ -3,6 +3,7 @@ import time
 
 import openpyxl
 import pandas as pd
+import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
@@ -16,12 +17,13 @@ def config_driver() -> webdriver.Chrome:
 
 
 def create_excel_with_header():
-    filename = 'petcircle.xlsx'
+    filename = 'petcircle_data.xlsx'
     if os.path.exists(filename) is True:
         return
     workbook = openpyxl.Workbook()
     sheet = workbook.active
-    sheet.append(['TITLE', 'descriptions', 'prices', 'Image1', 'Image2', 'Image3', 'Image4', 'Image5', 'Image6', 'Link'])
+    sheet.append(
+        ['TITLE', 'descriptions', 'prices', 'Image1', 'Image2', 'Image3', 'Image4', 'Image5', 'Image6', 'Link'])
     workbook.save(filename)
 
 
@@ -52,10 +54,10 @@ def insert_products(products_url: list):
 
 
 def insert_data_into_excel(data):
-    df = pd.read_excel("petcircle.xlsx")
+    df = pd.read_excel("petcircle_v3.xlsx")
     new_data = pd.DataFrame(data, columns=df.columns)
     df = pd.concat([df, new_data], ignore_index=True)
-    df.to_excel("petcircle.xlsx", index=False)
+    df.to_excel("petcircle_v3.xlsx", index=False)
 
 
 def get_brand_urls(driver: webdriver.Chrome):
@@ -134,16 +136,74 @@ def get_products(driver: webdriver.Chrome):
             pass
 
         insert_data_into_excel([[title, des, price, img1, img2, img3, img4, img5, img6, driver.current_url]])
-        print(f'{ind+1}. {title} inserted')
+        print(f'{ind + 1}. {title} inserted')
         time.sleep(1)
+
+
+def fix_data():
+    df = pd.read_excel('petcircle_v2.xlsx', dtype=str)
+    products = df.values
+    for i, product in enumerate(products):
+        print(f'{i + 1}. Working on {product[0]}')
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                          'Chrome/58.0.3029.110 Safari/537.36'
+        }
+
+        if str(product[8]) != 'nan':
+            res = requests.get(product[8], headers=headers)
+            if res.status_code == 200:
+                insert_data_into_excel(
+                    [[product[0], product[1], product[2], product[3], product[4], product[5], product[6],
+                      product[7], product[8], product[9]]])
+                continue
+
+        if str(product[7]) != 'nan':
+            res = requests.get(product[7], headers=headers)
+            if res.status_code == 200:
+                insert_data_into_excel(
+                    [[product[0], product[1], product[2], product[3], product[4], product[5], product[6],
+                      product[7], '', product[9]]])
+                continue
+
+        if str(product[6]) != 'nan':
+            res = requests.get(product[6], headers=headers)
+            if res.status_code == 200:
+                insert_data_into_excel(
+                    [[product[0], product[1], product[2], product[3], product[4], product[5], product[6],
+                      '', '', product[9]]])
+                continue
+
+        if str(product[5]) != 'nan':
+            res = requests.get(product[5], headers=headers)
+            if res.status_code == 200:
+                insert_data_into_excel(
+                    [[product[0], product[1], product[2], product[3], product[4], product[5], '',
+                      '', '', product[9]]])
+                continue
+
+        if str(product[4]) != 'nan':
+            res = requests.get(product[4], headers=headers)
+            if res.status_code == 200:
+                insert_data_into_excel(
+                    [[product[0], product[1], product[2], product[3], product[4], '', '',
+                      '', '', product[9]]])
+                continue
+
+        if str(product[3]) != 'nan':
+            res = requests.get(product[3], headers=headers)
+            if res.status_code == 200:
+                insert_data_into_excel(
+                    [[product[0], product[1], product[2], product[3], '', '', '', '', '', product[9]]])
+                continue
 
 
 def run():
     # create_brand_url_csv()
     # create_product_url_csv()
-    # create_excel_with_header()
-    driver = config_driver()
-    get_products(driver)
+    create_excel_with_header()
+    # driver = config_driver()
+    fix_data()
 
 
 if __name__ == '__main__':
