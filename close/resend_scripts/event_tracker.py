@@ -1,3 +1,5 @@
+from typing import Union
+
 import db_connectivity
 
 
@@ -13,7 +15,7 @@ class Event:
     def _set(self):
         self.conn, self.cursor = db_connectivity.db_connection()
 
-    def get_sql(self):
+    def get_sql(self) -> Union[str, None]:
         if self.event_type == 'email.sent':
             return f"UPDATE emails SET email_opened='Yes' WHERE resend_id='{self.email_id}'"
         elif self.event_type == 'email.delivered':
@@ -31,6 +33,9 @@ class Event:
         return None
 
     def update_email(self):
-        self.get_sql()
-        self.cursor.execute(self.get_sql())
+        self._set()
+        sql = self.get_sql()
+        if sql is None:
+            return
+        self.cursor.execute(sql)
         self.conn.commit()

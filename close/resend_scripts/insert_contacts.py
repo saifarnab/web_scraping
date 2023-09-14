@@ -147,7 +147,6 @@ def run():
     if conn is None or cur is None:
         logging.error('Failed to get db connection')
         return
-    print(conn)
     create_tables(conn, cur)
     insert_db(conn, cur, data)
 

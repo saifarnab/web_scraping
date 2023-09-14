@@ -175,10 +175,7 @@ class Resend:
         self._pointer_init()
         contacts = self._get_contacts()
         connected_accounts = self._get_connected_accounts()
-
-        print(contacts)
-        print(connected_accounts)
-        # self._email_sender(connected_accounts, contacts)
+        self._email_sender(connected_accounts, contacts)
 
 
 if __name__ == '__main__':
