@@ -22,7 +22,7 @@ logging.basicConfig(
 
 def config_driver(maximize_window: bool) -> webdriver.Chrome:
     chrome_options = Options()
-    chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument("--start-maximized")
     chrome_options.add_argument("lang=en-GB")
@@ -206,8 +206,10 @@ def scanner():
             # wait till 60s if no live games are available
             if len(table_elements) == 0:
                 logging.info('--> no live games are playing, waiting 60s for next try.')
-                time.sleep(60)
+                time.sleep(2)
                 continue
+
+                # //div[@id="html2"]//table//tbody//tr//td
 
             # iterate each tr
             for table_ind in range(len(table_elements)):
@@ -302,8 +304,8 @@ def scanner():
 
                     # extract data from i button which will open a modal
                     # td_elements[2].find_element(By.XPATH, './/a[2]').click()
-                    driver.find_element(By.XPATH,
-                                        "//img[@src='https://live.goalprofits.com/_layouts/images/info.png']").click()
+                    td_elements[19].find_element(By.XPATH,
+                                        ".//img[@src='https://live.goalprofits.com/_layouts/images/info.png']").click()
 
                     # logging.info(f'i button 1st click done')
                     time.sleep(1)
@@ -353,16 +355,18 @@ def scanner():
                                 home_on.replace(':', ''), home_off.replace(':', ''), home_da.replace(':', ''),
                                 away_on.replace(':', ''), away_off.replace(':', ''), away_da.replace(':', ''),
                                 ht_score.replace(':', '')]
-                    if check_for_duplicate(data_row) is False:
-                        insert = insert_or_update_row(first_blank_row, data_row)
-                        first_blank_row += 1
-                        if insert is True:
-                            logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
-                            time.sleep(5)
-                            save_to_csv()
-                        else:
-                            logging.info(f'--> <{game}> data is already exist in gamedb!')
-                            save_to_csv()
+                    print(data_row)
+                    time.sleep(2)
+                    # if check_for_duplicate(data_row) is False:
+                    #     insert = insert_or_update_row(first_blank_row, data_row)
+                    #     first_blank_row += 1
+                    #     if insert is True:
+                    #         logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
+                    #         time.sleep(5)
+                    #         save_to_csv()
+                    #     else:
+                    #         logging.info(f'--> <{game}> data is already exist in gamedb!')
+                    #         save_to_csv()
 
                     tr_ind += 2
 

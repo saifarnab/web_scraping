@@ -1,9 +1,8 @@
 import csv
 import logging
 import os
-import random
 import time
-from datetime import date
+from datetime import datetime
 
 import pandas as pd
 import xlwings as xw
@@ -173,48 +172,203 @@ def scanner():
     # iterate to extract game data
     while True:
 
-        str_list = ["Time heals vs 1", "Dream big vs 2", "Stay strong vs 3", "Love wins vs 31", "Learn, grow vs 32", "Ok vs 4"]
-        float_list = ["1.5", "3.14", "2.718", "0.99", '4.75', '9.0']
-
-        current_date = date.today().strftime('%d/%m/%y')
-        game = str_list[random.randint(0, 5)]
-        home = float_list[random.randint(0, 5)]
-        away = float_list[random.randint(0, 5)]
-        draw = float_list[random.randint(0, 5)]
-        ht_home = float_list[random.randint(0, 5)]
-        ht_away = float_list[random.randint(0, 5)]
-        ht_draw = float_list[random.randint(0, 5)]
-        home_on = float_list[random.randint(0, 5)]
-        home_off = float_list[random.randint(0, 5)]
-        home_da = float_list[random.randint(0, 5)]
-        away_on = float_list[random.randint(0, 5)]
-        away_off = float_list[random.randint(0, 5)]
-        away_da = float_list[random.randint(0, 5)]
-        ht_score = float_list[random.randint(0, 5)]
         try:
-            # insert data to gamedb
+            driver.get('https://live.goalprofits.com/')
+            # print(f'{pathlib.Path(__file__).parent.resolve()}\gamedb.gamedb;')
 
-            data_row = [current_date.replace(':', ''), game.replace(':', ''), home.replace(':', ''),
-                        away.replace(':', ''), draw.replace(':', ''), ht_home.replace(':', ''),
-                        ht_away.replace(':', ''), ht_draw.replace(':', ''),
-                        home_on.replace(':', ''), home_off.replace(':', ''), home_da.replace(':', ''),
-                        away_on.replace(':', ''), away_off.replace(':', ''), away_da.replace(':', ''),
-                        ht_score.replace(':', '')]
-            print(data_row)
-            if check_for_duplicate(data_row) is False:
-                insert = insert_or_update_row(first_blank_row, data_row)
-                first_blank_row += 1
-                if insert is True:
-                    logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
-                    time.sleep(5)
-                    save_to_csv()
-                else:
-                    logging.info(f'--> <{game}> data is already exist in gamedb!')
-                    save_to_csv()
+            if 'login' in driver.current_url:
+                # login to the site
+                username_input_button = driver.find_element(By.XPATH, '//input[@id="wlm_form_field_log"]')
+                username_input_button.clear()
+                username_input_button.send_keys("dennis.peibst@googlemail.com")
+                pass_input_button = driver.find_element(By.XPATH, '//input[@id="wlm_form_field_pwd"]')
+                pass_input_button.clear()
+                pass_input_button.send_keys("Freelancer1")
+                driver.find_element(By.XPATH, '//input[@id="wlm_form_field_wp-submit"]').click()
+                logging.info("login success")
+                time.sleep(2)
+                # get to the live game section
+                driver.get('https://live.goalprofits.com/')
+
+            elif 'live' not in driver.current_url:
+                logging.info('login or live not found')
+                continue
+
+            live_games_button = driver.find_element(By.XPATH, '//a[@href="#live"]')
+            driver.execute_script("arguments[0].click();", live_games_button)
+            time.sleep(1)
+            driver.execute_script("arguments[0].click();", live_games_button)
+            time.sleep(1)
+
+            # find available live games
+            table_elements = driver.find_elements(By.XPATH, '//div[@id="html2"]//table')
+
+            # wait till 60s if no live games are available
+            if len(table_elements) == 0:
+                logging.info('--> no live games are playing, waiting 60s for next try.')
+                time.sleep(2)
+                continue
+
+            # iterate each tr
+            for table_ind in range(len(table_elements)):
+                tr_elements = table_elements[table_ind].find_elements(By.XPATH, './/tbody//tr')
+                tr_ind = 0
+
+                # iterate each td
+                for ind in range(int(len(tr_elements) / 2)):
+                    td_elements = tr_elements[tr_ind].find_elements(By.XPATH, ".//td")
+                    current_date = datetime.now().date().strftime('%dth %B %Y')
+                    try:
+                        game_time = td_elements[0].text.strip()
+                        # logging.info(f'game_time --> {game_time}')
+                    except Exception as exx:
+                        game_time = 'N/A'
+
+                    # if game time is not HT then return
+                    # if game_time != 'HT':
+                    #     tr_ind += 2
+                    #     logging.info('Waiting to detect HT')
+                    #     continue
+
+                    # extract required data from 1st tr
+                    team1 = td_elements[1].text.index('(')
+                    team1 = td_elements[1].text[:team1].strip()
+                    # logging.info(f'team1 --> {team1}')
+
+                    try:
+                        ht_score = td_elements[2].text.split('\n')[0]
+                        # logging.info(f'ht_score --> {ht_score}')
+                    except Exception as exx:
+                        ht_score = 'N/A'
+
+                    try:
+                        v = td_elements[19].find_element(By.XPATH, './/a/img[@data-toggle="tooltip"]')
+                        tooltip = v.get_attribute('data-original-title').replace('\n', '').replace(
+                            "<div class='tooltip-prices'>", '').replace('<br>', '').replace('</div>', '').replace(
+                            '<div>', '')
+                        tooltip = "".join(tooltip.split())
+                        ht_home, ht_draw, ht_away = tooltip[2:6], tooltip[8:12], tooltip[14:18]
+                    except Exception as e:
+                        ht_home, ht_draw, ht_away = 'N/A', 'N/A', 'N/A'
+
+                    try:
+                        home_on = td_elements[3].text
+                        # logging.info(f'home_on --> {home_on}')
+                    except Exception as exx:
+                        home_on = 'N/A'
+
+                    try:
+                        home_off = td_elements[4].text
+                        # logging.info(f'home_off --> {home_off}')
+                    except Exception as exx:
+                        home_off = 'N/A'
+
+                    try:
+                        home_da = td_elements[9].text
+                        # logging.info(f'home_da --> {home_da}')
+                    except Exception as exx:
+                        home_da = 'N/A'
+
+                    # logging.info('extracted required data from 1st tr')
+
+                    # extract required data from 2nd tr
+                    td_elements2 = tr_elements[tr_ind + 1].find_elements(By.XPATH, ".//td")
+
+                    team2 = td_elements2[0].text.index('(')
+                    team2 = td_elements2[0].text[:team2].strip()
+                    # logging.info(f'team2 --> {team2}')
+
+                    try:
+                        away_on = td_elements2[1].text
+                        # logging.info(f'away_on --> {away_on}')
+                    except Exception as exx:
+                        away_on = 'N/A'
+
+                    try:
+                        away_off = td_elements2[2].text
+                        # logging.info(f'away_off --> {away_off}')
+                    except Exception as exx:
+                        away_off = 'N/A'
+
+                    try:
+                        away_da = td_elements2[7].text
+                        # logging.info(f'away_da --> {away_da}')
+                    except Exception as exx:
+                        away_da = 'N/A'
+
+                    # logging.info('extracted required data from 2nd tr')
+
+                    game = team1 + ' v ' + team2
+
+                    # extract data from i button which will open a modal
+                    # td_elements[2].find_element(By.XPATH, './/a[2]').click()
+                    td_elements[19].find_element(By.XPATH,
+                                        ".//img[@src='https://live.goalprofits.com/_layouts/images/info.png']").click()
+
+                    # logging.info(f'i button 1st click done')
+                    time.sleep(1)
+                    driver.find_element(By.XPATH, '//a[@id="pregame-tab"]').click()
+                    # logging.info(f'i button 2nd click done')
+                    time.sleep(1)
+                    try:
+                        home = driver.find_elements(By.XPATH,
+                                                    '//table[@class="table borderless table-striped score-table"]//span[@class="d-block font13 text-nowrap"]')[
+                            0].text.split(':')[1].strip()
+                        # logging.info(f'home --> {home}')
+                    except Exception as exx:
+                        home = 'N/A'
+
+                    try:
+                        draw = driver.find_elements(By.XPATH,
+                                                    '//table[@class="table borderless table-striped score-table"]//span[@class="d-block font13 text-nowrap"]')[
+                            1].text.split(':')[1].strip()
+                        # logging.info(f'draw --> {draw}')
+                    except Exception as exx:
+                        draw = 'N/A'
+
+                    try:
+                        away = driver.find_elements(By.XPATH,
+                                                    '//table[@class="table borderless table-striped score-table"]//span[@class="d-block font13 text-nowrap"]')[
+                            2].text.split(':')[1].strip()
+                        # logging.info(f'away --> {away}')
+                    except Exception as exx:
+                        away = 'N/A'
+
+                    # close the modal opened by I button
+                    close_buttons = driver.find_elements(By.XPATH, '//button[@class="close"]')
+                    for close_button in close_buttons:
+                        try:
+                            close_button.click()
+                            # logging.info('clieck close button to close the modal')
+                        except Exception as e:
+                            continue
+
+                    time.sleep(1)
+
+                    # insert data to gamedb
+
+                    data_row = [current_date.replace(':', ''), game.replace(':', ''), home.replace(':', ''),
+                                away.replace(':', ''), draw.replace(':', ''), ht_home.replace(':', ''),
+                                ht_away.replace(':', ''), ht_draw.replace(':', ''),
+                                home_on.replace(':', ''), home_off.replace(':', ''), home_da.replace(':', ''),
+                                away_on.replace(':', ''), away_off.replace(':', ''), away_da.replace(':', ''),
+                                ht_score.replace(':', '')]
+                    if check_for_duplicate(data_row) is False:
+                        insert = insert_or_update_row(first_blank_row, data_row)
+                        first_blank_row += 1
+                        if insert is True:
+                            logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
+                            time.sleep(5)
+                            save_to_csv()
+                        else:
+                            logging.info(f'--> <{game}> data is already exist in gamedb!')
+                            save_to_csv()
+
+                    tr_ind += 2
 
         except Exception as ex:
             print(ex)
-            break
+            continue
 
 
 if __name__ == '__main__':
