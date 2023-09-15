@@ -1,20 +1,14 @@
 import csv
 import logging
 import os
-import subprocess
 import time
-from datetime import date
+from datetime import datetime
 
 import pandas as pd
 import xlwings as xw
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-
-# subprocess.check_call(['pip', 'install', 'selenium'])
-# subprocess.check_call(['pip', 'install', 'openpyxl'])
-# subprocess.check_call(['pip', 'install', 'pandas'])
-# subprocess.check_call(['pip', 'install', 'xlwings'])
 
 # excel db path
 GAMEDB = 'scrap2.xlsx'
@@ -223,7 +217,7 @@ def scanner():
                 # iterate each td
                 for ind in range(int(len(tr_elements) / 2)):
                     td_elements = tr_elements[tr_ind].find_elements(By.XPATH, ".//td")
-                    current_date = date.today().strftime('%d/%m/%y')
+                    current_date = datetime.now().date().strftime('%dth %B %Y')
                     try:
                         game_time = td_elements[0].text.strip()
                         # logging.info(f'game_time --> {game_time}')
@@ -231,10 +225,10 @@ def scanner():
                         game_time = 'N/A'
 
                     # if game time is not HT then return
-                    if game_time != 'HT':
-                        tr_ind += 2
-                        logging.info('Waiting to detect HT')
-                        continue
+                    # if game_time != 'HT':
+                    #     tr_ind += 2
+                    #     logging.info('Waiting to detect HT')
+                    #     continue
 
                     # extract required data from 1st tr
                     team1 = td_elements[1].text.index('(')

@@ -11,11 +11,6 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
-subprocess.check_call(['pip', 'install', 'selenium'])
-subprocess.check_call(['pip', 'install', 'openpyxl'])
-subprocess.check_call(['pip', 'install', 'pandas'])
-subprocess.check_call(['pip', 'install', 'xlwings'])
-
 # excel db path
 GAMEDB = 'scrap2.xlsx'
 
@@ -42,7 +37,7 @@ def config_driver(maximize_window: bool) -> webdriver.Chrome:
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument("--log-level=3")
-    driver = webdriver.Chrome(executable_path='chromedriver.exe', options=chrome_options)
+    driver = webdriver.Chrome(options=chrome_options)
     if maximize_window is True:
         driver.maximize_window()
     return driver
@@ -212,7 +207,7 @@ def scanner():
             # wait till 60s if no live games are available
             if len(table_elements) == 0:
                 logging.info('--> no live games are playing, waiting 60s for next try.')
-                time.sleep(60)
+                time.sleep(5)
                 continue
 
             # iterate each tr
@@ -231,10 +226,10 @@ def scanner():
                         game_time = 'N/A'
 
                     # if game time is not HT then return
-                    if game_time != 'HT':
-                        tr_ind += 2
-                        logging.info('Waiting to detect HT')
-                        continue
+                    # if game_time != 'HT':
+                    #     tr_ind += 2
+                    #     logging.info('Waiting to detect HT')
+                    #     continue
 
                     # extract required data from 1st tr
                     team1 = td_elements[1].text.index('(')
