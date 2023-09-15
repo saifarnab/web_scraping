@@ -11,7 +11,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
 # excel db path
-GAMEDB = 'scrap2.xlsx'
+GAMEDB = 'scrap.xlsx'
 
 # log format
 logging.basicConfig(
@@ -205,8 +205,8 @@ def scanner():
 
             # wait till 60s if no live games are available
             if len(table_elements) == 0:
-                logging.info('--> no live games are playing, waiting 60s for next try.')
-                time.sleep(2)
+                logging.info('--> Waiting 60s for next try..')
+                time.sleep(60)
                 continue
 
             # iterate each tr
@@ -225,10 +225,10 @@ def scanner():
                         game_time = 'N/A'
 
                     # if game time is not HT then return
-                    # if game_time != 'HT':
-                    #     tr_ind += 2
-                    #     logging.info('Waiting to detect HT')
-                    #     continue
+                    if game_time != 'HT':
+                        tr_ind += 2
+                        logging.info('Waiting to detect HT')
+                        continue
 
                     # extract required data from 1st tr
                     team1 = td_elements[1].text.index('(')
@@ -303,7 +303,7 @@ def scanner():
                     # extract data from i button which will open a modal
                     # td_elements[2].find_element(By.XPATH, './/a[2]').click()
                     td_elements[19].find_element(By.XPATH,
-                                        ".//img[@src='https://live.goalprofits.com/_layouts/images/info.png']").click()
+                                                 ".//img[@src='https://live.goalprofits.com/_layouts/images/info.png']").click()
 
                     # logging.info(f'i button 1st click done')
                     time.sleep(1)
@@ -367,7 +367,7 @@ def scanner():
                     tr_ind += 2
 
         except Exception as ex:
-            print(ex)
+            # print(ex)
             continue
 
 
