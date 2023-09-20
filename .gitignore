@@ -289,3 +289,5 @@ tags
 #**/migrations/**
 #!**/migrations
 #!**/migrations/__init__.py
+tennis24_v2/tennis_v2.xlsx
+tennis24_v2/tennis.xlsx

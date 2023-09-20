@@ -31,7 +31,7 @@ def config_driver() -> webdriver.Chrome:
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument(f'user-agent={UserAgent().random}')
-    # chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
@@ -46,7 +46,7 @@ def config_driver_without_ua() -> webdriver.Chrome:
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument(f'user-agent={UserAgent().random}')
-    # chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
@@ -191,6 +191,7 @@ def scrapper():
                 WebDriverWait(driver, 5).until(
                     EC.visibility_of_element_located((By.CLASS_NAME, 'item--header')))
             except Exception as e:
+                print('1st e', e)
                 try:
                     driver = config_driver_without_ua()
                     driver.get(url)
@@ -201,6 +202,7 @@ def scrapper():
                     WebDriverWait(driver, 5).until(
                         EC.visibility_of_element_located((By.CLASS_NAME, 'item--header')))
                 except Exception as ex:
+                    print('2nd e', ex)
                     reloader += 1
                     continue
             # collection_name = driver.find_element(By.XPATH, '//a[@class="sc-1f719d57-0 eiItIQ CollectionLink--link"]//span//div').text
@@ -223,21 +225,24 @@ def scrapper():
                 WebDriverWait(driver, 5).until(
                     EC.visibility_of_element_located((By.XPATH, '//img[@class="Image--image"]')))
                 src = driver.find_element(By.XPATH, '//img[@class="Image--image"]').get_attribute('src')
-
+                print(src)
             except Exception as e:
+                print('3rd e', e)
                 driver = config_driver_without_ua()
                 driver.get(f'{base_url}/{oldest}')
                 try:
                     WebDriverWait(driver, 5).until(
                         EC.visibility_of_element_located((By.XPATH, '//img[@class="Image--image"]')))
                     src = driver.find_element(By.XPATH, '//img[@class="Image--image"]').get_attribute('src')
-
+                    print(src)
                 except Exception as ex:
+                    print('4th e', ex)
                     driver = config_driver()
                     driver.get(f'{base_url}/{oldest}')
                     try:
                         time.sleep(1)
                         src = driver.find_element(By.TAG_NAME, "source").get_attribute('src')
+                        print(src)
                     except Exception as e:
                         driver = config_driver_without_ua()
                         driver.get(f'{base_url}/{oldest}')
@@ -245,6 +250,7 @@ def scrapper():
                             time.sleep(1)
                             src = driver.find_element(By.TAG_NAME, "source").get_attribute('src')
                         except Exception as ex:
+                            print('5th e', ex)
                             reloader += 1
                             continue
 
@@ -270,4 +276,6 @@ def scrapper():
 
 
 if __name__ == '__main__':
-    scrapper()
+    # scrapper()
+
+    save_nft('https://i.seadn.io/gcs/files/37bf2dc12ebb05f698276be079865434.gif?auto=format&dpr=1&w=1000', '13241671101486416561022079107883927955556851378415017348010573016104974680084.gif')
