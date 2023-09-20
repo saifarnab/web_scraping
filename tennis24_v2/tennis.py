@@ -341,6 +341,18 @@ def tournaments_csv():
     df.to_csv('atp-singles.csv', index=False)
 
 
+def check_data_exists(name: str) -> bool:
+    filename = 'tennis.xlsx'
+    workbook = openpyxl.load_workbook(filename)
+    sheet = workbook.active
+    for row in sheet.iter_rows(values_only=True):
+        if row[0] is None:
+            return False
+        if name.strip() == row[0].strip():
+            return True  # Data exists in the sheet
+    return False  # Data does not exist in the sheet
+
+
 def iterate_tournament(driver: webdriver.Chrome):
     links = get_atp_single_tournaments()
     counter = 1
@@ -360,26 +372,48 @@ def iterate_tournament(driver: webdriver.Chrome):
             match_links.append(f'https://www.tennis24.com/match/{match_id}/#/match-summary/match-summary')
 
         for match_link in match_links:
+            if check_data_exists(match_link):
+                print(f'{match_link} already available ')
+                continue
             start_time = time.time()
             driver.get(match_link)
             time.sleep(3)
             header = driver.find_element(By.XPATH, '//span[@class="tournamentHeader__country"]').text.split(',')
             tournament_name, surface_stage = header[0], header[1].split('-')
-            surface = surface_stage[0]
-            stage = surface_stage[1]
+            try:
+                surface = surface_stage[0]
+                stage = surface_stage[1]
+            except:
+                surface, stage = '', ''
             tournament_time = driver.find_element(By.XPATH, '//div[@class="duelParticipant__startTime"]//div').text
-            players = driver.find_elements(By.XPATH,
-                                           '//a[@class="participant__participantName participant__overflow "]')
-            player1 = players[0].text
-            player2 = players[1].text
+            try:
+                players = driver.find_elements(By.XPATH,
+                                               '//a[@class="participant__participantName participant__overflow "]')
+                player1 = players[0].text
+                player2 = players[1].text
+            except:
+                player1 = ''
+                player2 = ''
             ranks = driver.find_elements(By.XPATH, '//div[@class="participant__participantRank"]')
-            rank1 = ranks[0].text.replace('ATP', '').replace('\n', '').replace(':', '').replace('.', '').strip()
-            rank2 = ranks[1].text.replace('ATP', '').replace('\n', '').replace(':', '').replace('.', '').strip()
+            try:
+                rank1 = ranks[0].text.replace('ATP', '').replace('\n', '').replace(':', '').replace('.', '').strip()
+            except:
+                rank1 = ''
+
+            try:
+                rank2 = ranks[1].text.replace('ATP', '').replace('\n', '').replace(':', '').replace('.', '').strip()
+            except:
+                rank2 = ''
 
             sets = driver.find_element(By.XPATH, '//div[@class="detailScore__wrapper"]').text.replace('\n', '').split(
                 '-')
-            player1_set_won = sets[0]
-            player2_set_won = sets[1]
+
+            try:
+                player1_set_won = sets[0]
+                player2_set_won = sets[1]
+            except:
+                player1_set_won = ''
+                player2_set_won = ''
 
             try:
                 player1_set1_games_won = driver.find_element(By.XPATH,
