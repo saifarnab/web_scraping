@@ -40,13 +40,7 @@ def append_to_excel(data):
 
 
 def get_atp_single_tournaments():
-    return ['https://www.tennis24.com/atp-singles/acapulco/', 'https://www.tennis24.com/atp-singles/adelaide/',
-            'https://www.tennis24.com/atp-singles/adelaide-2/', 'https://www.tennis24.com/atp-singles/amersfoort/',
-            'https://www.tennis24.com/atp-singles/amsterdam/', 'https://www.tennis24.com/atp-singles/antalya/',
-            'https://www.tennis24.com/atp-singles/antwerp/', 'https://www.tennis24.com/atp-singles/antwerp-2/',
-            'https://www.tennis24.com/atp-singles/astana/', 'https://www.tennis24.com/atp-singles/athens/',
-            'https://www.tennis24.com/atp-singles/atlanta/', 'https://www.tennis24.com/atp-singles/atp-cup/',
-            'https://www.tennis24.com/atp-singles/auckland/', 'https://www.tennis24.com/atp-singles/australian-open/',
+    return ['https://www.tennis24.com/atp-singles/australian-open/',
             'https://www.tennis24.com/atp-singles/bangkok/', 'https://www.tennis24.com/atp-singles/banja-luka/',
             'https://www.tennis24.com/atp-singles/barcelona/', 'https://www.tennis24.com/atp-singles/basel/',
             'https://www.tennis24.com/atp-singles/bastad/', 'https://www.tennis24.com/atp-singles/beijing/',
@@ -379,10 +373,16 @@ def iterate_tournament(driver: webdriver.Chrome):
             match_id = match.get_attribute('id').split('g_2_')[-1]
             match_links.append(f'https://www.tennis24.com/match/{match_id}/#/match-summary/match-summary')
 
-        for match_link in match_links:
-            if check_data_exists(match_link):
-                print(f'{match_link} already available ')
+        print(f'Total matches = {len(match_links)}')
+
+        for index, match_link in enumerate(match_links):
+            if link == 'https://www.tennis24.com/atp-singles/australian-open/' and index < 55:
+                print('already inserted for australian-open')
                 continue
+
+            # if check_data_exists(match_link):
+            #     print(f'{match_link} already available ')
+            #     continue
             start_time = time.time()
             driver.get(match_link)
             time.sleep(3)
