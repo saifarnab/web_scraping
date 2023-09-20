@@ -365,6 +365,14 @@ def iterate_tournament(driver: webdriver.Chrome):
         if year < 2021:
             continue
 
+        while True:
+            more_results = driver.find_elements(By.XPATH, '//a[@class="event__more event__more--static"]')
+            if len(more_results) > 0:
+                driver.execute_script("arguments[0].click();", more_results[0])
+                time.sleep(2)
+            else:
+                break
+
         match_links = []
         matches = driver.find_elements(By.XPATH, '//div[@title="Click for match detail!"]')
         for match in matches:
