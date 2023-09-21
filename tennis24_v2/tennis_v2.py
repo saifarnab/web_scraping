@@ -41,7 +41,7 @@ def append_to_excel(data):
 
 
 def get_wta_single_tournaments():
-    return ['https://www.tennis24.com/wta-singles/abu-dhabi/', 'https://www.tennis24.com/wta-singles/acapulco/',
+    v1 = [ 'https://www.tennis24.com/wta-singles/acapulco/',
             'https://www.tennis24.com/wta-singles/adelaide/', 'https://www.tennis24.com/wta-singles/adelaide-2/',
             'https://www.tennis24.com/wta-singles/albuquerque/', 'https://www.tennis24.com/wta-singles/amelia-island/',
             'https://www.tennis24.com/wta-singles/antwerp/', 'https://www.tennis24.com/wta-singles/athens/',
@@ -58,8 +58,9 @@ def get_wta_single_tournaments():
             'https://www.tennis24.com/wta-singles/billie-jean-king-cup-group-i/',
             'https://www.tennis24.com/wta-singles/billie-jean-king-cup-group-ii/',
             'https://www.tennis24.com/wta-singles/billie-jean-king-cup-group-iii/',
-            'https://www.tennis24.com/wta-singles/billie-jean-king-cup-group-iv/',
-            'https://www.tennis24.com/wta-singles/billie-jean-king-cup-world-group/',
+            'https://www.tennis24.com/wta-singles/billie-jean-king-cup-group-iv/']
+
+    v2 = ['https://www.tennis24.com/wta-singles/billie-jean-king-cup-world-group/',
             'https://www.tennis24.com/wta-singles/billie-jean-king-cup-world-group-ii/',
             'https://www.tennis24.com/wta-singles/birmingham/', 'https://www.tennis24.com/wta-singles/bogota/',
             'https://www.tennis24.com/wta-singles/bol/', 'https://www.tennis24.com/wta-singles/boston/',
@@ -80,8 +81,7 @@ def get_wta_single_tournaments():
             'https://www.tennis24.com/wta-singles/doha/', 'https://www.tennis24.com/wta-singles/dubai/',
             'https://www.tennis24.com/wta-singles/eastbourne/', 'https://www.tennis24.com/wta-singles/espoo-helsinki/',
             'https://www.tennis24.com/wta-singles/fes/', 'https://www.tennis24.com/wta-singles/filderstadt/',
-            'https://www.tennis24.com/wta-singles/finals-fort-worth/',
-            'https://www.tennis24.com/wta-singles/florianopolis/', 'https://www.tennis24.com/wta-singles/forest-hills/',
+            'https://www.tennis24.com/wta-singles/finals-fort-worth/', 'https://www.tennis24.com/wta-singles/florianopolis/', 'https://www.tennis24.com/wta-singles/forest-hills/',
             'https://www.tennis24.com/wta-singles/french-open/', 'https://www.tennis24.com/wta-singles/gdynia/',
             'https://www.tennis24.com/wta-singles/gold-coast/', 'https://www.tennis24.com/wta-singles/granby/',
             'https://www.tennis24.com/wta-singles/grand-slam-cup/', 'https://www.tennis24.com/wta-singles/gstaad/',
@@ -99,8 +99,9 @@ def get_wta_single_tournaments():
             'https://www.tennis24.com/wta-singles/kolkata/', 'https://www.tennis24.com/wta-singles/kuala-lumpur/',
             'https://www.tennis24.com/wta-singles/lausanne/', 'https://www.tennis24.com/wta-singles/leipzig/',
             'https://www.tennis24.com/wta-singles/lexington/', 'https://www.tennis24.com/wta-singles/linz/',
-            'https://www.tennis24.com/wta-singles/livesport-prague-open/',
-            'https://www.tennis24.com/wta-singles/los-angeles/', 'https://www.tennis24.com/wta-singles/lucerne/',
+            'https://www.tennis24.com/wta-singles/livesport-prague-open/']
+
+    v5 = ['https://www.tennis24.com/wta-singles/los-angeles/', 'https://www.tennis24.com/wta-singles/lucerne/',
             'https://www.tennis24.com/wta-singles/lugano/', 'https://www.tennis24.com/wta-singles/luxembourg/',
             'https://www.tennis24.com/wta-singles/lyon/', 'https://www.tennis24.com/wta-singles/madrid/',
             'https://www.tennis24.com/wta-singles/madrid-2/', 'https://www.tennis24.com/wta-singles/makarska/',
@@ -115,8 +116,9 @@ def get_wta_single_tournaments():
             'https://www.tennis24.com/wta-singles/melbourne-summer-set-2/',
             'https://www.tennis24.com/wta-singles/melbourne-yarra-valley-classic/',
             'https://www.tennis24.com/wta-singles/memphis/', 'https://www.tennis24.com/wta-singles/merida/',
-            'https://www.tennis24.com/wta-singles/miami/', 'https://www.tennis24.com/wta-singles/milan/',
-            'https://www.tennis24.com/wta-singles/modena/', 'https://www.tennis24.com/wta-singles/monastir/',
+            'https://www.tennis24.com/wta-singles/miami/', 'https://www.tennis24.com/wta-singles/milan/']
+
+    v6 = ['https://www.tennis24.com/wta-singles/modena/', 'https://www.tennis24.com/wta-singles/monastir/',
             'https://www.tennis24.com/wta-singles/monterrey/', 'https://www.tennis24.com/wta-singles/montpellier/',
             'https://www.tennis24.com/wta-singles/montreal/', 'https://www.tennis24.com/wta-singles/moscow/',
             'https://www.tennis24.com/wta-singles/moscow-2/', 'https://www.tennis24.com/wta-singles/nagoya/',
@@ -136,8 +138,8 @@ def get_wta_single_tournaments():
             'https://www.tennis24.com/wta-singles/rabat/', 'https://www.tennis24.com/wta-singles/rio-de-janeiro/',
             'https://www.tennis24.com/wta-singles/rome/', 'https://www.tennis24.com/wta-singles/san-diego/',
             'https://www.tennis24.com/wta-singles/san-jose/', 'https://www.tennis24.com/wta-singles/san-juan/',
-            'https://www.tennis24.com/wta-singles/san-marino/', 'https://www.tennis24.com/wta-singles/sao-paulo/',
-            'https://www.tennis24.com/wta-singles/sapporo/', 'https://www.tennis24.com/wta-singles/sarasota/',
+            'https://www.tennis24.com/wta-singles/san-marino/', 'https://www.tennis24.com/wta-singles/sao-paulo/']
+    v7 = ['https://www.tennis24.com/wta-singles/sapporo/', 'https://www.tennis24.com/wta-singles/sarasota/',
             'https://www.tennis24.com/wta-singles/schenectady/', 'https://www.tennis24.com/wta-singles/scottsdale/',
             'https://www.tennis24.com/wta-singles/scottsdale-2/', 'https://www.tennis24.com/wta-singles/seoul/',
             'https://www.tennis24.com/wta-singles/shanghai/', 'https://www.tennis24.com/wta-singles/shenzhen/',
@@ -162,6 +164,7 @@ def get_wta_single_tournaments():
             'https://www.tennis24.com/wta-singles/zhengzhou/', 'https://www.tennis24.com/wta-singles/zhuhai/',
             'https://www.tennis24.com/wta-singles/zurich/']
 
+    return v2
 
 def create_excel_with_header():
     filename = 'wtp.xlsx'
