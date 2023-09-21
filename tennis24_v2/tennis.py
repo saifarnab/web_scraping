@@ -1,4 +1,5 @@
 import os
+import socket
 import time
 
 import openpyxl
@@ -31,7 +32,7 @@ def create_directory_if_not_exists(directory):
 
 
 def append_to_excel(data):
-    filename = 'tennis.xlsx'
+    filename = 'atp.xlsx'
     workbook = openpyxl.load_workbook(filename)
     sheet = workbook.active
     for row in data:
@@ -39,8 +40,8 @@ def append_to_excel(data):
     workbook.save(filename)
 
 
-def get_atp_single_tournaments():
-    return ['https://www.tennis24.com/atp-singles/australian-open/',
+def get_wta_single_tournaments():
+    v1 = ['https://www.tennis24.com/atp-singles/australian-open/',
             'https://www.tennis24.com/atp-singles/bangkok/', 'https://www.tennis24.com/atp-singles/banja-luka/',
             'https://www.tennis24.com/atp-singles/barcelona/', 'https://www.tennis24.com/atp-singles/basel/',
             'https://www.tennis24.com/atp-singles/bastad/', 'https://www.tennis24.com/atp-singles/beijing/',
@@ -142,10 +143,10 @@ def get_atp_single_tournaments():
             'https://www.tennis24.com/atp-singles/wimbledon/', 'https://www.tennis24.com/atp-singles/winston-salem/',
             'https://www.tennis24.com/atp-singles/zagreb/', 'https://www.tennis24.com/atp-singles/zaragoza/',
             'https://www.tennis24.com/atp-singles/zhuhai/']
-
+    return v1
 
 def create_excel_with_header():
-    filename = 'tennis.xlsx'
+    filename = 'atp.xlsx'
     if os.path.exists(filename) is True:
         return
     workbook = openpyxl.Workbook()
@@ -329,14 +330,8 @@ def create_excel_with_header():
     workbook.save(filename)
 
 
-def tournaments_csv():
-    header = ['Link', 'Status']  # Example header
-    df = pd.DataFrame(columns=header)
-    df.to_csv('atp-singles.csv', index=False)
-
-
 def check_data_exists(name: str) -> bool:
-    filename = 'tennis.xlsx'
+    filename = 'atp.xlsx'
     workbook = openpyxl.load_workbook(filename)
     sheet = workbook.active
     for row in sheet.iter_rows(values_only=True):
@@ -347,12 +342,30 @@ def check_data_exists(name: str) -> bool:
     return False  # Data does not exist in the sheet
 
 
+def is_internet_available():
+    try:
+        # Try to connect to a well-known website
+        socket.create_connection(("www.google.com", 80))
+        return True
+    except socket.error:
+        return False
+
+def wait_for_internet():
+    print("Waiting for internet connection...")
+    while not is_internet_available():
+        time.sleep(5)  # Wait for 5 seconds before checking again
+
+    print("Internet connection is back!")
+
+
 def iterate_tournament(driver: webdriver.Chrome):
-    links = get_atp_single_tournaments()
+    links = get_wta_single_tournaments()
     counter = 1
     for link in links:
         print('---------------------------------------------')
         print(f'Tournament link = {link}')
+        if not is_internet_available():
+            wait_for_internet()
         driver.get(f'{link}/results/')
 
         year = int(driver.find_element(By.XPATH, '//div[@class="heading__info"]').text)
@@ -376,23 +389,30 @@ def iterate_tournament(driver: webdriver.Chrome):
         print(f'Total matches = {len(match_links)}')
 
         for index, match_link in enumerate(match_links):
-            if link == 'https://www.tennis24.com/atp-singles/australian-open/' and index < 55:
-                print('already inserted for australian-open')
-                continue
 
             # if check_data_exists(match_link):
             #     print(f'{match_link} already available ')
             #     continue
             start_time = time.time()
+
+            if not is_internet_available():
+                wait_for_internet()
+
             driver.get(match_link)
             time.sleep(3)
-            header = driver.find_element(By.XPATH, '//span[@class="tournamentHeader__country"]').text.split(',')
-            tournament_name, surface_stage = header[0], header[1].split('-')
-            try:
-                surface = surface_stage[0]
-                stage = surface_stage[1]
-            except:
-                surface, stage = '', ''
+            header = driver.find_element(By.XPATH, '//span[@class="tournamentHeader__country"]').text
+
+            if ',' in header:
+                header = driver.find_element(By.XPATH, '//span[@class="tournamentHeader__country"]').text.split(',')
+                tournament_name, surface_stage = header[0], header[1].split('-')
+                try:
+                    surface = surface_stage[0]
+                    stage = surface_stage[1]
+                except:
+                    surface, stage = '', ''
+            else:
+                tournament_name, surface, stage = header, '', ''
+
             tournament_time = driver.find_element(By.XPATH, '//div[@class="duelParticipant__startTime"]//div').text
             try:
                 players = driver.find_elements(By.XPATH,
@@ -1071,7 +1091,7 @@ def iterate_tournament(driver: webdriver.Chrome):
                             pbp_set_2_game_15_serve = 'Player A'
 
                 # set 3
-                set_3_clicks_elm = driver.find_elements(By.XPATH, '//a[@title="Set 2"]')
+                set_3_clicks_elm = driver.find_elements(By.XPATH, '//a[@title="Set 3"]')
                 if len(set_3_clicks_elm) != 0:
                     driver.execute_script("arguments[0].click();", set_3_clicks_elm[0])
                     time.sleep(1)
@@ -1124,7 +1144,7 @@ def iterate_tournament(driver: webdriver.Chrome):
                             pbp_set_3_game_15_serve = 'Player A'
 
                 # set 4
-                set_4_clicks_elm = driver.find_elements(By.XPATH, '//a[@title="Set 2"]')
+                set_4_clicks_elm = driver.find_elements(By.XPATH, '//a[@title="Set 4"]')
                 if len(set_4_clicks_elm) != 0:
                     driver.execute_script("arguments[0].click();", set_4_clicks_elm[0])
                     time.sleep(1)
@@ -1177,7 +1197,7 @@ def iterate_tournament(driver: webdriver.Chrome):
                             pbp_set_4_game_15_serve = 'Player A'
 
                 # set 5
-                set_5_clicks_elm = driver.find_elements(By.XPATH, '//a[@title="Set 2"]')
+                set_5_clicks_elm = driver.find_elements(By.XPATH, '//a[@title="Set 5"]')
                 if len(set_5_clicks_elm) != 0:
                     driver.execute_script("arguments[0].click();", set_5_clicks_elm[0])
                     time.sleep(1)
@@ -1386,12 +1406,24 @@ def iterate_tournament(driver: webdriver.Chrome):
             counter += 1
 
 
+def get_tournaments(driver: webdriver.Chrome):
+    driver.get('https://www.tennis24.com/')
+    elm = driver.find_element(By.ID, "lmenu_5725")
+    driver.execute_script("arguments[0].click();", elm)
+    time.sleep(1)
+    te = []
+    tours = driver.find_elements(By.XPATH, '//a[@class="lmc__templateHref"]')
+    for tour in tours:
+        te.append(tour.get_attribute('href'))
+
+    print(te)
+
+
 def scrapper():
     print('=============================================================')
     print('Execution starts!')
 
     driver = config_driver()
-    # tournaments_csv()
     # get_tournaments(driver)
     create_excel_with_header()
     iterate_tournament(driver)
