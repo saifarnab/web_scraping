@@ -44,7 +44,6 @@ def config_driver(maximize_window: bool) -> webdriver.Chrome:
         driver.maximize_window()
     return driver
 
-
 def check_excel_file() -> bool:
     if os.path.exists(GAMEDB):
         return True
@@ -163,6 +162,14 @@ def save_to_csv():
         pass
 
 
+csv_file_path = 'data.csv'
+
+
+def insert_to_csv(new_data):
+    df = pd.DataFrame(new_data)
+    df.to_csv(csv_file_path, header=False, index=False, mode='a')
+
+
 def scanner():
     # define 'driver' variable
     if check_excel_file() is False:
@@ -217,6 +224,8 @@ def scanner():
                 tr_elements = table_elements[table_ind].find_elements(By.XPATH, './/tbody//tr')
                 tr_ind = 0
 
+                print(len(tr_elements))
+
                 # iterate each td
                 for ind in range(int(len(tr_elements) / 2)):
                     td_elements = tr_elements[tr_ind].find_elements(By.XPATH, ".//td")
@@ -228,9 +237,9 @@ def scanner():
                         game_time = 'N/A'
 
                     # if game time is not HT then return
-                    if game_time != 'HT':
-                        tr_ind += 2
-                        continue
+                    # if game_time != 'HT':
+                    #     tr_ind += 2
+                    #     continue
 
                     # extract required data from 1st tr
                     team1 = td_elements[1].text.index('(')
@@ -358,10 +367,13 @@ def scanner():
                                 away_on.replace(':', ''), away_off.replace(':', ''), away_da.replace(':', ''),
                                 ht_score.replace(':', '')]
 
-                    if check_for_duplicate(data_row) is False:
-                        insert = insert_or_update_row(first_blank_row, data_row)
-                        first_blank_row += 1
-                        logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
+                    insert_to_csv([data_row])
+                    logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
+
+                    # if check_for_duplicate(data_row) is False:
+                    #     insert = insert_or_update_row(first_blank_row, data_row)
+                    #     first_blank_row += 1
+                    #     logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
                     # if insert is True:
                     #     logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
                     #     time.sleep(5)

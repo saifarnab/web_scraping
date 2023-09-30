@@ -160,6 +160,13 @@ def save_to_csv():
     except:
         pass
 
+csv_file_path = 'data.csv'
+
+
+def insert_to_csv(new_data):
+    df = pd.DataFrame(new_data)
+    df.to_csv(csv_file_path, header=False, index=False, mode='a')
+
 
 def scanner():
     # define 'driver' variable
@@ -206,7 +213,7 @@ def scanner():
             # wait till 60s if no live games are available
             if len(table_elements) == 0:
                 logging.info('--> Waiting 60s for next try..')
-                time.sleep(60)
+                # time.sleep(60)
                 continue
 
             # iterate each tr
@@ -225,10 +232,10 @@ def scanner():
                         game_time = 'N/A'
 
                     # if game time is not HT then return
-                    if game_time != 'HT':
-                        tr_ind += 2
-                        logging.info('Waiting to detect HT')
-                        continue
+                    # if game_time != 'HT':
+                    #     tr_ind += 2
+                    #     logging.info('Waiting to detect HT')
+                    #     continue
 
                     # extract required data from 1st tr
                     team1 = td_elements[1].text.index('(')
@@ -345,24 +352,29 @@ def scanner():
 
                     time.sleep(1)
 
-                    # insert data to gamedb
-
+                    # insert data to game db
                     data_row = [current_date.replace(':', ''), game.replace(':', ''), home.replace(':', ''),
                                 away.replace(':', ''), draw.replace(':', ''), ht_home.replace(':', ''),
                                 ht_away.replace(':', ''), ht_draw.replace(':', ''),
                                 home_on.replace(':', ''), home_off.replace(':', ''), home_da.replace(':', ''),
                                 away_on.replace(':', ''), away_off.replace(':', ''), away_da.replace(':', ''),
                                 ht_score.replace(':', '')]
-                    if check_for_duplicate(data_row) is False:
-                        insert = insert_or_update_row(first_blank_row, data_row)
-                        first_blank_row += 1
-                        if insert is True:
-                            logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
-                            time.sleep(5)
-                            save_to_csv()
-                        else:
-                            logging.info(f'--> <{game}> data is already exist in gamedb!')
-                            save_to_csv()
+
+                    insert_to_csv([data_row])
+                    logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
+
+
+                    # if check_for_duplicate(data_row) is False:
+                    #     insert = insert_or_update_row(first_blank_row, data_row)
+                    #     first_blank_row += 1
+                    #     if insert is True:
+                    #         logging.info(f'--> <{game}> data is fetched and stored to gamedb!')
+                    #         time.sleep(5)
+                    #         save_to_csv()
+                    #     else:
+                    #         logging.info(f'--> <{game}> data is already exist in gamedb!')
+                    #         save_to_csv()
+
 
                     tr_ind += 2
 
